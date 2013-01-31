@@ -9,6 +9,7 @@ wm97xx-ts-y := wm97xx-core.o
 da9052-tsi-objs				:= da9052_tsi.o da9052_tsi_filter.o da9052_tsi_calibrate.o
 obj-$(CONFIG_TOUCHSCREEN_DA9052)      	 += da9052-tsi.o
 obj-$(CONFIG_TOUCHSCREEN_88PM860X)	+= 88pm860x-ts.o
+obj-$(CONFIG_TOUCHSCREEN_CTW6120)	+= ctw6120.o ctw6120-mt.o
 obj-$(CONFIG_TOUCHSCREEN_AD7877)	+= ad7877.o
 obj-$(CONFIG_TOUCHSCREEN_AD7879)	+= ad7879.o
 obj-$(CONFIG_TOUCHSCREEN_AD7879_I2C)	+= ad7879-i2c.o
