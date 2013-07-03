@@ -39,7 +39,7 @@
 #define	MII_KSZPHY_CTRL			0x1F
 /* bitmap of PHY register to set interrupt mode */
 #define KSZPHY_CTRL_INT_ACTIVE_HIGH		(1 << 9)
-#define KSZ9021_CTRL_INT_ACTIVE_HIGH		(1 << 14)
+#define KSZ90XX_CTRL_INT_ACTIVE_HIGH		(1 << 14)
 #define KS8737_CTRL_INT_ACTIVE_HIGH		(1 << 14)
 #define KSZ8051_RMII_50MHZ_CLK			(1 << 7)
 
@@ -93,14 +93,14 @@ static int kszphy_config_intr(struct phy_device *phydev)
 	return rc < 0 ? rc : 0;
 }
 
-static int ksz9021_config_intr(struct phy_device *phydev)
+static int ksz90xx_config_intr(struct phy_device *phydev)
 {
 	int temp, rc;
 
 	temp = phy_read(phydev, MII_KSZPHY_CTRL);
-	if (temp & KSZ9021_CTRL_INT_ACTIVE_HIGH) {
+	if (temp & KSZ90XX_CTRL_INT_ACTIVE_HIGH) {
 		/* set the interrupt pin active low */
-		temp &= ~KSZ9021_CTRL_INT_ACTIVE_HIGH;
+		temp &= ~KSZ90XX_CTRL_INT_ACTIVE_HIGH;
 		phy_write(phydev, MII_KSZPHY_CTRL, temp);
 	}
 	rc = kszphy_set_interrupt(phydev);
@@ -206,9 +206,25 @@ static struct phy_driver ksz9021_driver = {
 	.config_aneg	= genphy_config_aneg,
 	.read_status	= genphy_read_status,
 	.ack_interrupt	= kszphy_ack_interrupt,
-	.config_intr	= ksz9021_config_intr,
+	.config_intr	= ksz90xx_config_intr,
 	.driver		= { .owner = THIS_MODULE, },
 };
+
+static struct phy_driver ksz9031_driver = {
+	.phy_id		= PHY_ID_KSZ9031,
+	.phy_id_mask	= 0x00ffffff,
+	.name		= "Micrel KSZ9031 Gigabit PHY",
+	.features	= (PHY_GBIT_FEATURES | SUPPORTED_Pause
+				| SUPPORTED_Asym_Pause),
+	.flags		= PHY_HAS_MAGICANEG | PHY_HAS_INTERRUPT,
+	.config_init	= kszphy_config_init,
+	.config_aneg	= genphy_config_aneg,
+	.read_status	= genphy_read_status,
+	.ack_interrupt	= kszphy_ack_interrupt,
+	.config_intr	= ksz90xx_config_intr,
+	.driver		= { .owner = THIS_MODULE, },
+};
+
 
 static int __init ksphy_init(void)
 {
@@ -231,9 +247,13 @@ static int __init ksphy_init(void)
 	ret = phy_driver_register(&ks8051_driver);
 	if (ret)
 		goto err5;
-
+	ret = phy_driver_register(&ksz9031_driver);
+	if (ret)
+		goto err6;
 	return 0;
 
+err6:
+	phy_driver_unregister(&ks8051_driver);
 err5:
 	phy_driver_unregister(&ks8041_driver);
 err4:
@@ -253,6 +273,7 @@ static void __exit ksphy_exit(void)
 	phy_driver_unregister(&ksz9021_driver);
 	phy_driver_unregister(&ks8041_driver);
 	phy_driver_unregister(&ks8051_driver);
+	phy_driver_unregister(&ksz9031_driver);
 }
 
 module_init(ksphy_init);
@@ -264,6 +285,7 @@ MODULE_LICENSE("GPL");
 
 static struct mdio_device_id __maybe_unused micrel_tbl[] = {
 	{ PHY_ID_KSZ9021, 0x00ffffff },
+	{ PHY_ID_KSZ9031, 0x00ffffff },
 	{ PHY_ID_KS8001, 0x00ffffff },
 	{ PHY_ID_KS8737, 0x00ffffff },
 	{ PHY_ID_KS8041, 0x00ffffff },
