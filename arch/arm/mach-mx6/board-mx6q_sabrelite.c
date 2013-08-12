@@ -472,7 +472,9 @@ static int mx6q_sabrelite_fec_phy_init(struct phy_device *phydev)
 static struct fec_platform_data fec_data __initdata = {
 	.init = mx6q_sabrelite_fec_phy_init,
 	.phy = PHY_INTERFACE_MODE_RGMII,
+#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
 	.gpio_irq = MX6_ENET_IRQ,
+#endif
 };
 
 static int mx6q_sabrelite_spi_cs[] = {
@@ -1229,8 +1231,10 @@ static void __init mx6_sabrelite_board_init(void)
 			IOMUX_OBSRV_MUX1_OFFSET,
 			OBSRV_MUX1_ENET_IRQ,
 			OBSRV_MUX1_MASK);
+#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
 	else
 		fec_data.gpio_irq = -1;
+#endif
 
 	imx6_init_fec(fec_data);
 	imx6q_add_pm_imx(0, &mx6q_sabrelite_pm_data);

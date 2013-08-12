@@ -55,7 +55,8 @@
 
 #include "drm_pciids.h"
 
-static char platformdevicename[] = "Vivante GCCore";
+static char platformdevicename[] = "Vivante GCCore:00"; //:00->This makes the 3.0.35 compatible with a Xorg driver build for 3.5.7 or newer kernels.
+
 static struct platform_device *pplatformdev;
 
 static struct drm_driver driver = {

@@ -830,33 +830,41 @@ static int fsl_otg_start_hnp(struct otg_transceiver *otg_p)
 /* Interrupt handler for gpio id pin */
 irqreturn_t fsl_otg_isr_gpio(int irq, void *dev_id)
 {
-	struct otg_fsm *fsm;
-	struct fsl_usb2_platform_data *pdata =
-		(struct fsl_usb2_platform_data *)dev_id;
-	struct fsl_otg *f_otg;
-	struct otg_transceiver *otg_trans = otg_get_transceiver();
+	struct fsl_otg *fotg = (struct fsl_otg *)dev_id;
+	struct otg_transceiver *otg = &fotg->otg;
 	int value;
-	f_otg = container_of(otg_trans, struct fsl_otg, otg);
-	fsm = &f_otg->fsm;
+	irqreturn_t ret = IRQ_NONE;
+	struct fsl_usb2_platform_data *pdata;
 
-	if (pdata->id_gpio == 0)
-		return IRQ_NONE;
+	if (fotg && fotg->otg.dev) {
+		pdata = fotg->otg.dev->platform_data;
+		if (pdata->irq_delay)
+			return ret;
+	}
 
-	value = gpio_get_value(pdata->id_gpio) ? 1 : 0;
+	value = gpio_get_value(gpio_id) ? 1 : 0;
 
 	if (value)
-		irq_set_irq_type(gpio_to_irq(pdata->id_gpio), IRQ_TYPE_LEVEL_LOW);
+		irq_set_irq_type(gpio_to_irq(gpio_id), IRQ_TYPE_LEVEL_LOW);
 	else
-		irq_set_irq_type(gpio_to_irq(pdata->id_gpio), IRQ_TYPE_LEVEL_HIGH);
+		irq_set_irq_type(gpio_to_irq(gpio_id), IRQ_TYPE_LEVEL_HIGH);
 
+	/*FIXME: ID change not generate when init to 0 */
+	fotg->fsm.id = value;
+	otg->default_a = (fotg->fsm.id == 0);
 
-	if (value == f_otg->fsm.id)
-		return IRQ_HANDLED;
+	/* is_b_host, is_a_peripheral may be used at host/gadget driver
+	 * so, assign them at irq, the otg event is scheduled too late
+	 */
+	if (otg->host)
+		otg->host->is_b_host = fotg->fsm.id;
+	if (otg->gadget)
+		otg->gadget->is_a_peripheral = !(fotg->fsm.id);
 
-	f_otg->fsm.id = value;
+	printk(KERN_DEBUG "ID int (ID is %d)\n", fotg->fsm.id);
 
-	__cancel_delayed_work(&f_otg->otg_event);
-	schedule_otg_work(&f_otg->otg_event, msecs_to_jiffies(10));
+	__cancel_delayed_work(&fotg->otg_event);
+	schedule_otg_work(&fotg->otg_event, msecs_to_jiffies(10));
 
 	return IRQ_HANDLED;
 }
@@ -1050,7 +1058,7 @@ int usb_otg_start(struct platform_device *pdev)
 	} else {
 		status = request_irq(gpio_to_irq(pdata->id_gpio),
 					fsl_otg_isr_gpio,
-					IRQF_SHARED, driver_name, pdata);
+					IRQF_SHARED, driver_name, p_otg);
 	}
 	if (status) {
 		dev_dbg(p_otg->otg.dev, "can't get IRQ %d, error %d\n",

@@ -20,6 +20,7 @@ obj-$(CONFIG_MACH_MX6_OC) += board-mx6_oc.o
 obj-$(CONFIG_MACH_MX6_NIT6XLITE) += board-mx6_nit6xlite.o
 obj-$(CONFIG_MACH_MX6Q_SABRESD) += board-mx6q_sabresd.o mx6q_sabresd_pmic_pfuze100.o
 obj-$(CONFIG_MACH_MX6Q_SABREAUTO) += board-mx6q_sabreauto.o mx6q_sabreauto_pmic_pfuze100.o
+obj-$(CONFIG_MACH_VAR_SOM_MX6) += board-mx6q_var_som.o mx6q_var_som_pmic_pfuze100.o
 obj-$(CONFIG_MACH_MX6Q_HDMIDONGLE) += board-mx6q_hdmidongle.o
 obj-$(CONFIG_SMP) += plat_hotplug.o platsmp.o headsmp.o
 obj-$(CONFIG_LOCAL_TIMERS) += localtimer.o

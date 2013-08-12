@@ -22,12 +22,18 @@
 #include <linux/platform_device.h>
 #include <linux/fsl_devices.h>
 #include <linux/delay.h>
+#include <linux/gpio.h>
 #include <linux/io.h>
 #include <mach/arc_otg.h>
 #include <mach/hardware.h>
+#include <asm/mach-types.h>
 #include "devices-imx6q.h"
 #include "regs-anadig.h"
 #include "usb.h"
+
+#ifdef CONFIG_MACH_VAR_SOM_MX6
+	#define VAR_SOM_USBOTG_ID IMX_GPIO_NR(1, 4)
+#endif
 
 DEFINE_MUTEX(otg_wakeup_enable_mutex);
 static int usbotg_init_ext(struct platform_device *pdev);
@@ -540,8 +546,16 @@ static void _host_wakeup_enable(struct fsl_usb2_platform_data *pdata, bool enabl
 
 static enum usb_wakeup_event _is_host_wakeup(struct fsl_usb2_platform_data *pdata)
 {
+	u32 id;
 	u32 wakeup_req = USB_OTG_CTRL & UCTRL_OWIR;
 	u32 otgsc = UOG_OTGSC;
+
+#ifdef CONFIG_MACH_VAR_SOM_MX6
+	if (machine_is_var_som_mx6()) 
+		id = gpio_get_value(VAR_SOM_USBOTG_ID);
+	 else
+#endif
+	id = UOG_OTGSC & OTGSC_STS_USB_ID;
 
 	if (wakeup_req) {
 		pr_debug("the otgsc is 0x%x, usbsts is 0x%x, portsc is 0x%x, wakeup_irq is 0x%x\n", UOG_OTGSC, UOG_USBSTS, UOG_PORTSC1, wakeup_req);
@@ -551,7 +565,7 @@ static enum usb_wakeup_event _is_host_wakeup(struct fsl_usb2_platform_data *pdat
 		pr_debug("otg host ID wakeup\n");
 		return WAKEUP_EVENT_ID;
 	}
-	if (wakeup_req  && (!(otgsc & OTGSC_STS_USB_ID))) {
+	if (wakeup_req  && (!id)) {
 		pr_debug("otg host Remote wakeup\n");
 		return WAKEUP_EVENT_DPDM;
 	}
@@ -596,15 +610,23 @@ static void _device_wakeup_enable(struct fsl_usb2_platform_data *pdata, bool ena
 
 static enum usb_wakeup_event _is_device_wakeup(struct fsl_usb2_platform_data *pdata)
 {
+	u32 id;
 	int wakeup_req = USB_OTG_CTRL & UCTRL_OWIR;
 	pr_debug("%s\n", __func__);
 
+#ifdef CONFIG_MACH_VAR_SOM_MX6
+	if (machine_is_var_som_mx6()) 
+		id = gpio_get_value(VAR_SOM_USBOTG_ID);
+	 else
+#endif
+	id = UOG_OTGSC & OTGSC_STS_USB_ID;
+
 	/* if ID=1, it is a device wakeup event */
-	if (wakeup_req && (UOG_OTGSC & OTGSC_STS_USB_ID) && (UOG_USBSTS & USBSTS_URI)) {
+	if (wakeup_req && id && (UOG_USBSTS & USBSTS_URI)) {
 		printk(KERN_INFO "otg udc wakeup, host sends reset signal\n");
 		return WAKEUP_EVENT_DPDM;
 	}
-	if (wakeup_req && (UOG_OTGSC & OTGSC_STS_USB_ID) &&  \
+	if (wakeup_req && id &&  \
 		((UOG_USBSTS & USBSTS_PCI) || (UOG_PORTSC1 & PORTSC_PORT_FORCE_RESUME))) {
 		/*
 		 * When the line state from J to K, the Port Change Detect bit
@@ -613,12 +635,12 @@ static enum usb_wakeup_event _is_device_wakeup(struct fsl_usb2_platform_data *pd
 		printk(KERN_INFO "otg udc wakeup, host sends resume signal\n");
 		return WAKEUP_EVENT_DPDM;
 	}
-	if (wakeup_req && (UOG_OTGSC & OTGSC_STS_USB_ID) && (UOG_OTGSC & OTGSC_STS_A_VBUS_VALID) \
+	if (wakeup_req && id && (UOG_OTGSC & OTGSC_STS_A_VBUS_VALID) \
 		&& (UOG_OTGSC & OTGSC_IS_B_SESSION_VALID)) {
 		printk(KERN_INFO "otg udc vbus rising wakeup\n");
 		return WAKEUP_EVENT_VBUS;
 	}
-	if (wakeup_req && (UOG_OTGSC & OTGSC_STS_USB_ID) && !(UOG_OTGSC & OTGSC_STS_A_VBUS_VALID)) {
+	if (wakeup_req && id && !(UOG_OTGSC & OTGSC_STS_A_VBUS_VALID)) {
 		printk(KERN_INFO "otg udc vbus falling wakeup\n");
 		return WAKEUP_EVENT_VBUS;
 	}
@@ -641,6 +663,7 @@ static int devnum;
 static int  __init mx6_usb_dr_init(void)
 {
 	int i = 0;
+	int error;
 	void __iomem *anatop_base_addr = MX6_IO_ADDRESS(ANATOP_BASE_ADDR);
 	struct imx_fsl_usb2_wakeup_data imx6q_fsl_otg_wakeup_data =
 		imx_fsl_usb2_wakeup_data_entry_single(MX6Q, 0, OTG);
@@ -650,6 +673,22 @@ static int  __init mx6_usb_dr_init(void)
 		imx_fsl_usb2_udc_data_entry_single(MX6Q);
 	struct imx_fsl_usb2_otg_data __maybe_unused imx6q_fsl_usb2_otg_data  =
 		imx_fsl_usb2_otg_data_entry_single(MX6Q);
+
+#ifdef CONFIG_MACH_VAR_SOM_MX6
+	if(machine_is_var_som_mx6()) {
+		error = gpio_request(VAR_SOM_USBOTG_ID, "usbotg_id");
+		if (error < 0) {
+			pr_err("failed to request VAR_SOM_USBOTG_ID, error %d\n",
+					error);
+		}
+
+		error = gpio_direction_input(VAR_SOM_USBOTG_ID);
+		if (error < 0) {
+			pr_err("failed to configure direction for VAR_SOM_USBOTG_ID, error %d\n",
+					error);
+		}
+	}
+#endif
 
 	/* Some phy and power's special controls for otg
 	 * 1. The external charger detector needs to be disabled
@@ -671,6 +710,10 @@ static int  __init mx6_usb_dr_init(void)
 	dr_utmi_config.wake_up_enable = _device_wakeup_enable;
 	dr_utmi_config.operating_mode = FSL_USB2_DR_OTG;
 	dr_utmi_config.wakeup_pdata = &dr_wakeup_config;
+#ifdef CONFIG_MACH_VAR_SOM_MX6
+	if(machine_is_var_som_mx6())
+		dr_utmi_config.id_gpio = VAR_SOM_USBOTG_ID;
+#endif	
 	pdev[i] = imx6q_add_fsl_usb2_otg(&dr_utmi_config);
 	dr_wakeup_config.usb_pdata[i] = pdev[i]->dev.platform_data;
 	i++;
@@ -691,6 +734,10 @@ static int  __init mx6_usb_dr_init(void)
 	dr_utmi_config.wakeup_pdata = &dr_wakeup_config;
 	dr_utmi_config.wakeup_handler = host_wakeup_handler;
 	dr_utmi_config.platform_phy_power_on = dr_platform_phy_power_on;
+#ifdef CONFIG_MACH_VAR_SOM_MX6
+	if(machine_is_var_som_mx6())
+		dr_utmi_config.id_gpio = VAR_SOM_USBOTG_ID;
+#endif	
 	pdev[i] = imx6q_add_fsl_ehci_otg(&dr_utmi_config);
 	dr_wakeup_config.usb_pdata[i] = pdev[i]->dev.platform_data;
 	i++;
@@ -707,6 +754,10 @@ static int  __init mx6_usb_dr_init(void)
 	dr_utmi_config.wakeup_handler = device_wakeup_handler;
 	dr_utmi_config.charger_base_addr = anatop_base_addr;
 	dr_utmi_config.platform_phy_power_on = dr_platform_phy_power_on;
+#ifdef CONFIG_MACH_VAR_SOM_MX6
+	if(machine_is_var_som_mx6())
+		dr_utmi_config.id_gpio = VAR_SOM_USBOTG_ID;
+#endif	
 	pdev[i] = imx6q_add_fsl_usb2_udc(&dr_utmi_config);
 	dr_wakeup_config.usb_pdata[i] = pdev[i]->dev.platform_data;
 	i++;

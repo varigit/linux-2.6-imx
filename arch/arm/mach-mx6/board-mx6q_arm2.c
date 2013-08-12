@@ -392,7 +392,9 @@ static struct fec_platform_data fec_data __initdata = {
 	.init			= mx6_arm2_fec_phy_init,
 	.power_hibernate	= mx6_arm2_fec_power_hibernate,
 	.phy			= PHY_INTERFACE_MODE_RGMII,
+#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
 	.gpio_irq = MX6_ENET_IRQ,
+#endif
 };
 
 static int mx6_arm2_spi_cs[] = {
@@ -2195,8 +2197,10 @@ static void __init mx6_arm2_init(void)
 				IOMUX_OBSRV_MUX1_OFFSET,
 				OBSRV_MUX1_ENET_IRQ,
 				OBSRV_MUX1_MASK);
+#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
 		else
 			fec_data.gpio_irq = -1;
+#endif
 		imx6_init_fec(fec_data);
 	}
 
