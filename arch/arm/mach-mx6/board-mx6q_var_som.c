@@ -248,6 +248,14 @@ static const struct esdhc_platform_data mx6q_var_som_sd2_data __initconst = {
 
 #ifdef CONFIG_WL12XX_PLATFORM_DATA
 /* WLAN */
+
+static void sdio_set_power(int on)
+{
+	pr_debug("%s:%s: set power(%d)\n",
+		 __FILE__, __func__, on);
+	gpio_set_value(VAR_SOM_WL1271_WL_EN,on);
+}
+
 static struct esdhc_platform_data mx6q_var_som_sd3_data = {
 	.always_present = 1,
 	.cd_gpio = -1,
@@ -255,6 +263,7 @@ static struct esdhc_platform_data mx6q_var_som_sd3_data = {
 	.keep_power_at_suspend = 0,
 	.caps = MMC_CAP_POWER_OFF_CARD,
 	.platform_pad_change = plt_sd_pad_change,
+	.set_power = sdio_set_power,
 };
 #endif
 
