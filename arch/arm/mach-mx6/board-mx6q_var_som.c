@@ -136,7 +136,8 @@ static int __init var_ts_type_setup(char *str)
 }
 __setup("var_ts_type=", var_ts_type_setup);
 
-/* GPIO Buttons
+/* 
+ * GPIO Buttons
  */
 static struct gpio_keys_button gpio_keys_button_pins[] = {
 	{
@@ -144,6 +145,7 @@ static struct gpio_keys_button gpio_keys_button_pins[] = {
 		.gpio		= VAR_SOM_KEY_BACK_GPIO,
 		.desc		= "Back",
 		.active_low	= 1,
+		.wakeup		= 1,
 	},
 };
 
@@ -314,7 +316,7 @@ static const struct imxuart_platform_data mx6_var_som_uart1_data __initconst = {
 };
 
 static const struct imxuart_platform_data mx6_var_som_uart2_data __initconst = {
-	.flags      = IMXUART_HAVE_RTSCTS | IMXUART_SDMA,
+	.flags      = IMXUART_HAVE_RTSCTS, 
 	.dma_req_rx = MX6Q_DMA_REQ_UART3_RX,
 	.dma_req_tx = MX6Q_DMA_REQ_UART3_TX,
 };
@@ -664,8 +666,36 @@ static void hdmi_init(int ipu_id, int disp_id)
 		mxc_iomux_set_gpr_register(0, 0, 1, 1);
 }
 
+/* On mx6x var_som board i2c2 iomux with hdmi ddc,
+ * the pins default work at i2c2 function,
+ when hdcp enable, the pins should work at ddc function */
+
+static void hdmi_enable_ddc_pin(void)
+{
+	if (cpu_is_mx6dl())
+		mxc_iomux_v3_setup_multiple_pads(mx6dl_var_som_hdmi_ddc_pads,
+			ARRAY_SIZE(mx6dl_var_som_hdmi_ddc_pads));
+	else
+		mxc_iomux_v3_setup_multiple_pads(mx6q_var_som_hdmi_ddc_pads,
+			ARRAY_SIZE(mx6q_var_som_hdmi_ddc_pads));
+}
+
+static void hdmi_disable_ddc_pin(void)
+{
+	if (cpu_is_mx6dl())
+		mxc_iomux_v3_setup_multiple_pads(mx6dl_var_som_i2c2_pads,
+			ARRAY_SIZE(mx6dl_var_som_i2c2_pads));
+	else
+		mxc_iomux_v3_setup_multiple_pads(mx6q_var_som_i2c2_pads,
+			ARRAY_SIZE(mx6q_var_som_i2c2_pads));
+}
+
 static struct fsl_mxc_hdmi_platform_data hdmi_data = {
 	.init = hdmi_init,
+	.enable_pins = hdmi_enable_ddc_pin,
+	.disable_pins = hdmi_disable_ddc_pin,
+	.phy_reg_vlev = 0x0294,
+	.phy_reg_cksymtx = 0x800d,
 };
 
 static struct fsl_mxc_hdmi_core_platform_data hdmi_core_data = {
@@ -690,15 +720,16 @@ static struct fsl_mxc_ldb_platform_data ldb_data = {
 
 static struct imx_ipuv3_platform_data ipu_data[] = {
 	{
-		.rev = 4,
-		.csi_clk[0] = "clko2_clk",
-		.bypass_reset = false,
+	.rev = 4,
+	.csi_clk[0] = "clko_clk",
+	.bypass_reset = false,
 	}, {
-		.rev = 4,
-		.csi_clk[0] = "clko2_clk",
-		.bypass_reset = false, 
+	.rev = 4,
+	.csi_clk[0] = "clko_clk",
+	.bypass_reset = false, 
 	},
 };
+
 
 static struct ion_platform_data imx_ion_data = {
 	.nr = 1,
@@ -715,11 +746,20 @@ static struct ion_platform_data imx_ion_data = {
 
 static struct fsl_mxc_capture_platform_data capture_data[] = {
 	{
-		.csi = 1,
+		.csi = 0,
 		.ipu = 0,
 		.mclk_source = 0,
 		.is_mipi = 1,
 	},
+};
+
+struct imx_vout_mem {
+	resource_size_t res_mbase;
+	resource_size_t res_msize;
+};
+
+static struct imx_vout_mem vout_mem __initdata = {
+	.res_msize = SZ_128M,
 };
 
 static void var_som_suspend_enter(void)
@@ -974,6 +1014,7 @@ static int init_wlan(void)
 
 	gpio_free(VAR_SOM_WL1271_WL_EN);
 	gpio_free(VAR_SOM_WL1271_BT_EN);
+
 	mdelay(1);
 
 	gpio_export(VAR_SOM_WL1271_WL_EN,1);
@@ -1020,6 +1061,7 @@ static void __init mx6_var_som_board_init(void)
 	struct clk *clko, *clko2;
 	struct clk *new_parent;
 	int rate;
+	struct platform_device *voutdev;
 
 	if (cpu_is_mx6q())
 		mxc_iomux_v3_setup_multiple_pads(mx6q_var_som_pads,
@@ -1080,12 +1122,17 @@ static void __init mx6_var_som_board_init(void)
 	imx6q_add_vdoa();
 	imx6q_add_lcdif(&lcdif_data);
 	imx6q_add_ldb(&ldb_data);
-	
-#if 0
-	imx6q_add_v4l2_output(0);
 	imx6q_add_v4l2_capture(0, &capture_data[0]);
 	imx6q_add_mipi_csi2(&mipi_csi2_pdata);
-#endif	
+	voutdev = imx6q_add_v4l2_output(0);
+	if (vout_mem.res_msize && voutdev) {
+		dma_declare_coherent_memory(&voutdev->dev,
+					    vout_mem.res_mbase,
+					    vout_mem.res_mbase,
+					    vout_mem.res_msize,
+					    (DMA_MEMORY_MAP |
+					     DMA_MEMORY_EXCLUSIVE));
+	}
 
 	if (1 == caam_enabled)
 		imx6q_add_imx_caam();
@@ -1153,6 +1200,11 @@ static void __init mx6_var_som_board_init(void)
 	imx6q_add_hdmi_soc();
 	imx6q_add_hdmi_soc_dai();
 
+	if (cpu_is_mx6dl()) {
+		imx6dl_add_imx_pxp();
+		imx6dl_add_imx_pxp_client();
+	}
+
 	imx6q_add_gpmi(&mx6q_gpmi_nand_platform_data);
 
 	clko2 = clk_get(NULL, "clko2_clk");
@@ -1172,7 +1224,7 @@ static void __init mx6_var_som_board_init(void)
 	init_wlan();
 #endif
 
-	/* audio use osc clock */
+	/* Camera and audio use osc clock */
 	clko = clk_get(NULL, "clko_clk");
 	if (!IS_ERR(clko))
 		clk_set_parent(clko, clko2);
