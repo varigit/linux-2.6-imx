@@ -608,7 +608,7 @@ static struct ahci_platform_data mx6q_var_som_sata_data = {
 	.exit = mx6q_var_som_sata_exit,
 };
 static struct viv_gpu_platform_data imx6q_gpu_pdata __initdata = {
-	.reserved_mem_size = SZ_128M + SZ_64M,
+	.reserved_mem_size = SZ_128M + SZ_64M, 
 };
 
 static struct imx_asrc_platform_data imx_asrc_data = {
@@ -919,6 +919,7 @@ static void __init fixup_mxc_board(struct machine_desc *desc, struct tag *tags,
            if (str != NULL) {
                str += 7;
                imx6q_gpu_pdata.reserved_mem_size = memparse(str, &str);
+               printk(KERN_ERR "Setting GPU Mem to %ld\n", (long) imx6q_gpu_pdata.reserved_mem_size);
            }
            break;
        }
