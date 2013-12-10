@@ -52,6 +52,7 @@
 #include <linux/regulator/fixed.h>
 #include <sound/wm8962.h>
 #include <linux/mfd/mxc-hdmi-core.h>
+#include <linux/ti_wilink_st.h>
 
 #include <mach/common.h>
 #include <mach/hardware.h>
@@ -310,7 +311,7 @@ static const struct anatop_thermal_platform_data
 };
 
 static const struct imxuart_platform_data mx6_var_som_uart1_data __initconst = {
-	.flags      = IMXUART_HAVE_RTSCTS | IMXUART_SDMA,
+	.flags      = IMXUART_HAVE_RTSCTS,	// | IMXUART_SDMA,
 	.dma_req_rx = MX6Q_DMA_REQ_UART2_RX,
 	.dma_req_tx = MX6Q_DMA_REQ_UART2_TX,
 };
@@ -808,7 +809,71 @@ static struct platform_device vwl1271_reg_devices = {
 		.platform_data = &vwl1271_reg_config,
 	},
 };
+
 #endif
+
+
+#ifdef CONFIG_TI_ST
+/* TI-ST for WL12xx BT */
+
+static int plat_kim_suspend(struct platform_device *pdev, pm_message_t state)
+{
+	return 0;
+}
+
+static int plat_kim_resume(struct platform_device *pdev)
+{
+	return 0;
+}
+
+static int plat_kim_chip_enable(struct kim_data_s *kim_data)
+{
+	gpio_direction_output(kim_data->nshutdown, 0);
+	msleep(1);
+	gpio_direction_output(kim_data->nshutdown, 1);
+
+	return 0;
+}
+
+static int plat_kim_chip_disable(struct kim_data_s *kim_data)
+{
+	gpio_direction_output(kim_data->nshutdown, 0);
+
+	return 0;
+}
+
+static struct ti_st_plat_data wilink_pdata = {
+	.nshutdown_gpio = VAR_SOM_WL1271_BT_EN,
+	.dev_name = "/dev/ttymxc1",
+	.flow_cntrl = 1,
+	.baud_rate = 3000000,
+	.suspend = plat_kim_suspend,
+	.resume = plat_kim_resume,
+	.chip_enable = plat_kim_chip_enable,
+	.chip_disable = plat_kim_chip_disable,
+};
+
+static struct platform_device wl12xx_device = {
+	.name       = "kim",
+	.id     = -1,
+	.dev.platform_data = &wilink_pdata,
+};
+
+static struct platform_device btwilink_device = {
+	.name = "btwilink",
+	.id = -1,
+};
+
+static void var_som_init_btwilink(void)
+{
+	pr_info("var_som_mx6: bt init\n");
+
+	platform_device_register(&wl12xx_device);
+	platform_device_register(&btwilink_device);
+}
+#endif
+
+
 
 static struct regulator_consumer_supply var_som_vmmc_consumers[] = {
 	REGULATOR_SUPPLY("vmmc", "sdhci-esdhc-imx.1"),
@@ -1006,7 +1071,9 @@ static int init_wlan(void)
 		pr_err("error setting wl12xx data\n");
 
 	platform_device_register(&vwl1271_reg_devices);
-
+#ifdef CONFIG_TI_ST
+	var_som_init_btwilink();
+#endif
 	gpio_set_value(VAR_SOM_WL1271_WL_EN, 1); /* momentarily enable */
 	gpio_set_value(VAR_SOM_WL1271_BT_EN, 1);
 	mdelay(2);

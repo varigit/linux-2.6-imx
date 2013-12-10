@@ -40,7 +40,7 @@ void (*st_recv) (void*, const unsigned char*, long);
 static void add_channel_to_table(struct st_data_s *st_gdata,
 		struct st_proto_s *new_proto)
 {
-	pr_info("%s: id %d\n", __func__, new_proto->chnl_id);
+	pr_debug("%s: id %d\n", __func__, new_proto->chnl_id);
 	/* list now has the channel id as index itself */
 	st_gdata->list[new_proto->chnl_id] = new_proto;
 	st_gdata->is_registered[new_proto->chnl_id] = true;
@@ -49,7 +49,7 @@ static void add_channel_to_table(struct st_data_s *st_gdata,
 static void remove_channel_from_table(struct st_data_s *st_gdata,
 		struct st_proto_s *proto)
 {
-	pr_info("%s: id %d\n", __func__, proto->chnl_id);
+	pr_debug("%s: id %d\n", __func__, proto->chnl_id);
 /*	st_gdata->list[proto->chnl_id] = NULL; */
 	st_gdata->is_registered[proto->chnl_id] = false;
 }
@@ -141,14 +141,14 @@ void st_send_frame(unsigned char chnl_id, struct st_data_s *st_gdata)
 void st_reg_complete(struct st_data_s *st_gdata, char err)
 {
 	unsigned char i = 0;
-	pr_info(" %s ", __func__);
+	pr_debug(" %s ", __func__);
 	for (i = 0; i < ST_MAX_CHANNELS; i++) {
 		if (likely(st_gdata != NULL &&
 			st_gdata->is_registered[i] == true &&
 				st_gdata->list[i]->reg_complete_cb != NULL)) {
 			st_gdata->list[i]->reg_complete_cb
 				(st_gdata->list[i]->priv_data, err);
-			pr_info("protocol %d's cb sent %d\n", i, err);
+			pr_debug("protocol %d's cb sent %d\n", i, err);
 			if (err) { /* cleanup registered protocol */
 				st_gdata->protos_registered--;
 				st_gdata->is_registered[i] = false;
@@ -338,6 +338,12 @@ void st_int_recv(void *disc_data,
 			/* Unknow packet? */
 		default:
 			type = *ptr;
+			if (st_gdata->list[type] == NULL) {
+				pr_err("chip/interface misbehavior dropping"
+					" frame starting with 0x%02x", type);
+				goto done;
+
+			}
 			st_gdata->rx_skb = alloc_skb(
 					st_gdata->list[type]->max_frame_size,
 					GFP_ATOMIC);
@@ -354,6 +360,7 @@ void st_int_recv(void *disc_data,
 		ptr++;
 		count--;
 	}
+done:
 	spin_unlock_irqrestore(&st_gdata->lock, flags);
 	pr_debug("done %s", __func__);
 	return;
@@ -495,7 +502,7 @@ long st_register(struct st_proto_s *new_proto)
 	unsigned long flags = 0;
 
 	st_kim_ref(&st_gdata, 0);
-	pr_info("%s(%d) ", __func__, new_proto->chnl_id);
+	pr_debug("%s(%d) ", __func__, new_proto->chnl_id);
 	if (st_gdata == NULL || new_proto == NULL || new_proto->recv == NULL
 	    || new_proto->reg_complete_cb == NULL) {
 		pr_err("gdata/new_proto/recv or reg_complete_cb not ready");
@@ -527,7 +534,7 @@ long st_register(struct st_proto_s *new_proto)
 		spin_unlock_irqrestore(&st_gdata->lock, flags);
 		return -EINPROGRESS;
 	} else if (st_gdata->protos_registered == ST_EMPTY) {
-		pr_info(" chnl_id list empty :%d ", new_proto->chnl_id);
+		pr_debug(" chnl_id list empty :%d ", new_proto->chnl_id);
 		set_bit(ST_REG_IN_PROGRESS, &st_gdata->st_state);
 		st_recv = st_kim_recv;
 
@@ -624,7 +631,7 @@ long st_unregister(struct st_proto_s *proto)
 
 	if ((st_gdata->protos_registered == ST_EMPTY) &&
 	    (!test_bit(ST_REG_PENDING, &st_gdata->st_state))) {
-		pr_info(" all chnl_ids unregistered ");
+		pr_debug(" all chnl_ids unregistered ");
 
 		/* stop traffic on tty */
 		if (st_gdata->tty) {
@@ -679,7 +686,7 @@ static int st_tty_open(struct tty_struct *tty)
 {
 	int err = 0;
 	struct st_data_s *st_gdata;
-	pr_info("%s ", __func__);
+	pr_debug("%s ", __func__);
 
 	st_kim_ref(&st_gdata, 0);
 	st_gdata->tty = tty;
@@ -709,7 +716,7 @@ static void st_tty_close(struct tty_struct *tty)
 	unsigned long flags = 0;
 	struct	st_data_s *st_gdata = tty->disc_data;
 
-	pr_info("%s ", __func__);
+	pr_debug("%s ", __func__);
 
 	/* TODO:
 	 * if a protocol has been registered & line discipline
@@ -717,9 +724,10 @@ static void st_tty_close(struct tty_struct *tty)
 	 */
 	spin_lock_irqsave(&st_gdata->lock, flags);
 	for (i = ST_BT; i < ST_MAX_CHANNELS; i++) {
-		if (st_gdata->list[i] != NULL)
+		if (st_gdata->is_registered[i] == true)
 			pr_err("%d not un-registered", i);
 		st_gdata->list[i] = NULL;
+		st_gdata->is_registered[i] = false;
 	}
 	st_gdata->protos_registered = 0;
 	spin_unlock_irqrestore(&st_gdata->lock, flags);

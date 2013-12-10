@@ -35,6 +35,7 @@
 
 #include <linux/skbuff.h>
 #include <linux/ti_wilink_st.h>
+#include <linux/module.h>
 
 
 #define MAX_ST_DEVICES	3	/* Imagine 1 on each UART for now */
@@ -68,6 +69,7 @@ void validate_firmware_response(struct kim_data_s *kim_gdata)
 	if (unlikely(skb->data[5] != 0)) {
 		pr_err("no proper response during fw download");
 		pr_err("data6 %x", skb->data[5]);
+		kfree_skb(skb);
 		return;		/* keep waiting for the proper response */
 	}
 	/* becos of all the script being downloaded */
@@ -210,6 +212,7 @@ static long read_local_version(struct kim_data_s *kim_gdata, char *bts_scr_name)
 		pr_err(" waiting for ver info- timed out ");
 		return -ETIMEDOUT;
 	}
+	INIT_COMPLETION(kim_gdata->kim_rcvd);
 
 	version =
 		MAKEWORD(kim_gdata->resp_buffer[13],
@@ -229,7 +232,7 @@ static long read_local_version(struct kim_data_s *kim_gdata, char *bts_scr_name)
 	kim_gdata->version.maj_ver = maj_ver;
 	kim_gdata->version.min_ver = min_ver;
 
-	pr_info("%s", bts_scr_name);
+	pr_debug("%s", bts_scr_name);
 	return 0;
 }
 
@@ -249,7 +252,7 @@ void skip_change_remote_baud(unsigned char **ptr, long *len)
 		*len = *len - (sizeof(struct bts_action) +
 				((struct bts_action *)cur_action)->size);
 		/* warn user on not commenting these in firmware */
-		pr_warn("skipping the wait event of change remote baud");
+		pr_debug("skipping the wait event of change remote baud");
 	}
 }
 
@@ -298,13 +301,14 @@ static long download_firmware(struct kim_data_s *kim_gdata)
 
 		switch (((struct bts_action *)ptr)->type) {
 		case ACTION_SEND_COMMAND:	/* action send */
+			pr_debug("S");
 			action_ptr = &(((struct bts_action *)ptr)->data[0]);
 			if (unlikely
 			    (((struct hci_command *)action_ptr)->opcode ==
 			     0xFF36)) {
 				/* ignore remote change
 				 * baud rate HCI VS command */
-				pr_warn("change remote baud"
+				pr_debug("change remote baud"
 				    " rate command in firmware");
 				skip_change_remote_baud(&ptr, &len);
 				break;
@@ -335,6 +339,10 @@ static long download_firmware(struct kim_data_s *kim_gdata)
 				release_firmware(kim_gdata->fw_entry);
 				return -ETIMEDOUT;
 			}
+			/* reinit completion before sending for the
+			 * relevant wait
+			 */
+			INIT_COMPLETION(kim_gdata->kim_rcvd);
 
 			/*
 			 * Free space found in uart buffer, call st_int_write
@@ -361,6 +369,7 @@ static long download_firmware(struct kim_data_s *kim_gdata)
 			}
 			break;
 		case ACTION_WAIT_EVENT:  /* wait */
+			pr_debug("W");
 			if (!wait_for_completion_timeout
 					(&kim_gdata->kim_rcvd,
 					 msecs_to_jiffies(CMD_RESP_TIME))) {
@@ -434,11 +443,17 @@ long st_kim_start(void *kim_data)
 {
 	long err = 0;
 	long retry = POR_RETRY_COUNT;
+	struct ti_st_plat_data	*pdata;
 	struct kim_data_s	*kim_gdata = (struct kim_data_s *)kim_data;
 
-	pr_info(" %s", __func__);
+	pr_debug(" %s", __func__);
+	pdata = kim_gdata->kim_pdev->dev.platform_data;
 
 	do {
+		/* platform specific enabling code here */
+		if (pdata->chip_enable)
+			pdata->chip_enable(kim_gdata);
+
 		/* Configure BT nShutdown to HIGH state */
 		gpio_set_value(kim_gdata->nshutdown, GPIO_LOW);
 		mdelay(5);	/* FIXME: a proper toggle */
@@ -448,7 +463,7 @@ long st_kim_start(void *kim_data)
 		INIT_COMPLETION(kim_gdata->ldisc_installed);
 		/* send notification to UIM */
 		kim_gdata->ldisc_install = 1;
-		pr_info("ldisc_install = 1");
+		pr_debug("ldisc_install = 1");
 		sysfs_notify(&kim_gdata->kim_pdev->dev.kobj,
 				NULL, "install");
 		/* wait for ldisc to be installed */
@@ -457,21 +472,34 @@ long st_kim_start(void *kim_data)
 		if (!err) {	/* timeout */
 			pr_err("line disc installation timed out ");
 			kim_gdata->ldisc_install = 0;
-			pr_info("ldisc_install = 0");
+			pr_debug("ldisc_install = 0");
 			sysfs_notify(&kim_gdata->kim_pdev->dev.kobj,
 					NULL, "install");
+			/* the following wait is never going to be completed,
+			 * since the ldisc was never installed, hence serving
+			 * as a mdelay of LDISC_TIME msecs */
+			err = wait_for_completion_timeout
+				(&kim_gdata->ldisc_installed,
+				 msecs_to_jiffies(LDISC_TIME));
 			err = -ETIMEDOUT;
 			continue;
 		} else {
 			/* ldisc installed now */
-			pr_info(" line discipline installed ");
+			pr_debug(" line discipline installed ");
 			err = download_firmware(kim_gdata);
 			if (err != 0) {
 				pr_err("download firmware failed");
 				kim_gdata->ldisc_install = 0;
-				pr_info("ldisc_install = 0");
+				pr_debug("ldisc_install = 0");
 				sysfs_notify(&kim_gdata->kim_pdev->dev.kobj,
 						NULL, "install");
+				/* this wait might be completed, though in the
+				 * tty_close() since the ldisc is already
+				 * installed */
+				err = wait_for_completion_timeout
+					(&kim_gdata->ldisc_installed,
+					 msecs_to_jiffies(LDISC_TIME));
+				err = -EINVAL;
 				continue;
 			} else {	/* on success don't retry */
 				break;
@@ -489,6 +517,8 @@ long st_kim_stop(void *kim_data)
 {
 	long err = 0;
 	struct kim_data_s	*kim_gdata = (struct kim_data_s *)kim_data;
+	struct ti_st_plat_data	*pdata =
+		kim_gdata->kim_pdev->dev.platform_data;
 
 	INIT_COMPLETION(kim_gdata->ldisc_installed);
 
@@ -497,7 +527,7 @@ long st_kim_stop(void *kim_data)
 	tty_driver_flush_buffer(kim_gdata->core_data->tty);
 
 	/* send uninstall notification to UIM */
-	pr_info("ldisc_install = 0");
+	pr_debug("ldisc_install = 0");
 	kim_gdata->ldisc_install = 0;
 	sysfs_notify(&kim_gdata->kim_pdev->dev.kobj, NULL, "install");
 
@@ -515,6 +545,10 @@ long st_kim_stop(void *kim_data)
 	gpio_set_value(kim_gdata->nshutdown, GPIO_HIGH);
 	mdelay(1);
 	gpio_set_value(kim_gdata->nshutdown, GPIO_LOW);
+
+	/* platform specific disable */
+	if (pdata->chip_disable)
+		pdata->chip_disable(kim_gdata);
 	return err;
 }
 
