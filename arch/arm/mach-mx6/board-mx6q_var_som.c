@@ -79,6 +79,11 @@
 #include "board-mx6q_var_som.h"
 #include "board-mx6solo_var_som.h"
 
+/*
+ * Un comment if you whould like to build uImage for SD-Card that support Android partition table.
+ * This is required for nand-recovery image.
+ */
+//#define android_partition_support 1
 
 #define VAR_SOM_ECSPI3_CS0      IMX_GPIO_NR(4, 24)
 #define VAR_SOM_ADS7846_INT     IMX_GPIO_NR(4, 25)
@@ -281,6 +286,20 @@ static struct mtd_partition mx6q_var_som_partitions[] = {
 		.name	= "rootfs",
 		.offset	= MTDPART_OFS_APPEND,
 		.size	= MTDPART_SIZ_FULL,
+#ifdef android_partition_support
+	}, {
+		.name	= "android_boot",
+		.offset	= 0x1000000,
+		.size	= 0x1000000,
+	}, {
+		.name	= "android_recovery",
+		.offset	= 0x2000000,
+		.size	= 0x2000000,
+	}, {
+		.name	= "android_rootfs",
+		.offset	= 0x4000000,
+		.size	= MTDPART_SIZ_FULL,
+#endif
 	},
 };
 
@@ -310,7 +329,7 @@ mx6q_gpmi_nand_platform_data __initconst = {
 	.partition_count         = ARRAY_SIZE(mx6q_var_som_partitions),
 	.min_prop_delay_in_ns    = 5,
 	.max_prop_delay_in_ns    = 9,
-	.max_chip_count          = 1,
+	.max_chip_count          = 2,
 	.enable_bbt              = 1,
 	.enable_ddr              = 0,
 };
@@ -487,7 +506,7 @@ static void mx6q_mipi_sensor_io_init(void)
 	gpio_set_value(VAR_SOM_MIPICSI_PWN, 1);
 
 	if (cpu_is_mx6dl())
-		mxc_iomux_set_gpr_register(13, 3, 3, 1);
+		mxc_iomux_set_gpr_register(13, 0, 3, 0);
 }
 
 static struct fsl_mxc_camera_platform_data mipi_csi2_data = {
