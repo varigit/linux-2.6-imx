@@ -53,10 +53,8 @@ struct imx_priv {
 	int amic_irq;
 	int amic_status;
 	struct platform_device *pdev;
-	struct snd_pcm_substream *first_stream;
-	struct snd_pcm_substream *second_stream;
-};
 
+};
 static struct imx_priv card_priv;
 static struct snd_soc_card snd_soc_card_imx;
 static struct snd_soc_codec *gcodec;
@@ -87,10 +85,10 @@ static void imx_hifi_shutdown(struct snd_pcm_substream *substream)
 	return;
 }
 
+
 static int check_hw_params(struct snd_pcm_substream *substream,
 				struct snd_pcm_hw_params *params)
 {
-	struct imx_priv *priv = &card_priv;
 	unsigned int channels = params_channels(params);
 	unsigned int sample_rate = params_rate(params);
 	snd_pcm_format_t sample_format = params_format(params);
@@ -101,6 +99,8 @@ static int check_hw_params(struct snd_pcm_substream *substream,
 	substream->runtime->format = sample_format;
 	substream->runtime->channels = channels;
 
+	return 0;
+#if 0
 	if (!priv->first_stream) {
 		priv->first_stream = substream;
 	} else {
@@ -133,7 +133,7 @@ static int check_hw_params(struct snd_pcm_substream *substream,
 			return -EINVAL;
 		}
 	}
-
+#endif
 	return 0;
 }
 
@@ -157,6 +157,7 @@ static int imx_hifi_hw_params(struct snd_pcm_substream *substream,
 	 * So we here check the three parameters above of two substreams
 	 * if they are running in the same time.
 	 */
+
 	ret = check_hw_params(substream, params);
 	if (ret < 0) {
 		pr_err("Failed to match hw params: %d\n", ret);
