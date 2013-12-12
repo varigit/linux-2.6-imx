@@ -590,6 +590,11 @@ int gpmi_init(struct gpmi_nand_data *this)
 
 	/* Select BCH ECC. */
 	writel(BM_GPMI_CTRL1_BCH_MODE, r->gpmi_regs + HW_GPMI_CTRL1_SET);
+    /*
+     * Decouple the chip select from dma channel. We use dma0 for all
+     * the chips.
+     */
+    writel(BM_GPMI_CTRL1_DECOUPLE_CS, r->gpmi_regs + HW_GPMI_CTRL1_SET);
 
 	clk_disable_unprepare(r->clock);
 	return 0;
@@ -1262,6 +1267,13 @@ int gpmi_is_ready(struct gpmi_nand_data *this, unsigned chip)
 		mask = MX23_BM_GPMI_DEBUG_READY0 << chip;
 		reg = readl(r->gpmi_regs + HW_GPMI_DEBUG);
 	} else if (GPMI_IS_MX28(this) || GPMI_IS_MX6Q(this)) {
+		         /* In the imx6, all the ready/busy pins are binding
+		         * togeter. So we only need to check the ready/busy status
+		         * of chip 0.
+		         */
+		        if (GPMI_IS_MX6Q(this))
+		            chip = 0;
+
 		/* MX28 shares the same R/B register as MX6Q. */
 		mask = MX28_BF_GPMI_STAT_READY_BUSY(1 << chip);
 		reg = readl(r->gpmi_regs + HW_GPMI_STAT);
