@@ -479,7 +479,7 @@ static void mx6q_mipi_sensor_io_init(void)
 	gpio_set_value(VAR_SOM_MIPICSI_PWN, 1);
 
 	if (cpu_is_mx6dl())
-		mxc_iomux_set_gpr_register(13, 3, 3, 1);
+		mxc_iomux_set_gpr_register(13, 0, 3, 0);
 }
 
 static struct fsl_mxc_camera_platform_data mipi_csi2_data = {
