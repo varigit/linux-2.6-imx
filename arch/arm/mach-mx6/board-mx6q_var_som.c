@@ -516,7 +516,7 @@ static struct i2c_board_info mxc_i2c1_board_info[] __initdata = {
 
 static struct i2c_board_info mxc_i2c2_board_info[] __initdata = {
 	{
-		I2C_BOARD_INFO("ctw6120", 0x38),
+		I2C_BOARD_INFO("ctw6120-mt", 0x38),
 		.flags = I2C_CLIENT_WAKE,
 		.irq = gpio_to_irq(VAR_SOM_TSC_CTW6120_IRQ_GPIO),
 	},
