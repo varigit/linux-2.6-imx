@@ -394,6 +394,7 @@ static long download_firmware(struct kim_data_s *kim_gdata)
 		    ((struct bts_action *)ptr)->size;
 	}
 	/* fw download complete */
+	pr_info(" BT firmware %s loaded", bts_scr_name);
 	release_firmware(kim_gdata->fw_entry);
 	return 0;
 }

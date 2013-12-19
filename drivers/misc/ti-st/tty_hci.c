@@ -139,7 +139,7 @@ int hci_tty_open(struct inode *inod, struct file *file)
 	unsigned long timeleft;
 	struct ti_st *hst;
 
-	pr_info("inside %s (%p, %p)\n", __func__, inod, file);
+	pr_debug("inside %s (%p, %p)\n", __func__, inod, file);
 
 	hst = kzalloc(sizeof(*hst), GFP_KERNEL);
 	file->private_data = hst;
@@ -228,7 +228,7 @@ int hci_tty_release(struct inode *inod, struct file *file)
 	int err, i;
 	struct ti_st *hst = file->private_data;
 
-	pr_info("inside %s (%p, %p)\n", __func__, inod, file);
+	pr_debug("inside %s (%p, %p)\n", __func__, inod, file);
 
 	for (i = 0; i < MAX_BT_CHNL_IDS; i++) {
 		err = st_unregister(&ti_st_proto[i]);
@@ -487,7 +487,7 @@ static struct device *hci_tty_dev;	/* dev during device_create */
  */
 static int __init hci_tty_init(void)
 {
-	pr_info("inside %s\n", __func__);
+	pr_debug("inside %s\n", __func__);
 
 	/* Expose the device DEVICE_NAME to user space
 	 * And obtain the major number for the device
