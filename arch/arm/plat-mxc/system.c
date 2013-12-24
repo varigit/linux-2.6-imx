@@ -57,7 +57,7 @@ void arch_reset(char mode, const char *cmd)
 
 #ifdef CONFIG_ARCH_MX6
 	/* wait for reset to assert... */
-	if (enable_ldo_mode == LDO_MODE_BYPASSED) {
+	if (machine_is_mx6q_sabresd() && enable_ldo_mode == LDO_MODE_BYPASSED) {
 		/*On Sabresd board use WDOG2 to reset external PMIC, so here do
 		* more WDOG2 reset.*/
 		wcr_enable = 0x14;
