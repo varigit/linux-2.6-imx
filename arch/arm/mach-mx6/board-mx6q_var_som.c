@@ -80,10 +80,10 @@
 #include "board-mx6solo_var_som.h"
 
 /*
- * Un comment if you whould like to build uImage for SD-Card that support Android partition table.
+ * Un comment if you would like to build uImage for SD-Card that support Android partition table.
  * This is required for nand-recovery image.
  */
-//#define android_partition_support 1
+//#define ANDROID_NAND_RECOVERY
 
 #define VAR_SOM_ECSPI3_CS0      IMX_GPIO_NR(4, 24)
 #define VAR_SOM_ADS7846_INT     IMX_GPIO_NR(4, 25)
@@ -286,7 +286,7 @@ static struct mtd_partition mx6q_var_som_partitions[] = {
 		.name	= "rootfs",
 		.offset	= MTDPART_OFS_APPEND,
 		.size	= MTDPART_SIZ_FULL,
-#ifdef android_partition_support
+#ifdef ANDROID_NAND_RECOVERY
 	}, {
 		.name	= "android_boot",
 		.offset	= 0x1000000,
