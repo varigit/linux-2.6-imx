@@ -157,6 +157,11 @@ static iomux_v3_cfg_t mx6q_var_som_pads[] = {
 
 	MX6Q_PAD_KEY_COL2__GPIO_4_10, /* camera reset */ 
 	MX6Q_PAD_EIM_DA13__GPIO_3_13, /* camera power down */
+	/* Can Bus */
+	MX6Q_PAD_GPIO_7__CAN1_TXCAN,	/* GPIO_7 - CAN1_TX */
+	MX6Q_PAD_GPIO_8__CAN1_RXCAN,	/* GPIO_8 - CAN1_RX */
+
+
 };
 
 static iomux_v3_cfg_t mx6q_gpmi_nand[] __initdata = {

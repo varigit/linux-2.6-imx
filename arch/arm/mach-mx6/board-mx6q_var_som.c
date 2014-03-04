@@ -635,6 +635,21 @@ static struct ahci_platform_data mx6q_var_som_sata_data = {
 	.init = mx6q_var_som_sata_init,
 	.exit = mx6q_var_som_sata_exit,
 };
+
+static void mx6q_var_som_flexcan0_switch(int enable)
+{
+	if (enable) {
+//		gpio_set_value(TBD, 1);	// Always ON
+	} else {
+//		gpio_set_value(TBD, 0); // Always ON
+	}
+}
+
+static const struct flexcan_platform_data
+	mx6q_var_som_flexcan0_pdata __initconst = {
+	.transceiver_switch = mx6q_var_som_flexcan0_switch,
+};
+
 static struct viv_gpu_platform_data imx6q_gpu_pdata __initdata = {
 	.reserved_mem_size = SZ_128M,
 };
@@ -1088,6 +1103,8 @@ static void __init mx6_var_som_board_init(void)
 	} else
 		for (i = 0; i < 2 && i < ARRAY_SIZE(var_som_fb_data); i++)
 			imx6q_add_ipuv3fb(i, &var_som_fb_data[i]);
+
+	imx6q_add_flexcan0(&mx6q_var_som_flexcan0_pdata);
 
 
 	imx6q_add_vdoa();
