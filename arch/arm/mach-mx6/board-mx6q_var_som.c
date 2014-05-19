@@ -300,7 +300,7 @@ static const struct gpmi_nand_platform_data mx6q_gpmi_nand_platform_data __initc
 	.platform_init           = gpmi_nand_platform_init,
 	.min_prop_delay_in_ns    = 5,
 	.max_prop_delay_in_ns    = 9,
-	.max_chip_count          = 1,
+	.max_chip_count          = 2,
 	.enable_bbt              = 1,
 	.enable_ddr              = 0,
 };
