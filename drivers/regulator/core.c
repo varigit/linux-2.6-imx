@@ -1554,12 +1554,16 @@ static int regulator_ena_gpio_ctrl(struct regulator_dev *rdev, bool enable)
 	if (!pin)
 		return -EINVAL;
 
+printk(KERN_DEBUG "regulator_ena_gpio_ctrl(%d,%d) enable_count %d\n",pin->gpio,enable,pin->enable_count);
 	if (enable) {
 		/* Enable GPIO at initial use */
 		if (pin->enable_count == 0)
+                      { 
 			gpio_set_value_cansleep(pin->gpio,
 						!pin->ena_gpio_invert);
-
+                        printk(KERN_DEBUG "Regulator pin enabled\n");
+                       }
+                       
 		pin->enable_count++;
 	} else {
 		if (pin->enable_count > 1) {
@@ -1572,6 +1576,7 @@ static int regulator_ena_gpio_ctrl(struct regulator_dev *rdev, bool enable)
 			gpio_set_value_cansleep(pin->gpio,
 						pin->ena_gpio_invert);
 			pin->enable_count = 0;
+                        printk (KERN_DEBUG "Regulator pin disabled\n");
 		}
 	}
 

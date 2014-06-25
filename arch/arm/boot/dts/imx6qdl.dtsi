@@ -1168,6 +1168,27 @@
 				MX6QDL_PAD_ENET_TX_EN__ENET_TX_EN     0x1b0b0
 			>;
 		};
+
+		pinctrl_enet_4: enetgrp-4 {
+			fsl,pins = <
+				MX6QDL_PAD_ENET_MDIO__ENET_MDIO       0x1b0b0
+				MX6QDL_PAD_ENET_MDC__ENET_MDC         0x1b0b0
+				MX6QDL_PAD_RGMII_TXC__RGMII_TXC       0x1b0b0
+				MX6QDL_PAD_RGMII_TD0__RGMII_TD0       0x1b0b0
+				MX6QDL_PAD_RGMII_TD1__RGMII_TD1       0x1b0b0
+				MX6QDL_PAD_RGMII_TD2__RGMII_TD2       0x1b0b0
+				MX6QDL_PAD_RGMII_TD3__RGMII_TD3       0x1b0b0
+				MX6QDL_PAD_RGMII_TX_CTL__RGMII_TX_CTL 0x1b0b0
+				MX6QDL_PAD_ENET_REF_CLK__ENET_TX_CLK  0x1b0b0
+				MX6QDL_PAD_RGMII_RXC__RGMII_RXC       0x1b0b0
+				MX6QDL_PAD_RGMII_RD0__RGMII_RD0       0x1b0b0
+				MX6QDL_PAD_RGMII_RD1__RGMII_RD1       0x1b0b0
+				MX6QDL_PAD_RGMII_RD2__RGMII_RD2       0x1b0b0
+				MX6QDL_PAD_RGMII_RD3__RGMII_RD3       0x1b0b0
+				MX6QDL_PAD_RGMII_RX_CTL__RGMII_RX_CTL 0x1b0b0
+			>;
+		};
+
 	};
 
 	esai {
@@ -1215,6 +1236,12 @@
 				MX6QDL_PAD_KEY_ROW2__FLEXCAN1_RX 0x80000000
 			>;
 		};
+		pinctrl_flexcan1_3: flexcan1grp-3 {
+			fsl,pins = <
+				MX6QDL_PAD_GPIO_7__FLEXCAN1_TX   0x80000000
+				MX6QDL_PAD_GPIO_8__FLEXCAN1_RX   0x80000000
+			>;
+		};
 	};
 
 	flexcan2 {
@@ -1250,6 +1277,31 @@
 		};
 	};
 
+	gpmi-nand {
+		pinctrl_gpmi_nand_v1: gpmi-nand-1 {
+			fsl,pins = <
+				MX6QDL_PAD_NANDF_CLE__NAND_CLE		0xb0b1
+				MX6QDL_PAD_NANDF_ALE__NAND_ALE		0xb0b1
+				MX6QDL_PAD_NANDF_CS0__NAND_CE0_B	0xb0b1
+				MX6QDL_PAD_NANDF_CS1__NAND_CE1_B	0xb0b1
+				MX6QDL_PAD_NANDF_RB0__NAND_READY_B	0xb0b1
+
+				MX6QDL_PAD_NANDF_D0__NAND_DATA00	0xb0b1
+				MX6QDL_PAD_NANDF_D1__NAND_DATA01	0xb0b1
+				MX6QDL_PAD_NANDF_D2__NAND_DATA02	0xb0b1
+				MX6QDL_PAD_NANDF_D3__NAND_DATA03	0xb0b1
+				MX6QDL_PAD_NANDF_D4__NAND_DATA04	0xb0b1
+				MX6QDL_PAD_NANDF_D5__NAND_DATA05	0xb0b1
+				MX6QDL_PAD_NANDF_D6__NAND_DATA06	0xb0b1
+				MX6QDL_PAD_NANDF_D7__NAND_DATA07	0xb0b1
+				MX6QDL_PAD_SD4_CMD__NAND_RE_B		0xb0b1
+				MX6QDL_PAD_SD4_CLK__NAND_WE_B		0xb0b1
+				MX6QDL_PAD_NANDF_WP_B__NAND_WP_B	0xb0b1
+			>;
+		};
+	};
+
+
 	hdmi_hdcp {
 		pinctrl_hdmi_hdcp_1: hdmihdcpgrp-1 {
 			fsl,pins = <
@@ -1270,8 +1322,7 @@
 				MX6QDL_PAD_EIM_EB2__HDMI_TX_DDC_SCL  0x4001b8b1
 				MX6QDL_PAD_KEY_ROW3__HDMI_TX_DDC_SDA 0x4001b8b1
 			>;
-		};
-	};
+		};	};
 
 	hdmi_cec {
 		pinctrl_hdmi_cec_1: hdmicecgrp-1 {
@@ -1454,6 +1505,7 @@
 	pwm1 {
 		pinctrl_pwm1_1: pwm1grp-1 {
 			fsl,pins = <
+				MX6QDL_PAD_DISP0_DAT9__PWM2_OUT 0x1b0b1
 				MX6QDL_PAD_SD1_DAT3__PWM1_OUT 0x1b0b1
 			>;
 		};
@@ -1507,7 +1559,16 @@
 				MX6QDL_PAD_EIM_D29__UART2_DTE_RTS_B 0x1b0b1
 			>;
 		};
+		pinctrl_uart2_3: uart2grp-3 { /* RTS/CTS only mode */
+			fsl,pins = <
+				MX6QDL_PAD_SD3_DAT4__UART2_RX_DATA  0x1b0b1
+				MX6QDL_PAD_SD3_DAT5__UART2_TX_DATA  0x1b0b1
+				MX6QDL_PAD_EIM_D28__UART2_CTS_B	    0x1b0b1
+				MX6QDL_PAD_EIM_D29__UART2_RTS_B	    0x1b0b1
+			>;
+		};
 	};
+
 
 	uart3 {
 		pinctrl_uart3_1: uart3grp-1 {
@@ -1515,6 +1576,15 @@
 				MX6QDL_PAD_SD4_CLK__UART3_RX_DATA 0x1b0b1
 				MX6QDL_PAD_SD4_CMD__UART3_TX_DATA 0x1b0b1
 				MX6QDL_PAD_EIM_D30__UART3_CTS_B   0x1b0b1
+				MX6QDL_PAD_EIM_EB3__UART3_RTS_B   0x1b0b1
+			>;
+		};
+		/* Variscite Uart2 support */
+		pinctrl_uart3_2: uart3grp-2 {	/* RX/TX RTS/CTS */
+			fsl,pins = <
+				MX6QDL_PAD_EIM_D25__UART3_RX_DATA 0x1b0b1
+				MX6QDL_PAD_EIM_D24__UART3_TX_DATA 0x1b0b1
+				MX6QDL_PAD_EIM_D23__UART3_CTS_B   0x1b0b1
 				MX6QDL_PAD_EIM_EB3__UART3_RTS_B   0x1b0b1
 			>;
 		};

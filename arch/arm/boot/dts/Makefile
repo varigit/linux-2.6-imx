@@ -124,6 +124,11 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6dl-wandboard.dtb \
 	imx6q-arm2.dtb \
 	imx6q-sabreauto.dtb \
+	imx6q-var-som.dtb \
+	imx6q-var-som-ldo.dtb \
+	imx6dl-var-som.dtb \
+	imx6sl-var-som.dtb \
+	imx6q-nitrogen6x.dtb \
 	imx6q-sabreauto-ecspi.dtb \
 	imx6q-sabreauto-flexcan1.dtb \
 	imx6q-sabreauto-gpmi-weim.dtb \
