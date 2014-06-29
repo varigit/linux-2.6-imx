@@ -81,8 +81,8 @@
 		wlan_en_reg: fixedregulator@2 {
 			compatible = "regulator-fixed";
 			regulator-name = "wlan-en-regulator";
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <1800000>;
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
 
 			/* WLAN_EN GPIO for this board - Bank7, pin8 */
 			gpio = <&gpio7 8 0>;
@@ -563,7 +563,7 @@
 &mipi_csi {
 	status = "okay";
 	ipu_id = <0>;
-	csi_id = <0>;
+	csi_id = <1>;
 	v_channel = <0>;
 	lanes = <2>;
 };
