@@ -77,20 +77,6 @@
 			/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
 			board-ref-clock = <4>;
 		};
-
-		wlan_en_reg: fixedregulator@2 {
-			compatible = "regulator-fixed";
-			regulator-name = "wlan-en-regulator";
-			regulator-min-microvolt = <3300000>;
-			regulator-max-microvolt = <3300000>;
-
-			/* WLAN_EN GPIO for this board - Bank7, pin8 */
-			gpio = <&gpio7 8 0>;
-
-			/* WLAN card specific delay */
-			startup-delay-us = <70000>;
-			enable-active-high;
-		};
 	};
 
 	gpio-keys {
@@ -687,7 +673,7 @@
 	pinctrl-0 = <&pinctrl_usdhc3_2>;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
-	vqmmc-supply = <&wlan_en_reg>;
+	en-gpios = <&gpio7 8 0>;
 	non-removable;
 	cap-power-off-card;
 	max-frequency = <24000000>;
