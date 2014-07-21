@@ -1,7 +1,4 @@
 /*
- * Copyright (C) 2014 Variscite, Ltd. All Rights Reserved
- * Donio Ron: ron.d@variscite.com
- *
  * Copyright 2012 Freescale Semiconductor, Inc.
  * Copyright 2011 Linaro Ltd.
  *
@@ -11,7 +8,6 @@
  *
  * http://www.opensource.org/licenses/gpl-license.html
  * http://www.gnu.org/copyleft/gpl.html
- *
  */
 
 / {
@@ -34,6 +30,7 @@
 			regulator-name = "usb_otg_vbus";
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
+			gpio = <&gpio3 22 0>;
 			enable-active-high;
 		};
 
@@ -42,6 +39,8 @@
 			regulator-name = "usb_h1_vbus";
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
+			gpio = <&gpio1 29 0>;
+			enable-active-high;
 		};
 
 		reg_audio: tlv320aic3x_supply {
@@ -87,7 +86,7 @@
 			linux,code = <158>; /* KEY_BACK */
 		};
 	};
-
+	
 	sound {
 		compatible = "fsl,imx6q-var-som-tlv320aic3x", "fsl,imx-audio-tlv320aic3x";
 		model = "tlv320aic3x-audio";
@@ -233,19 +232,11 @@
 };
 
 &cpu0 {
-	operating-points = <
-		/* kHz    uV */
-		1200000 1275000
-		996000  1250000
-		852000  1250000
-		792000  1150000
-		396000  1150000
-	>;
-
 	arm-supply = <&sw1a_reg>;
 	soc-supply = <&sw1c_reg>;
 	pu-supply = <&pu_dummy>; /* use pu_dummy if VDDSOC share with VDDPU */
 };
+
 
 #if 0
 &ecspi3 {
@@ -291,17 +282,13 @@
 	fsl,cpu_pupscr_sw = <0xf>;
 	fsl,cpu_pdnscr_iso2sw = <0x1>;
 	fsl,cpu_pdnscr_iso = <0x1>;
-	fsl,ldo-bypass = <1>; 			/* use ldo-bypass, u-boot will check it and configure */
-	fsl,wdog-reset = <1>; 			/* watchdog select of reset source */
-	pu-supply = <&reg_pu>; 			/* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
+	fsl,ldo-bypass = <1>; /* use ldo-bypass, u-boot will check it and configure */
+	fsl,wdog-reset = <1>; /* watchdog select of reset source */
+	pu-supply = <&pu_dummy>; /* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
 };
 
 &gpu {
-	pu-supply = <&reg_pu>; 			/* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
-};
-
-&vpu {
-	pu-supply = <&reg_pu>; 			/* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
+	pu-supply = <&pu_dummy>; /* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
 };
 
 &hdmi_audio {
@@ -373,103 +360,6 @@
 			0x0000 /* 5:Default */
 		>;
        	};
-
-	pmic: pfuze100@08 {
-		compatible = "fsl,pfuze100";
-		reg = <0x08>;
-
-		regulators {
-			sw1a_reg: sw1ab {
-				regulator-min-microvolt = <300000>;
-				regulator-max-microvolt = <1875000>;
-				regulator-boot-on;
-				regulator-always-on;
-				regulator-ramp-delay = <6250>;
-			};
-
-			sw1c_reg: sw1c {
-				regulator-min-microvolt = <300000>;
-				regulator-max-microvolt = <1875000>;
-				regulator-boot-on;
-				regulator-always-on;
-				regulator-ramp-delay = <6250>;
-			};
-
-			sw2_reg: sw2 {
-				regulator-min-microvolt = <800000>;
-				regulator-max-microvolt = <3300000>;
-				regulator-boot-on;
-				regulator-always-on;
-			};
-
-			sw3a_reg: sw3a {
-				regulator-min-microvolt = <800000>;
-				regulator-max-microvolt = <3950000>;
-				regulator-boot-on;
-				regulator-always-on;
-			};
-
-			sw3b_reg: sw3b {
-				regulator-min-microvolt = <800000>;
-				regulator-max-microvolt = <3950000>;
-				regulator-boot-on;
-				regulator-always-on;
-			};
-
-			sw4_reg: sw4 {
-				regulator-min-microvolt = <800000>;
-				regulator-max-microvolt = <3950000>;
-			};
-
-			snvs_reg: vsnvs {
-				regulator-min-microvolt = <1200000>;
-				regulator-max-microvolt = <3000000>;
-				regulator-boot-on;
-				regulator-always-on;
-			};
-
-			vref_reg: vrefddr {
-				regulator-boot-on;
-				regulator-always-on;
-			};
-
-			vgen1_reg: vgen1 {
-				regulator-min-microvolt = <800000>;
-				regulator-max-microvolt = <1550000>;
-			};
-
-			vgen2_reg: vgen2 {
-				regulator-min-microvolt = <1800000>;
-				regulator-max-microvolt = <3300000>;
-			};
-
-			vgen3_reg: vgen3 {
-				regulator-min-microvolt = <1800000>;
-				regulator-max-microvolt = <3300000>;
-				regulator-always-on;
-				regulator-boot-on;			};
-
-			vgen4_reg: vgen4 {
-				regulator-min-microvolt = <1800000>;
-				regulator-max-microvolt = <3300000>;
-				regulator-always-on;
-				regulator-boot-on;
-			};
-
-			vgen5_reg: vgen5 {
-				regulator-min-microvolt = <1800000>;
-				regulator-max-microvolt = <3300000>;
-				regulator-always-on;
-				regulator-boot-on;
-			};
-
-			vgen6_reg: vgen6 {
-				regulator-min-microvolt = <3300000>;
-				regulator-max-microvolt = <3300000>;
-			};
-
-		};
-	};
 };
 
 &i2c3 {
@@ -572,7 +462,6 @@
 	status = "okay";
 };
 
-
 #if 0
 &pwm1 {
 	pinctrl-names = "default";
@@ -580,7 +469,6 @@
 	status = "okay";
 };
 #endif
-
 
 &ssi2 {
 	fsl,mode = "i2s-slave";
@@ -616,7 +504,7 @@
 	status = "okay";
 };
 
-&gpmi {
+&gpmi { /* nand flash 0.5 GB partition table */
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gpmi_nand_v1>;
 	status = "okay";
@@ -647,7 +535,6 @@
 	vbus-supply = <&reg_usb_h1_vbus>;
 	status = "okay";
 };
-
 
 &usbotg {
 	vbus-supply = <&reg_usb_otg_vbus>;
@@ -680,3 +567,7 @@
 	status = "okay";
 };
 
+
+&vpu {
+	pu-supply = <&pu_dummy>; /* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
+};
