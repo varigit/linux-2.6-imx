@@ -4799,6 +4799,45 @@ static struct clk pwm_clk[] = {
 	 },
 };
 
+static struct clk pwm_high_perf_clk[] = {
+{
+	__INIT_CLK_DEBUG(pwm_clk_0)
+	 .parent = &ipg_clk,
+	 .id = 0,
+	 .enable_reg = MXC_CCM_CCGR4,
+	 .enable_shift = MXC_CCM_CCGRx_CG8_OFFSET,
+	 .enable = _clk_enable,
+	 .disable = _clk_disable,
+	 },
+	{
+	__INIT_CLK_DEBUG(pwm_clk_1)
+	 .parent = &ipg_clk,
+	 .id = 1,
+	 .enable_reg = MXC_CCM_CCGR4,
+	 .enable_shift = MXC_CCM_CCGRx_CG9_OFFSET,
+	 .enable = _clk_enable,
+	 .disable = _clk_disable,
+	 },
+	{
+	__INIT_CLK_DEBUG(pwm_clk_2)
+	 .parent = &ipg_clk,
+	 .id = 2,
+	 .enable_reg = MXC_CCM_CCGR4,
+	 .enable_shift = MXC_CCM_CCGRx_CG10_OFFSET,
+	 .enable = _clk_enable,
+	 .disable = _clk_disable,
+	 },
+	{
+	__INIT_CLK_DEBUG(pwm_clk_3)
+	 .parent = &ipg_clk,
+	 .id = 3,
+	 .enable_reg = MXC_CCM_CCGR4,
+	 .enable_shift = MXC_CCM_CCGRx_CG11_OFFSET,
+	 .enable = _clk_enable,
+	 .disable = _clk_disable,
+	 },
+};
+
 static struct clk epit_clk[] = {
 	{
 	__INIT_CLK_DEBUG(epit_clk_0)
@@ -4843,7 +4882,6 @@ static void _clk_sata_disable(struct clk *clk)
 	reg = __raw_readl(PLL8_ENET_BASE_ADDR);
 	reg &= ~ANADIG_PLL_ENET_EN_SATA;
 	__raw_writel(reg, PLL8_ENET_BASE_ADDR);
-}
 
 static struct clk sata_clk[] = {
 	{
@@ -5429,6 +5467,10 @@ static struct clk_lookup lookups[] = {
 	_REGISTER_CLOCK("mxc_pwm.1", NULL, pwm_clk[1]),
 	_REGISTER_CLOCK("mxc_pwm.2", NULL, pwm_clk[2]),
 	_REGISTER_CLOCK("mxc_pwm.3", NULL, pwm_clk[3]),
+	_REGISTER_CLOCK("mxc_pwm.0", "high_perf", pwm_high_perf_clk[0]),
+	_REGISTER_CLOCK("mxc_pwm.1", "high_perf", pwm_high_perf_clk[1]),
+	_REGISTER_CLOCK("mxc_pwm.2", "high_perf", pwm_high_perf_clk[2]),
+	_REGISTER_CLOCK("mxc_pwm.3", "high_perf", pwm_high_perf_clk[3]),
 	_REGISTER_CLOCK("mxc_epit.0", NULL, epit_clk[0]),
 	_REGISTER_CLOCK("mxc_epit.1", NULL, epit_clk[1]),
 	_REGISTER_CLOCK(NULL, "pcie_clk", pcie_clk[0]),
