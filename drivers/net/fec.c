@@ -1932,11 +1932,11 @@ fec_probe(struct platform_device *pdev)
 	}
 	clk_enable(fep->clk);
 
-	ret = fec_enet_init(ndev, phy_irq);
+	ret = fec_enet_init(ndev);
 	if (ret)
 		goto failed_init;
 
-	ret = fec_enet_mii_init(pdev);
+	ret = fec_enet_mii_init(pdev, phy_irq);
 	if (ret)
 		goto failed_mii_init;
 

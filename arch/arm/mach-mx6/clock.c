@@ -4882,6 +4882,7 @@ static void _clk_sata_disable(struct clk *clk)
 	reg = __raw_readl(PLL8_ENET_BASE_ADDR);
 	reg &= ~ANADIG_PLL_ENET_EN_SATA;
 	__raw_writel(reg, PLL8_ENET_BASE_ADDR);
+}
 
 static struct clk sata_clk[] = {
 	{
