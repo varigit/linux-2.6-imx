@@ -342,6 +342,7 @@ static int pfuze_identify(struct mc_pfuze *mc_pfuze, enum pfuze_id *id)
 		return ret;
 	switch (value & 0x0f) {
 	case 0x0:
+	case 0x1:
 		*id = PFUZE_ID_PFUZE100;
 		break;
 	default:
