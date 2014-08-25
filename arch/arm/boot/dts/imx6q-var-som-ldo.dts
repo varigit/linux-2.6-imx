@@ -55,23 +55,24 @@
 	status = "okay";
 
 	partition@0 {
-		label = "bootloader";
+		label = "spl";
 		reg = <0x00000000 0x00200000>;
 	};
 
 	partition@1 {
-		label = "dtb";
-		reg = <0x001e0000 0x00020000>;
+		label = "bootloader";
+		reg = <0x00200000 0x00200000>;
 	};
+
 
 	partition@2 {
 		label = "kernel";
-		reg = <0x00200000 0x00600000>;
+		reg = <0x00400000 0x00600000>;
 	};
 
 	partition@3 {
 		label = "rootfs";
-		reg = <0x00800000 0xff800000>;
+		reg = <0x00A00000 0xff800000>;
 	};
 
 };
