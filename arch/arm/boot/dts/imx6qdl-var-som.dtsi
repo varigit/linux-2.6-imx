@@ -120,6 +120,7 @@
 		hdmi-controller = <&hdmi_audio>;
 	};
 
+	/* Capacitive Display */
 	mxcfb1: fb@0 {
 		compatible = "fsl,mxc_sdc_fb";
 		disp_dev = "ldb";
@@ -130,6 +131,20 @@
 		late_init = <0>;
 		status = "okay";
 	};
+#if 0
+	/* Resistive Display */
+	mxcfb1: fb@0 {
+		compatible = "fsl,mxc_sdc_fb";
+		disp_dev = "ldb";
+		interface_pix_fmt = "RGB24";
+		mode_str ="VAR-WVGA";
+		default_bpp = <16>;
+		int_clk = <0>;
+		late_init = <0>;
+		status = "okay";
+	};
+
+#endif
 
 	mxcfb2: fb@1 {
 		compatible = "fsl,mxc_sdc_fb";
@@ -239,9 +254,8 @@
 };
 
 
-#if 0
 &ecspi3 {
-	fsl,spi-num-chipselects = <0>;
+	fsl,spi-num-chipselects = <1>;
 	cs-gpios = <&gpio4 24 0>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi3_1>;
@@ -269,7 +283,6 @@
 		linux,wakeup;
 		};
 };
-#endif
 
 &fec {
 	pinctrl-names = "default";
@@ -398,8 +411,8 @@
 				/* CTW6120 IRQ */
 				MX6QDL_PAD_EIM_DA7__GPIO3_IO07 			0x80000000
 				/* Touch */
-				MX6QDL_PAD_DISP0_DAT3__GPIO4_IO24 		0x80000000		/* touch panel CS */
-				MX6QDL_PAD_DISP0_DAT4__GPIO4_IO25 		0x80000000		/* touch panel irq */
+//				MX6QDL_PAD_DISP0_DAT3__GPIO4_IO24 		0x80000000		/* touch panel CS */
+//				MX6QDL_PAD_DISP0_DAT4__GPIO4_IO25 		0x80000000		/* touch panel irq */
 				/* for Bluetooth/wifi enable */
 				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17			0x100b0			/* wl12xx_wl_irq */
 //				MX6QDL_PAD_SD3_RST__GPIO7_IO08			0x000b0			/* wl12xx_wl_en */
