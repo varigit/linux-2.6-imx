@@ -67,16 +67,30 @@
 			regulator-max-microvolt = <3300000>;
 			regulator-always-on;
 		};
+	};
 
-		wlcore {
-			compatible = "wlcore";
-			gpio = <207>;   /* The wl8 driver expects gpio to be an integer, so gpio6_17 is (6-1)*32+17=207
-			        	   irq property must not be set as driver derives irq number from gpio if no irq set
-		 			   use edge irqs for suspend/resume */
-			platform-quirks = <1>;
-			/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
-			board-ref-clock = <4>;
-		};
+	wlcore {
+		compatible = "wlcore";
+		gpio = <177>;   /* The wl8 driver expects gpio to be an integer, so gpio6_17 is (6-1)*32+17=207
+		        	   irq property must not be set as driver derives irq number from gpio if no irq set
+	 			   use edge irqs for suspend/resume */
+		platform-quirks = <1>;
+		/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
+		board-ref-clock = <4>;
+	};
+
+	wlan_en_reg: fixedregulator@2 {
+		compatible = "regulator-fixed";
+		regulator-name = "wlan-en-regulator";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+
+		/* WLAN_EN GPIO for this board - Bank5, pin13 */
+		gpio = <&gpio7 8 0>;
+
+		/* WLAN card specific delay */
+		startup-delay-us = <70000>;
+		enable-active-high;
 	};
 
 	gpio-keys {
@@ -212,7 +226,7 @@
 
 
 	wlan {
-		compatible = "ti,wilink6";
+		compatible = "ti,wilink8";
 		interrupt-parent = <&gpio6>;
 		interrupts = <17 0>;
 		clocks = <&refclock>;
@@ -411,12 +425,7 @@
 				/* CTW6120 IRQ */
 				MX6QDL_PAD_EIM_DA7__GPIO3_IO07 			0x80000000
 				/* Touch */
-//				MX6QDL_PAD_DISP0_DAT3__GPIO4_IO24 		0x80000000		/* touch panel CS */
-//				MX6QDL_PAD_DISP0_DAT4__GPIO4_IO25 		0x80000000		/* touch panel irq */
 				/* for Bluetooth/wifi enable */
-				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17			0x100b0			/* wl12xx_wl_irq */
-//				MX6QDL_PAD_SD3_RST__GPIO7_IO08			0x000b0			/* wl12xx_wl_en */
-				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18			0x000b0			/* wl12xx_bt_en */
 				/* SDMMC2 CD/WP */
 				MX6QDL_PAD_KEY_COL4__GPIO4_IO14			0x80000000
 				MX6QDL_PAD_KEY_ROW4__GPIO4_IO15			0x80000000
@@ -571,14 +580,16 @@
 };
 
 &usdhc3 {	/* uSDHC3, TiWi wl1271 */
-	pinctrl-names = "default"; //, "state_100mhz", "state_200mhz";
+	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc3_2>;
+	pinctrl-1 = <&pinctrl_usdhc3_2_100mhz>;
+	pinctrl-2 = <&pinctrl_usdhc3_2_200mhz>;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
-	en-gpios = <&gpio7 8 0>;
+	vmmc-supply = <&wlan_en_reg>;        
 	non-removable;
 	cap-power-off-card;
-	max-frequency = <24000000>;
+//	max-frequency = <24000000>;
 	status = "okay";
 };
 
