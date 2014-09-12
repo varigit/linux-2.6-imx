@@ -49,17 +49,7 @@
 			regulator-name = "tlv320aic3x-supply";
 			enable-active-high;
 		};
-#if 0
-		reg_sensor: sensor_supply {
-			compatible = "regulator-fixed";
-			regulator-name = "sensor-supply";
-			regulator-min-microvolt = <3300000>;
-			regulator-max-microvolt = <3300000>;
-			gpio = <&gpio2 31 0>;
-			startup-delay-us = <500>;
-			enable-active-high;
-		};
-#endif
+
 		reg_3p3v: 3p3v {
 			compatible = "regulator-fixed";
 			regulator-name = "3P3V";
@@ -398,8 +388,6 @@
 
 	ctw6120_tsc@38 {
 		compatible = "fsl,ctw6120-tsc";
-//		pinctrl-names = "default";
-//		pinctrl-0 = <&ctw6120_pins>;
 		reg = <0x38>;
 		interrupt-parent = <&gpio3>;
 		interrupts = <7 0>;
@@ -568,7 +556,7 @@
 	status = "okay";
 };
 
-&usdhc2 {	/* uSDHC2, MMC/SD card */
+&usdhc1 {	/* uSDHC2, MMC/SD card */
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usdhc2_2>;
 	cd-gpios = <&gpio4 14 0>;
@@ -579,7 +567,16 @@
 	status = "okay";
 };
 
-&usdhc3 {	/* uSDHC3, TiWi wl1271 */
+&usdhc2 {	/* uSDHC1, eMMC */
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usdhc1_1>;
+	non-removable;
+	keep-power-in-suspend;
+	enable-sdio-wakeup;
+	status = "okay";
+};
+
+&usdhc3 {	/* uSDHC3, TiWi wl1271 7 Wilink8 WL18xx*/
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc3_2>;
 	pinctrl-1 = <&pinctrl_usdhc3_2_100mhz>;
@@ -589,7 +586,6 @@
 	vmmc-supply = <&wlan_en_reg>;        
 	non-removable;
 	cap-power-off-card;
-//	max-frequency = <24000000>;
 	status = "okay";
 };
 

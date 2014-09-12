@@ -836,6 +836,7 @@
 				status = "disabled";
 			};
 
+#ifndef VAR_SOM_MX6
 			usdhc1: usdhc@02190000 {
 				compatible = "fsl,imx6q-usdhc";
 				reg = <0x02190000 0x4000>;
@@ -855,7 +856,28 @@
 				bus-width = <4>;
 				status = "disabled";
 			};
+#else
+			/* VAR-SOM-MX6 Set second MMC (SDCARD) to be always the first device so we can boot from it */
+			usdhc1: usdhc@02194000 {
+				compatible = "fsl,imx6q-usdhc";
+				reg = <0x02194000 0x4000>;
+				interrupts = <0 23 0x04>;
+				clocks = <&clks 164>, <&clks 164>, <&clks 164>;
+				clock-names = "ipg", "ahb", "per";
+				bus-width = <4>;
+				status = "disabled";
+			};
 
+			usdhc2: usdhc@02190000 {
+				compatible = "fsl,imx6q-usdhc";
+				reg = <0x02190000 0x4000>;
+				interrupts = <0 22 0x04>;
+				clocks = <&clks 163>, <&clks 163>, <&clks 163>;
+				clock-names = "ipg", "ahb", "per";
+				bus-width = <4>;
+				status = "disabled";
+			};
+#endif
 			usdhc3: usdhc@02198000 {
 				compatible = "fsl,imx6q-usdhc";
 				reg = <0x02198000 0x4000>;

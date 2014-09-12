@@ -11,6 +11,8 @@
 
 /dts-v1/;
 
+#define VAR_SOM_MX6
+
 #include "imx6dl.dtsi"
 #include "imx6qdl-var-som.dtsi"
 
