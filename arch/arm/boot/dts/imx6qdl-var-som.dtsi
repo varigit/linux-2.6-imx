@@ -586,6 +586,7 @@
 	vmmc-supply = <&wlan_en_reg>;        
 	non-removable;
 	cap-power-off-card;
+	max-frequency = <24000000>;
 	status = "okay";
 };
 
