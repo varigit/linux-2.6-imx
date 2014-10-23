@@ -47,14 +47,30 @@ enum {
 };
 
 struct wl12xx_platform_data {
+        void (*set_power)(bool enable);
+        /* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+        int gpio;
+        int irq;
+        bool use_eeprom;
+        int board_ref_clock;
+        int board_tcxo_clock;
+        u32 platform_quirks;
+        bool pwr_in_suspend;
+};
+
+
+
+/*struct wl12xx_platform_data {
 	void (*set_power)(bool enable);
-	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
 	int irq;
 	bool use_eeprom;
 	int board_ref_clock;
 	int board_tcxo_clock;
 	unsigned long platform_quirks;
 };
+*/
+
+
 
 /* Platform does not support level trigger interrupts */
 #define WL12XX_PLATFORM_QUIRK_EDGE_IRQ	BIT(0)
