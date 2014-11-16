@@ -538,9 +538,21 @@
 
 	partition@3 {
 		label = "rootfs";
-		reg = <0x00a00000 0x1f800000>;
+		reg = <0x00a00000 0x1f600000>;
 	};
-
+/* Overlaped partition used to flash Android */
+	partition@4 {
+		label = "android_boot";
+		reg = <0x00400000 0x01000000>;
+	};
+	partition@5 {
+		label = "android_recovery";
+		reg = <0x01400000 0x01c00000>;
+	};
+	partition@6 {
+		label = "android_rootfs";
+		reg = <0x03000000 0x1d000000>;
+	};
 };
 
 &usbh1 {
