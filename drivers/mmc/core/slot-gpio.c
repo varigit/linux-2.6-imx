@@ -195,6 +195,46 @@ int mmc_gpio_request_cd(struct mmc_host *host, unsigned int gpio)
 }
 EXPORT_SYMBOL(mmc_gpio_request_cd);
 
+
+
+/**
+ * mmc_gpio_set_en- request a gpio for enable
+ * @host: mmc host
+ * @gpio: gpio number requested
+ *
+ * As devm_* managed functions are used in mmc_gpio_set_en(), client
+ *
+ * Returns zero on success, else an error.
+ */
+int mmc_gpio_set_en(struct mmc_host *host, unsigned int gpio)
+{
+	struct mmc_gpio *ctx;
+	int ret;
+
+	ret = mmc_gpio_alloc(host);
+	if (ret < 0)
+		return ret;
+
+	ctx = host->slot.handler_priv;
+
+	ret = devm_gpio_request_one(&host->class_dev, gpio, GPIOF_DIR_OUT,
+				    ctx->cd_label);
+	if (ret < 0)
+		/*
+		 * don't bother freeing memory. It might still get used by other
+		 * slot functions, in any case it will be freed, when the device
+		 * is destroyed.
+		 */
+		return ret;
+
+	gpio_set_value_cansleep(gpio, 1);
+
+
+	return 0;
+}
+EXPORT_SYMBOL(mmc_gpio_set_en);
+
+
 /**
  * mmc_gpio_free_ro - free the write-protection gpio
  * @host: mmc host
