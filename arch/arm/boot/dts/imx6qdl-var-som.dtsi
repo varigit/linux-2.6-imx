@@ -538,7 +538,7 @@
 
 	partition@3 {
 		label = "rootfs";
-		reg = <0x00a00000 0x1f600000>;
+		reg = <0x00a00000 0x3f600000>;
 	};
 /* Overlaped partition used to flash Android */
 	partition@4 {
@@ -551,7 +551,7 @@
 	};
 	partition@6 {
 		label = "android_rootfs";
-		reg = <0x03000000 0x1d000000>;
+		reg = <0x03000000 0x3d000000>;
 	};
 };
 
