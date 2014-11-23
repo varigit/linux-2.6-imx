@@ -129,26 +129,11 @@
 		compatible = "fsl,mxc_sdc_fb";
 		disp_dev = "ldb";
 		interface_pix_fmt = "RGB24";
-		mode_str ="VAR-WVGA-CTW";
 		default_bpp = <16>;
 		int_clk = <0>;
 		late_init = <0>;
-		status = "okay";
+		status = "disabled";
 	};
-#if 0
-	/* Resistive Display */
-	mxcfb1: fb@0 {
-		compatible = "fsl,mxc_sdc_fb";
-		disp_dev = "ldb";
-		interface_pix_fmt = "RGB24";
-		mode_str ="VAR-WVGA";
-		default_bpp = <16>;
-		int_clk = <0>;
-		late_init = <0>;
-		status = "okay";
-	};
-
-#endif
 
 	mxcfb2: fb@1 {
 		compatible = "fsl,mxc_sdc_fb";
@@ -158,7 +143,7 @@
 		default_bpp = <24>;
 		int_clk = <0>;
 		late_init = <0>;
-		status = "okay";
+		status = "disabled";
 	};
 
 	mxcfb3: fb@2 {
@@ -176,7 +161,6 @@
 		compatible = "fsl,mxc_sdc_fb";
 		disp_dev = "ldb";
 		interface_pix_fmt = "RGB666";
-		mode_str ="LDB-XGA";
 		default_bpp = <16>;
 		int_clk = <0>;
 		late_init = <0>;
@@ -237,12 +221,7 @@
 	};
 
 
-#if 0
-	lvds_cabc_ctrl {
-		lvds0-gpios = <&gpio6 15 0>;
-		lvds1-gpios = <&gpio6 16 0>;
-	};
-#endif
+
 };
 
 &audmux {
@@ -315,7 +294,7 @@
 
 &hdmi_core {
 	ipu_id = <0>;
-	disp_id = <0>;
+	disp_id = <1>;
 	status = "okay";
 };
 
@@ -447,13 +426,50 @@
 };
 
 &ldb {
-	ipu_id = <1>;
-	disp_id = <0>;
-	ext_ref = <1>;
-	mode = "sep0";
-	sec_ipu_id = <1>;
-	sec_disp_id = <1>;
 	status = "okay";
+
+	lvds-channel@0 {
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+		primary;
+		status = "okay";
+
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: hsd100pxn1 {
+				clock-frequency = <65000000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <39>;
+				hfront-porch = <39>;
+				vback-porch = <29>;
+				vfront-porch = <13>;
+				hsync-len = <47>;
+				vsync-len = <2>;
+			};
+		};
+	};
+
+	lvds-channel@1 {
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+		status = "okay";
+
+		display-timings {
+			native-mode = <&timing1>;
+			timing1: hsd100pxn1 {
+				clock-frequency = <65000000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <39>;
+				hfront-porch = <39>;
+				vback-porch = <29>;
+				vfront-porch = <13>;
+				hsync-len = <47>;
+				vsync-len = <2>;
+			};
+		};
+	};
 };
 
 &mipi_csi {
@@ -464,6 +480,17 @@
 	lanes = <2>;
 };
 
+&dcic1 {
+	dcic_id = <0>;
+	dcic_mux = "dcic-hdmi";
+	status = "okay";
+};
+
+&dcic2 {
+	dcic_id = <1>;
+	dcic_mux = "dcic-lvds0";
+	status = "okay";
+};
 &pcie {
 	pinctrl-0 = <&pinctrl_pcie>;
 	power-on-gpio = <&gpio2 12 0>;		/* gpio pin number of power-enable signal */
@@ -492,6 +519,7 @@
 	pinctrl-0 = <&pinctrl_uart1_1>;
 	status = "okay";
 };
+
 
 /* Bluetooth Uart */
 &uart2 {

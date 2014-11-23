@@ -15,6 +15,8 @@
 
 / {
 	aliases {
+		flexcan0 = &flexcan1;
+		flexcan1 = &flexcan2;
 		gpio0 = &gpio1;
 		gpio1 = &gpio2;
 		gpio2 = &gpio3;
@@ -1204,12 +1206,6 @@
 			>;
 		};
 
-		pinctrl_enet_irq: enetirqgrp {
-			fsl,pins = <
-				MX6QDL_PAD_GPIO_6__ENET_IRQ	      0x000b1
-			>;
-		};
-
 		pinctrl_enet_4: enetgrp-4 {
 			fsl,pins = <
 				MX6QDL_PAD_ENET_MDIO__ENET_MDIO       0x1b0b0
@@ -1229,7 +1225,6 @@
 				MX6QDL_PAD_RGMII_RX_CTL__RGMII_RX_CTL 0x1b0b0
 			>;
 		};
-
 	};
 
 	esai {
@@ -1326,7 +1321,6 @@
 				MX6QDL_PAD_NANDF_CS0__NAND_CE0_B	0xb0b1
 				MX6QDL_PAD_NANDF_CS1__NAND_CE1_B	0xb0b1
 				MX6QDL_PAD_NANDF_RB0__NAND_READY_B	0xb0b1
-
 				MX6QDL_PAD_NANDF_D0__NAND_DATA00	0xb0b1
 				MX6QDL_PAD_NANDF_D1__NAND_DATA01	0xb0b1
 				MX6QDL_PAD_NANDF_D2__NAND_DATA02	0xb0b1
@@ -1341,8 +1335,6 @@
 			>;
 		};
 	};
-
-
 	hdmi_hdcp {
 		pinctrl_hdmi_hdcp_1: hdmihdcpgrp-1 {
 			fsl,pins = <
@@ -1363,7 +1355,8 @@
 				MX6QDL_PAD_EIM_EB2__HDMI_TX_DDC_SCL  0x4001b8b1
 				MX6QDL_PAD_KEY_ROW3__HDMI_TX_DDC_SDA 0x4001b8b1
 			>;
-		};	};
+		};
+	};
 
 	hdmi_cec {
 		pinctrl_hdmi_cec_1: hdmicecgrp-1 {
@@ -1610,7 +1603,6 @@
 		};
 	};
 
-
 	uart3 {
 		pinctrl_uart3_1: uart3grp-1 {
 			fsl,pins = <
@@ -1773,16 +1765,15 @@
 
 		pinctrl_usdhc3_2: usdhc3grp-2 {
 			fsl,pins = <
-				MX6QDL_PAD_SD3_CMD__SD3_CMD     0x17059
-				MX6QDL_PAD_SD3_CLK__SD3_CLK     0x10059
-				MX6QDL_PAD_SD3_DAT0__SD3_DATA0  0x17059
-				MX6QDL_PAD_SD3_DAT1__SD3_DATA1  0x17059
-				MX6QDL_PAD_SD3_DAT2__SD3_DATA2  0x17059
-				MX6QDL_PAD_SD3_DAT3__SD3_DATA3  0x17059
+				MX6QDL_PAD_SD3_CMD__SD3_CMD    0x17059
+				MX6QDL_PAD_SD3_CLK__SD3_CLK    0x10059
+				MX6QDL_PAD_SD3_DAT0__SD3_DATA0 0x17059
+				MX6QDL_PAD_SD3_DAT1__SD3_DATA1 0x17059
+				MX6QDL_PAD_SD3_DAT2__SD3_DATA2 0x17059
+				MX6QDL_PAD_SD3_DAT3__SD3_DATA3 0x17059
                                 MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x13059   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
                                 MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x13059   // this is for wl_irq which driver will configure as an input with a pull down
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x13059   // used for BT_EN 
-
 			>;
 		};
 		pinctrl_usdhc3_2_100mhz: usdhc3grp-2-100mhz {
@@ -1811,7 +1802,6 @@
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130F9   // used for BT_EN 
 			>;
 		};
-
 	};
 
 	usdhc4 {
