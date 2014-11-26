@@ -315,9 +315,9 @@
 		reg = <0x3c>;
 		clocks = <&clks 200>;
 		clock-names = "csi_mclk";
-//		DOVDD-supply = <&vgen4_reg>; /* 1.8v */
-//		AVDD-supply = <&vgen3_reg>;  /* 2.8v, rev C board is VGEN3 rev B board is VGEN5 */
-//		DVDD-supply = <&vgen2_reg>;  /* 1.5v*/
+		DOVDD-supply = <&vgen4_reg>; /* 1.8v */
+		AVDD-supply = <&vgen3_reg>;  /* 2.8v, rev C board is VGEN3 rev B board is VGEN5 */
+		DVDD-supply = <&vgen2_reg>;  /* 1.5v*/
 		pwn-gpios = <&gpio3 13 1>;
 		rst-gpios = <&gpio4 10 0>;
 		csi_id = <1>;
