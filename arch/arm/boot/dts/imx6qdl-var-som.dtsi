@@ -484,15 +484,16 @@
 
 &dcic1 {
 	dcic_id = <0>;
-	dcic_mux = "dcic-hdmi";
+	dcic_mux = "dcic-lvds0";
 	status = "okay";
 };
 
 &dcic2 {
 	dcic_id = <1>;
-	dcic_mux = "dcic-lvds0";
+	dcic_mux = "dcic-hdmi";
 	status = "okay";
 };
+
 &pcie {
 	pinctrl-0 = <&pinctrl_pcie>;
 	power-on-gpio = <&gpio2 12 0>;		/* gpio pin number of power-enable signal */
