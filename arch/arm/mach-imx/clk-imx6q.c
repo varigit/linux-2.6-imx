@@ -162,7 +162,7 @@ static struct clk_div_table video_div_table[] = {
  * If the kernel parameter is absent or invalid, pll2_pfd0_352m will be
  * selected by default.
  */
-static int ldb_di_sel = 1;
+static int ldb_di_sel = 0;
 
 static int __init get_ldb_di_parent(char *p)
 {
