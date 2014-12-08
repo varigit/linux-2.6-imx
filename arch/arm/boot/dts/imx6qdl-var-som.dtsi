@@ -83,6 +83,7 @@
 		enable-active-high;
 	};
 
+#if 0
 	gpio-keys {
 		compatible = "gpio-keys";
 		power {
@@ -91,7 +92,7 @@
 			linux,code = <158>; /* KEY_BACK */
 		};
 	};
-	
+#endif	
 	sound {
 		compatible = "fsl,imx6q-var-som-tlv320aic3x", "fsl,imx-audio-tlv320aic3x";
 		model = "tlv320aic3x-audio";
