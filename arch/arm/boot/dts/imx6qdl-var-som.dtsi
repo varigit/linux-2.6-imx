@@ -280,7 +280,7 @@
 	fsl,cpu_pdnscr_iso2sw = <0x1>;
 	fsl,cpu_pdnscr_iso = <0x1>;
 	fsl,ldo-bypass = <1>; /* use ldo-bypass, u-boot will check it and configure */
-	fsl,wdog-reset = <2>; /* watchdog select of reset source */
+	fsl,wdog-reset = <1>; /* watchdog select of reset source */
 	pu-supply = <&pu_dummy>; /* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
 };
 
@@ -385,8 +385,6 @@
 	hog {
 		pinctrl_hog_1: hoggrp-1 {
 			fsl,pins = <
-				 /* User Button */
-				MX6QDL_PAD_CSI0_DATA_EN__GPIO5_IO20 		0x80000000
 				/* Backlight PWM */
 				MX6QDL_PAD_DISP0_DAT9__PWM2_OUT 		0x1b0b1
 				/* Backlight enable */
@@ -477,15 +475,15 @@
 		display-timings {
 			native-mode = <&timing1>;
 			timing1: hsd100pxn1 {
-				clock-frequency = <65000000>;
+				clock-frequency = <38251000>;
 				hactive = <800>;
 				vactive = <600>;
-				hback-porch = <39>;
-				hfront-porch = <39>;
-				vback-porch = <29>;
-				vfront-porch = <13>;
-				hsync-len = <47>;
-				vsync-len = <2>;
+				hback-porch = <112>;
+				hfront-porch = <32>;
+				vback-porch = <3>;
+				vfront-porch = <17>;
+				hsync-len = <80>;
+				vsync-len = <4>;
 			};
 		};
 	};
@@ -507,7 +505,7 @@
 
 &dcic2 {
 	dcic_id = <1>;
-	dcic_mux = "dcic-lvds1";
+	dcic_mux = "dcic-lvds0";
 	status = "okay";
 };
 
