@@ -1146,14 +1146,6 @@ static void sdhci_set_clock(struct sdhci_host *host, unsigned int clock)
 
 	host->mmc->actual_clock = 0;
 
-        //Check if the dts file set a max-frequency property which is lower than standard 
-        if (host->ops->get_max_clock) {
- 	     unsigned int max_freq=0;	
-            max_freq=host->ops->get_max_clock(host);
-            if (max_freq && (max_freq < clock))
-                 clock=max_freq;
-            printk(KERN_DEBUG "clock set to %d\n",clock);
-		}
 	if (host->ops->set_clock) {
 		host->ops->set_clock(host, clock);
 		if (host->quirks & SDHCI_QUIRK_NONSTANDARD_CLOCK)
