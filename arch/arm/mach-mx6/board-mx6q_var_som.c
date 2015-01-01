@@ -238,6 +238,15 @@ static int plt_sd_pad_change(unsigned int index, int clock)
 	}
 }
 
+/* eMMC */
+static const struct esdhc_platform_data mx6q_var_som_sd1_data __initconst = {
+	.always_present = 1,
+	.keep_power_at_suspend = 1,
+	.support_8bit = 1,
+	.delay_line = 0,
+	.runtime_pm = 1,
+};
+
 /* SD/MMC */
 static const struct esdhc_platform_data mx6q_var_som_sd2_data __initconst = {
 	.cd_gpio = VAR_SOM_SD2_CD,
@@ -892,6 +901,7 @@ static void var_som_init_btwilink(void)
 
 static struct regulator_consumer_supply var_som_vmmc_consumers[] = {
 	REGULATOR_SUPPLY("vmmc", "sdhci-esdhc-imx.1"),
+	REGULATOR_SUPPLY("vmmc", "sdhci-esdhc-imx.3"),
 	REGULATOR_SUPPLY("vcc", "spi2.0"),
 };
 
@@ -1256,6 +1266,7 @@ static void __init mx6_var_som_board_init(void)
 	imx6_init_fec(fec_data);
 	imx6q_add_pm_imx(0, &mx6q_var_som_pm_data);
 
+	imx6q_add_sdhci_usdhc_imx(0, &mx6q_var_som_sd1_data);
 	imx6q_add_sdhci_usdhc_imx(1, &mx6q_var_som_sd2_data);
 	imx_add_viv_gpu(&imx6_gpu_data, &imx6q_gpu_pdata);
 	imx6q_var_som_init_usb();
