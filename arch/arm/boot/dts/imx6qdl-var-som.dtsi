@@ -421,7 +421,11 @@
 		y-size = <480>;
 	};
 #endif
-
+        /* DS1307 RTC module */
+        rtc@0x68 {
+                 compatible = "dallas,ds1307";
+                 reg = <0x68>;
+        };
 };
 
 &iomuxc {
