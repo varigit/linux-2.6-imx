@@ -144,7 +144,11 @@
 	mxcfb1: fb@0 {
 		compatible = "fsl,mxc_sdc_fb";
 		disp_dev = "ldb";
+#ifdef VAR_SOM_SOLO_VSC
+		interface_pix_fmt = "RGB666";
+#else
 		interface_pix_fmt = "RGB24";
+#endif
 		default_bpp = <16>;
 		int_clk = <0>;
 		late_init = <0>;
