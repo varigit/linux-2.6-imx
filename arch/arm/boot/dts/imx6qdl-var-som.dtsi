@@ -256,6 +256,30 @@
 };
 
 
+
+#ifdef SPIDEV
+&ecspi1 {
+	fsl,spi-num-chipselects = <1>;
+	cs-gpios = <&gpio4 9 0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi1_2>;
+	status = "okay";
+
+        chip1: spidev@0 {
+               compatible = "spidev";
+               spi-max-frequency = <12000000>;
+               reg = <0>;
+        };
+/*
+        chip2: spidev@1 {
+               compatible = "spidev";
+               spi-max-frequency = <20000000>;
+               reg = <1>;
+	};
+*/
+};
+#endif
+
 &ecspi3 {
 	fsl,spi-num-chipselects = <1>;
 	cs-gpios = <&gpio4 24 0>;
