@@ -217,6 +217,7 @@
 	};
 };
 
+#if 0
 &ecspi1 {
 	dmas = <&sdma 3 7 1>, <&sdma 4 7 2>;
 	dma-names = "rx", "tx";
@@ -236,6 +237,7 @@
 	dmas = <&sdma 9 7 1>, <&sdma 10 7 2>;
 	dma-names = "rx", "tx";
 };
+#endif
 
 &iomuxc {
 	ipu2 {

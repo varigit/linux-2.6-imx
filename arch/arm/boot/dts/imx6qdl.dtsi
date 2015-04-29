@@ -15,6 +15,8 @@
 
 / {
 	aliases {
+		flexcan0 = &flexcan1;
+		flexcan1 = &flexcan2;
 		gpio0 = &gpio1;
 		gpio1 = &gpio2;
 		gpio2 = &gpio3;
@@ -855,6 +857,7 @@
 				status = "disabled";
 			};
 
+#ifndef VAR_SOM_MX6
 			usdhc1: usdhc@02190000 {
 				compatible = "fsl,imx6q-usdhc";
 				reg = <0x02190000 0x4000>;
@@ -874,7 +877,28 @@
 				bus-width = <4>;
 				status = "disabled";
 			};
+#else
+			/* VAR-SOM-MX6 Set second MMC (SDCARD) to be always the first device so we can boot from it */
+			usdhc1: usdhc@02194000 {
+				compatible = "fsl,imx6q-usdhc";
+				reg = <0x02194000 0x4000>;
+				interrupts = <0 23 0x04>;
+				clocks = <&clks 164>, <&clks 164>, <&clks 164>;
+				clock-names = "ipg", "ahb", "per";
+				bus-width = <4>;
+				status = "disabled";
+			};
 
+			usdhc2: usdhc@02190000 {
+				compatible = "fsl,imx6q-usdhc";
+				reg = <0x02190000 0x4000>;
+				interrupts = <0 22 0x04>;
+				clocks = <&clks 163>, <&clks 163>, <&clks 163>;
+				clock-names = "ipg", "ahb", "per";
+				bus-width = <4>;
+				status = "disabled";
+			};
+#endif
 			usdhc3: usdhc@02198000 {
 				compatible = "fsl,imx6q-usdhc";
 				reg = <0x02198000 0x4000>;
@@ -1195,9 +1219,23 @@
 			>;
 		};
 
-		pinctrl_enet_irq: enetirqgrp {
+		pinctrl_enet_4: enetgrp-4 {
 			fsl,pins = <
-				MX6QDL_PAD_GPIO_6__ENET_IRQ	      0x000b1
+				MX6QDL_PAD_ENET_MDIO__ENET_MDIO       0x1b0b0
+				MX6QDL_PAD_ENET_MDC__ENET_MDC         0x1b0b0
+				MX6QDL_PAD_RGMII_TXC__RGMII_TXC       0x1b0b0
+				MX6QDL_PAD_RGMII_TD0__RGMII_TD0       0x1b0b0
+				MX6QDL_PAD_RGMII_TD1__RGMII_TD1       0x1b0b0
+				MX6QDL_PAD_RGMII_TD2__RGMII_TD2       0x1b0b0
+				MX6QDL_PAD_RGMII_TD3__RGMII_TD3       0x1b0b0
+				MX6QDL_PAD_RGMII_TX_CTL__RGMII_TX_CTL 0x1b0b0
+				MX6QDL_PAD_ENET_REF_CLK__ENET_TX_CLK  0x1b0b0
+				MX6QDL_PAD_RGMII_RXC__RGMII_RXC       0x1b0b0
+				MX6QDL_PAD_RGMII_RD0__RGMII_RD0       0x1b0b0
+				MX6QDL_PAD_RGMII_RD1__RGMII_RD1       0x1b0b0
+				MX6QDL_PAD_RGMII_RD2__RGMII_RD2       0x1b0b0
+				MX6QDL_PAD_RGMII_RD3__RGMII_RD3       0x1b0b0
+				MX6QDL_PAD_RGMII_RX_CTL__RGMII_RX_CTL 0x1b0b0
 			>;
 		};
 	};
@@ -1247,6 +1285,12 @@
 				MX6QDL_PAD_KEY_ROW2__FLEXCAN1_RX 0x80000000
 			>;
 		};
+		pinctrl_flexcan1_3: flexcan1grp-3 {
+			fsl,pins = <
+				MX6QDL_PAD_GPIO_7__FLEXCAN1_TX   0x80000000
+				MX6QDL_PAD_GPIO_8__FLEXCAN1_RX   0x80000000
+			>;
+		};
 	};
 
 	flexcan2 {
@@ -1282,6 +1326,28 @@
 		};
 	};
 
+	gpmi-nand {
+		pinctrl_gpmi_nand_v1: gpmi-nand-1 {
+			fsl,pins = <
+				MX6QDL_PAD_NANDF_CLE__NAND_CLE		0xb0b1
+				MX6QDL_PAD_NANDF_ALE__NAND_ALE		0xb0b1
+				MX6QDL_PAD_NANDF_CS0__NAND_CE0_B	0xb0b1
+				MX6QDL_PAD_NANDF_CS1__NAND_CE1_B	0xb0b1
+				MX6QDL_PAD_NANDF_RB0__NAND_READY_B	0xb0b1
+				MX6QDL_PAD_NANDF_D0__NAND_DATA00	0xb0b1
+				MX6QDL_PAD_NANDF_D1__NAND_DATA01	0xb0b1
+				MX6QDL_PAD_NANDF_D2__NAND_DATA02	0xb0b1
+				MX6QDL_PAD_NANDF_D3__NAND_DATA03	0xb0b1
+				MX6QDL_PAD_NANDF_D4__NAND_DATA04	0xb0b1
+				MX6QDL_PAD_NANDF_D5__NAND_DATA05	0xb0b1
+				MX6QDL_PAD_NANDF_D6__NAND_DATA06	0xb0b1
+				MX6QDL_PAD_NANDF_D7__NAND_DATA07	0xb0b1
+				MX6QDL_PAD_SD4_CMD__NAND_RE_B		0xb0b1
+				MX6QDL_PAD_SD4_CLK__NAND_WE_B		0xb0b1
+				MX6QDL_PAD_NANDF_WP_B__NAND_WP_B	0xb0b1
+			>;
+		};
+	};
 	hdmi_hdcp {
 		pinctrl_hdmi_hdcp_1: hdmihdcpgrp-1 {
 			fsl,pins = <
@@ -1486,7 +1552,7 @@
 	pwm1 {
 		pinctrl_pwm1_1: pwm1grp-1 {
 			fsl,pins = <
-				MX6QDL_PAD_SD1_DAT3__PWM1_OUT 0x1b0b1
+				MX6QDL_PAD_DISP0_DAT9__PWM2_OUT 0x1b0b1
 			>;
 		};
 	};
@@ -1506,6 +1572,16 @@
 			>;
 		};
 	};
+
+
+	pwm4 {
+		pinctrl_pwm4_1: pwm4grp-1 {
+			fsl,pins = <
+				MX6QDL_PAD_SD4_DAT2__PWM4_OUT 0x1b0b1
+			>;
+		};
+	};
+
 
 	spdif {
 		pinctrl_spdif_1: spdifgrp-1 {
@@ -1547,6 +1623,22 @@
 				MX6QDL_PAD_EIM_D29__UART2_DTE_RTS_B 0x1b0b1
 			>;
 		};
+		pinctrl_uart2_3: uart2grp-3 { /* RTS/CTS only mode */
+			fsl,pins = <
+				MX6QDL_PAD_SD3_DAT4__UART2_RX_DATA  0x1b0b1
+				MX6QDL_PAD_SD3_DAT5__UART2_TX_DATA  0x1b0b1
+				MX6QDL_PAD_EIM_D28__UART2_CTS_B	    0x1b0b1
+				MX6QDL_PAD_EIM_D29__UART2_RTS_B	    0x1b0b1
+			>;
+		};
+		pinctrl_uart2_4: uart2grp-4 { /* RTS/CTS only mode */
+			fsl,pins = <
+				MX6QDL_PAD_SD3_DAT4__UART2_RX_DATA  0x1b0b1
+				MX6QDL_PAD_SD3_DAT5__UART2_TX_DATA  0x1b0b1
+				MX6QDL_PAD_SD4_DAT6__UART2_CTS_B    0x1b0b1
+				MX6QDL_PAD_SD4_DAT5__UART2_RTS_B    0x1b0b1
+			>;
+		};
 	};
 
 	uart3 {
@@ -1563,6 +1655,15 @@
 				MX6QDL_PAD_SD4_CMD__UART3_RX_DATA 0x1b0b1
 				MX6QDL_PAD_EIM_D30__UART3_RTS_B   0x1b0b1
 				MX6QDL_PAD_EIM_EB3__UART3_CTS_B   0x1b0b1
+			>;
+		};
+		/* Variscite Uart2 support */
+		pinctrl_uart3_2: uart3grp-2 {	/* RX/TX RTS/CTS */
+			fsl,pins = <
+				MX6QDL_PAD_EIM_D25__UART3_RX_DATA 0x1b0b1
+				MX6QDL_PAD_EIM_D24__UART3_TX_DATA 0x1b0b1
+				MX6QDL_PAD_EIM_D23__UART3_CTS_B   0x1b0b1
+				MX6QDL_PAD_EIM_EB3__UART3_RTS_B   0x1b0b1
 			>;
 		};
 	};
@@ -1653,14 +1754,54 @@
 	usdhc1 {
 		pinctrl_usdhc1_1: usdhc1grp-1 {
 			fsl,pins = <
+#ifdef VAR_DART_MX6
+				MX6QDL_PAD_SD1_CMD__SD1_CMD    0x17059
+				MX6QDL_PAD_SD1_CLK__SD1_CLK    0x10059
+				MX6QDL_PAD_SD1_DAT0__SD1_DATA0 0x17059
+				MX6QDL_PAD_SD1_DAT1__SD1_DATA1 0x17059
+				MX6QDL_PAD_SD1_DAT2__SD1_DATA2 0x17059
+				MX6QDL_PAD_SD1_DAT3__SD1_DATA3 0x17059
+                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x13059   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x13059   // this is for wl_irq which driver will configure as an input with a pull down
+                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x13059   // used for BT_EN 
+#else
 				MX6QDL_PAD_SD1_CMD__SD1_CMD    0x17071
 				MX6QDL_PAD_SD1_CLK__SD1_CLK    0x10071
 				MX6QDL_PAD_SD1_DAT0__SD1_DATA0 0x17071
 				MX6QDL_PAD_SD1_DAT1__SD1_DATA1 0x17071
 				MX6QDL_PAD_SD1_DAT2__SD1_DATA2 0x17071
 				MX6QDL_PAD_SD1_DAT3__SD1_DATA3 0x17071
+#endif
 			>;
 		};
+
+		pinctrl_usdhc1_2_100mhz: usdhc1grp-2-100mhz {
+			fsl,pins = <
+				MX6QDL_PAD_SD1_CMD__SD1_CMD     0x170B9
+				MX6QDL_PAD_SD1_CLK__SD1_CLK     0x100B9
+				MX6QDL_PAD_SD1_DAT0__SD1_DATA0  0x170B9
+				MX6QDL_PAD_SD1_DAT1__SD1_DATA1  0x170B9
+				MX6QDL_PAD_SD1_DAT2__SD1_DATA2  0x170B9
+				MX6QDL_PAD_SD1_DAT3__SD1_DATA3  0x170B9
+                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x130B9   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x130B9   // this is for wl_irq which driver will configure as an input with a pull down
+                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130B9   // used for BT_EN 
+			>;
+		};
+		pinctrl_usdhc1_2_200mhz: usdhc1grp-2-200mhz {
+			fsl,pins = <
+				MX6QDL_PAD_SD1_CMD__SD1_CMD     0x170F9
+				MX6QDL_PAD_SD1_CLK__SD1_CLK     0x100F9
+				MX6QDL_PAD_SD1_DAT0__SD1_DATA0  0x170F9
+				MX6QDL_PAD_SD1_DAT1__SD1_DATA1  0x170F9
+				MX6QDL_PAD_SD1_DAT2__SD1_DATA2  0x170F9
+				MX6QDL_PAD_SD1_DAT3__SD1_DATA3  0x170F9
+                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x130F9   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x130F9   // this is for wl_irq which driver will configure as an input with a pull down
+                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130F9   // used for BT_EN 
+			>;
+		};
+
 	};
 
 	usdhc2 {
@@ -1738,6 +1879,51 @@
 		};
 
 		pinctrl_usdhc3_2: usdhc3grp-2 {
+			fsl,pins = <
+				MX6QDL_PAD_SD3_CMD__SD3_CMD    0x17059
+				MX6QDL_PAD_SD3_CLK__SD3_CLK    0x10059
+				MX6QDL_PAD_SD3_DAT0__SD3_DATA0 0x17059
+				MX6QDL_PAD_SD3_DAT1__SD3_DATA1 0x17059
+				MX6QDL_PAD_SD3_DAT2__SD3_DATA2 0x17059
+				MX6QDL_PAD_SD3_DAT3__SD3_DATA3 0x17059
+#ifndef VAR_DART_MX6
+                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x13059   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x13059   // this is for wl_irq which driver will configure as an input with a pull down
+                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x13059   // used for BT_EN 
+#endif
+			>;
+		};
+		pinctrl_usdhc3_2_100mhz: usdhc3grp-2-100mhz {
+			fsl,pins = <
+				MX6QDL_PAD_SD3_CMD__SD3_CMD     0x170B9
+				MX6QDL_PAD_SD3_CLK__SD3_CLK     0x100B9
+				MX6QDL_PAD_SD3_DAT0__SD3_DATA0  0x170B9
+				MX6QDL_PAD_SD3_DAT1__SD3_DATA1  0x170B9
+				MX6QDL_PAD_SD3_DAT2__SD3_DATA2  0x170B9
+				MX6QDL_PAD_SD3_DAT3__SD3_DATA3  0x170B9
+#ifndef VAR_DART_MX6
+                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x130B9   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x130B9   // this is for wl_irq which driver will configure as an input with a pull down
+                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130B9   // used for BT_EN 
+#endif
+			>;
+		};
+		pinctrl_usdhc3_2_200mhz: usdhc3grp-2-200mhz {
+			fsl,pins = <
+				MX6QDL_PAD_SD3_CMD__SD3_CMD     0x170F9
+				MX6QDL_PAD_SD3_CLK__SD3_CLK     0x100F9
+				MX6QDL_PAD_SD3_DAT0__SD3_DATA0  0x170F9
+				MX6QDL_PAD_SD3_DAT1__SD3_DATA1  0x170F9
+				MX6QDL_PAD_SD3_DAT2__SD3_DATA2  0x170F9
+				MX6QDL_PAD_SD3_DAT3__SD3_DATA3  0x170F9
+#ifndef VAR_DART_MX6
+                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x130F9   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x130F9   // this is for wl_irq which driver will configure as an input with a pull down
+                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130F9   // used for BT_EN 
+#endif
+			>;
+		};
+		pinctrl_usdhc3_3: usdhc3grp-3 {
 			fsl,pins = <
 				MX6QDL_PAD_SD3_CMD__SD3_CMD    0x17059
 				MX6QDL_PAD_SD3_CLK__SD3_CLK    0x10059
