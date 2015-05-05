@@ -263,6 +263,7 @@
 	pinctrl-0 = <&pinctrl_ecspi3_1>;
 	status = "okay";
 
+#ifdef VAR_RESISTIVE_DISPLAY
 	ads7846@0 {
 		reg = <0>;	/* CS0 */
 		compatible = "ti,ads7846";
@@ -283,7 +284,8 @@
 		ti,settle-delay-usec	= /bits/ 16 <150>;
 		ti,keep-vref-on;	
 		linux,wakeup;
-		};
+	};
+#endif
 };
 
 &fec {
@@ -423,6 +425,7 @@
 			focaltech,mirror_v;
 		};
 #else
+#ifdef VAR_CAPACITIVE_DISPLAY
 	ctw6120_tsc@38 {
 		compatible = "fsl,ctw6120-tsc";
 		reg = <0x38>;
@@ -432,6 +435,7 @@
 		x-size = <800>;
 		y-size = <480>;
 	};
+#endif
 #endif
         /* DS1307 RTC module */
         rtc@0x68 {
@@ -502,6 +506,7 @@
 #endif
 		status = "okay";
 
+#ifdef VAR_RESISTIVE_DISPLAY
 /* Resistive Display */
 	display-timings {
 			native-mode = <&timingr0>;
@@ -517,9 +522,10 @@
 				vsync-len = <13>;
 			};
 		};
-		
+#else		
 /* Capacitive Display */
-		display-timings-alternate {
+
+	display-timings{
 			native-mode = <&timing0c>;
 			timing0c: hsd100pxn1 {
 				clock-frequency = <32000000>;
@@ -533,6 +539,7 @@
 				vsync-len = <2>;
 			};
 		};
+#endif
 	};
 
 	lvds-channel@1 {
