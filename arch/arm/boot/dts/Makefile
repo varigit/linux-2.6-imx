@@ -124,10 +124,13 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6dl-wandboard.dtb \
 	imx6q-arm2.dtb \
 	imx6q-sabreauto.dtb \
-	imx6q-var-som.dtb \
+	imx6q-var-som-c.dtb \
+	imx6q-var-som-r.dtb \
 	imx6q-var-dart.dtb \
-	imx6dl-var-som.dtb \
-	imx6dl-var-som-solo.dtb \
+	imx6dl-var-som-c.dtb \
+	imx6dl-var-som-r.dtb \
+	imx6dl-var-som-solo-c.dtb \
+	imx6dl-var-som-solo-r.dtb \
 	imx6dl-var-som-solo-vsc.dtb \
 	imx6q-sabreauto-ecspi.dtb \
 	imx6q-sabreauto-flexcan1.dtb \
