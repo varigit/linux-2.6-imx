@@ -363,7 +363,7 @@
 		DVDD-supply = <&reg_audio>;
 		AVDD-supply = <&reg_audio>;
 		DRVDD-supply = <&reg_audio>;
-		gpio-reset = <&gpio1 19 1>;
+		gpio-reset = <&gpio4 5 1>;
 		gpio-cfg = <
 			0x0000 /* 0:Default */
 			0x0000 /* 1:Default */
