@@ -698,7 +698,16 @@
 	status = "okay";
 };
 
-&usdhc1 {	/* uSDHC2, MMC/SD card */
+&usdhc1 {	/* uSDHC1, eMMC */
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usdhc1_1>;
+	non-removable;
+	keep-power-in-suspend;
+	enable-sdio-wakeup;
+	status = "okay";
+};
+
+&usdhc2 {	/* uSDHC2, MMC/SD card */
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usdhc2_2>;
 	cd-gpios = <&gpio4 14 0>;
@@ -706,15 +715,6 @@
 	wp-gpios = <&gpio4 15 0>;
 #endif
 	no-1-8-v;
-	keep-power-in-suspend;
-	enable-sdio-wakeup;
-	status = "okay";
-};
-
-&usdhc2 {	/* uSDHC1, eMMC */
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_usdhc1_1>;
-	non-removable;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
 	status = "okay";
