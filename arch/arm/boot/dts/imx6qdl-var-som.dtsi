@@ -111,7 +111,7 @@
 	sound {
 		compatible = "fsl,imx6q-var-som-tlv320aic3x", "fsl,imx-audio-tlv320aic3x";
 		model = "tlv320aic3x-audio";
-		ssi-controller = <&ssi2>;
+		cpu-dai = <&ssi2>;
 		audio-codec = <&codec>;
 		audio-routing =
 			/* Headphone connected to HPLOUT, HPROUT */
