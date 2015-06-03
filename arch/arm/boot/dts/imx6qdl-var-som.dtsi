@@ -118,17 +118,17 @@
 			"Headphone Jack",       "HPLOUT",
 			"Headphone Jack",       "HPROUT",
 			/* Line Out connected to LLOUT, RLOUT */
-			"Line Out",      	"LLOUT",
-			"Line Out",     	"RLOUT",
+			"Line Out Jack",      	"LLOUT",
+			"Line Out Jack",     	"RLOUT",
 			/* Mic connected to (MIC3L | MIC3R) */
-			"Mic Bias",		"MIC3L",
-			"Mic Bias",		"MIC3R",
+			"Mic Jack",		"MIC3L",
+			"Mic Jack",		"MIC3R",
 			"Mic Jack",		"Mic Bias",
 			/* Line In connected to (LINE1L | LINE2L), (LINE1R | LINE2R) */
-			"Line In",		"LINE1L",
-			"Line In",		"LINE2L",
-			"Line In",		"LINE1R",
-			"Line In",		"LINE2R";
+			"Line In Jack",		"LINE1L",
+			"Line In Jack",		"LINE2L",
+			"Line In Jack",		"LINE1R",
+			"Line In Jack",		"LINE2R";
 		mux-int-port = <2>;
 		mux-ext-port = <3>;
 	};
