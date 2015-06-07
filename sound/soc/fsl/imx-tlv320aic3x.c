@@ -28,7 +28,7 @@
 
 #define DAI_NAME_SIZE	32
 
-struct imx_sgtl5000_data {
+struct imx_tlv320aic3x_data {
 	struct snd_soc_dai_link dai;
 	struct snd_soc_card card;
 	char codec_dai_name[DAI_NAME_SIZE];
@@ -36,10 +36,10 @@ struct imx_sgtl5000_data {
 	struct clk *codec_clk;
 	unsigned int clk_frequency;
 };
-static int imx_sgtl5000_dai_init(struct snd_soc_pcm_runtime *rtd)
+static int imx_tlv320aic3x_dai_init(struct snd_soc_pcm_runtime *rtd)
 {
-	struct imx_sgtl5000_data *data = container_of(rtd->card,
-					struct imx_sgtl5000_data, card);
+	struct imx_tlv320aic3x_data *data = container_of(rtd->card,
+					struct imx_tlv320aic3x_data, card);
 	struct device *dev = rtd->card->dev;
 	int ret;
 
@@ -53,7 +53,7 @@ static int imx_sgtl5000_dai_init(struct snd_soc_pcm_runtime *rtd)
 	return 0;
 }
 
-static const struct snd_soc_dapm_widget imx_sgtl5000_dapm_widgets[] = {
+static const struct snd_soc_dapm_widget imx_tlv320aic3x_dapm_widgets[] = {
 	SND_SOC_DAPM_MIC("Mic Jack", NULL),
 	SND_SOC_DAPM_LINE("Line In Jack", NULL),
 	SND_SOC_DAPM_HP("Headphone Jack", NULL),
@@ -61,7 +61,7 @@ static const struct snd_soc_dapm_widget imx_sgtl5000_dapm_widgets[] = {
 	SND_SOC_DAPM_SPK("Ext Spk", NULL),
 };
 
-static int imx_sgtl5000_audmux_config(struct platform_device *pdev)
+static int imx_tlv320aic3x_audmux_config(struct platform_device *pdev)
 {
 	struct device_node *np = pdev->dev.of_node;
 	int int_port, ext_port;
@@ -106,15 +106,14 @@ static int imx_sgtl5000_audmux_config(struct platform_device *pdev)
 	return 0;
 }
 
-static int imx_sgtl5000_probe(struct platform_device *pdev)
+static int imx_tlv320aic3x_probe(struct platform_device *pdev)
 {
 	struct device_node *cpu_np, *codec_np;
 	struct platform_device *cpu_pdev;
 	struct i2c_client *codec_dev;
-	struct imx_sgtl5000_data *data;
+	struct imx_tlv320aic3x_data *data;
 	int ret;
 
-	printk("*********** orenr probe 1");
 	cpu_np = of_parse_phandle(pdev->dev.of_node, "cpu-dai", 0);
 	codec_np = of_parse_phandle(pdev->dev.of_node, "audio-codec", 0);
 	if (!cpu_np || !codec_np) {
@@ -124,7 +123,7 @@ static int imx_sgtl5000_probe(struct platform_device *pdev)
 	}
 
 	if (strstr(cpu_np->name, "ssi")) {
-		ret = imx_sgtl5000_audmux_config(pdev);
+		ret = imx_tlv320aic3x_audmux_config(pdev);
 		if (ret)
 			goto fail;
 	}
@@ -169,7 +168,7 @@ static int imx_sgtl5000_probe(struct platform_device *pdev)
 	data->dai.codec_of_node = codec_np;
 	data->dai.cpu_of_node = cpu_np;
 	data->dai.platform_of_node = cpu_np;
-	data->dai.init = &imx_sgtl5000_dai_init;
+	data->dai.init = &imx_tlv320aic3x_dai_init;
 	data->dai.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
 			    SND_SOC_DAIFMT_CBM_CFM;
 
@@ -183,8 +182,8 @@ static int imx_sgtl5000_probe(struct platform_device *pdev)
 	data->card.num_links = 1;
 	data->card.owner = THIS_MODULE;
 	data->card.dai_link = &data->dai;
-	data->card.dapm_widgets = imx_sgtl5000_dapm_widgets;
-	data->card.num_dapm_widgets = ARRAY_SIZE(imx_sgtl5000_dapm_widgets);
+	data->card.dapm_widgets = imx_tlv320aic3x_dapm_widgets;
+	data->card.num_dapm_widgets = ARRAY_SIZE(imx_tlv320aic3x_dapm_widgets);
 
 	ret = snd_soc_register_card(&data->card);
 	if (ret) {
@@ -204,9 +203,9 @@ fail:
 	return ret;
 }
 
-static int imx_sgtl5000_remove(struct platform_device *pdev)
+static int imx_tlv320aic3x_remove(struct platform_device *pdev)
 {
-	struct imx_sgtl5000_data *data = platform_get_drvdata(pdev);
+	struct imx_tlv320aic3x_data *data = platform_get_drvdata(pdev);
 
 	if (data->codec_clk) {
 		clk_disable_unprepare(data->codec_clk);
@@ -229,8 +228,8 @@ static struct platform_driver imx_tlv320aic3x_driver = {
 		.owner = THIS_MODULE,
 		.of_match_table = imx_tlv320aic3x_dt_ids,
 	},
-	.probe = imx_sgtl5000_probe,
-	.remove = imx_sgtl5000_remove,
+	.probe = imx_tlv320aic3x_probe,
+	.remove = imx_tlv320aic3x_remove,
 };
 module_platform_driver(imx_tlv320aic3x_driver);
 
