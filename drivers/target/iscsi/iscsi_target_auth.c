@@ -1,9 +1,7 @@
 /*******************************************************************************
  * This file houses the main functions for the iSCSI CHAP support
  *
- * \u00a9 Copyright 2007-2011 RisingTide Systems LLC.
- *
- * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
+ * (c) Copyright 2007-2013 Datera, Inc.
  *
  * Author: Nicholas A. Bellinger <nab@linux-iscsi.org>
  *
@@ -49,32 +47,6 @@ static void chap_binaryhex_to_asciihex(char *dst, char *src, int src_len)
 	}
 }
 
-static void chap_set_random(char *data, int length)
-{
-	long r;
-	unsigned n;
-
-	while (length > 0) {
-		get_random_bytes(&r, sizeof(long));
-		r = r ^ (r >> 8);
-		r = r ^ (r >> 4);
-		n = r & 0x7;
-
-		get_random_bytes(&r, sizeof(long));
-		r = r ^ (r >> 8);
-		r = r ^ (r >> 5);
-		n = (n << 3) | (r & 0x7);
-
-		get_random_bytes(&r, sizeof(long));
-		r = r ^ (r >> 8);
-		r = r ^ (r >> 5);
-		n = (n << 2) | (r & 0x3);
-
-		*data++ = n;
-		length--;
-	}
-}
-
 static void chap_gen_challenge(
 	struct iscsi_conn *conn,
 	int caller,
@@ -82,11 +54,11 @@ static void chap_gen_challenge(
 	unsigned int *c_len)
 {
 	unsigned char challenge_asciihex[CHAP_CHALLENGE_LENGTH * 2 + 1];
-	struct iscsi_chap *chap = (struct iscsi_chap *) conn->auth_protocol;
+	struct iscsi_chap *chap = conn->auth_protocol;
 
 	memset(challenge_asciihex, 0, CHAP_CHALLENGE_LENGTH * 2 + 1);
 
-	chap_set_random(chap->challenge, CHAP_CHALLENGE_LENGTH);
+	get_random_bytes(chap->challenge, CHAP_CHALLENGE_LENGTH);
 	chap_binaryhex_to_asciihex(challenge_asciihex, chap->challenge,
 				CHAP_CHALLENGE_LENGTH);
 	/*
@@ -120,7 +92,7 @@ static struct iscsi_chap *chap_server_open(
 	if (!conn->auth_protocol)
 		return NULL;
 
-	chap = (struct iscsi_chap *) conn->auth_protocol;
+	chap = conn->auth_protocol;
 	/*
 	 * We only support MD5 MDA presently.
 	 */
@@ -139,7 +111,7 @@ static struct iscsi_chap *chap_server_open(
 	/*
 	 * Set Identifier.
 	 */
-	chap->id = ISCSI_TPG_C(conn)->tpg_chap_id++;
+	chap->id = conn->tpg->tpg_chap_id++;
 	*aic_len += sprintf(aic_str + *aic_len, "CHAP_I=%d", chap->id);
 	*aic_len += 1;
 	pr_debug("[server] Sending CHAP_I=%d\n", chap->id);
@@ -165,14 +137,17 @@ static int chap_server_compute_md5(
 	unsigned int *nr_out_len)
 {
 	char *endptr;
-	unsigned char id, digest[MD5_SIGNATURE_SIZE];
+	unsigned long id;
+	unsigned char id_as_uchar;
+	unsigned char digest[MD5_SIGNATURE_SIZE];
 	unsigned char type, response[MD5_SIGNATURE_SIZE * 2 + 2];
 	unsigned char identifier[10], *challenge = NULL;
 	unsigned char *challenge_binhex = NULL;
 	unsigned char client_digest[MD5_SIGNATURE_SIZE];
 	unsigned char server_digest[MD5_SIGNATURE_SIZE];
 	unsigned char chap_n[MAX_CHAP_N_SIZE], chap_r[MAX_RESPONSE_LENGTH];
-	struct iscsi_chap *chap = (struct iscsi_chap *) conn->auth_protocol;
+	size_t compare_len;
+	struct iscsi_chap *chap = conn->auth_protocol;
 	struct crypto_hash *tfm;
 	struct hash_desc desc;
 	struct scatterlist sg;
@@ -210,7 +185,9 @@ static int chap_server_compute_md5(
 		goto out;
 	}
 
-	if (memcmp(chap_n, auth->userid, strlen(auth->userid)) != 0) {
+	/* Include the terminating NULL in the compare */
+	compare_len = strlen(auth->userid) + 1;
+	if (strncmp(chap_n, auth->userid, compare_len) != 0) {
 		pr_err("CHAP_N values do not match!\n");
 		goto out;
 	}
@@ -246,7 +223,7 @@ static int chap_server_compute_md5(
 		goto out;
 	}
 
-	sg_init_one(&sg, (void *)&chap->id, 1);
+	sg_init_one(&sg, &chap->id, 1);
 	ret = crypto_hash_update(&desc, &sg, 1);
 	if (ret < 0) {
 		pr_err("crypto_hash_update() failed for id\n");
@@ -254,7 +231,7 @@ static int chap_server_compute_md5(
 		goto out;
 	}
 
-	sg_init_one(&sg, (void *)&auth->password, strlen(auth->password));
+	sg_init_one(&sg, &auth->password, strlen(auth->password));
 	ret = crypto_hash_update(&desc, &sg, strlen(auth->password));
 	if (ret < 0) {
 		pr_err("crypto_hash_update() failed for password\n");
@@ -262,7 +239,7 @@ static int chap_server_compute_md5(
 		goto out;
 	}
 
-	sg_init_one(&sg, (void *)chap->challenge, CHAP_CHALLENGE_LENGTH);
+	sg_init_one(&sg, chap->challenge, CHAP_CHALLENGE_LENGTH);
 	ret = crypto_hash_update(&desc, &sg, CHAP_CHALLENGE_LENGTH);
 	if (ret < 0) {
 		pr_err("crypto_hash_update() failed for challenge\n");
@@ -305,14 +282,17 @@ static int chap_server_compute_md5(
 	}
 
 	if (type == HEX)
-		id = (unsigned char)simple_strtoul((char *)&identifier[2],
-					&endptr, 0);
+		id = simple_strtoul(&identifier[2], &endptr, 0);
 	else
-		id = (unsigned char)simple_strtoul(identifier, &endptr, 0);
+		id = simple_strtoul(identifier, &endptr, 0);
+	if (id > 255) {
+		pr_err("chap identifier: %lu greater than 255\n", id);
+		goto out;
+	}
 	/*
 	 * RFC 1994 says Identifier is no more than octet (8 bits).
 	 */
-	pr_debug("[server] Got CHAP_I=%d\n", id);
+	pr_debug("[server] Got CHAP_I=%lu\n", id);
 	/*
 	 * Get CHAP_C.
 	 */
@@ -334,6 +314,16 @@ static int chap_server_compute_md5(
 		goto out;
 	}
 	/*
+	 * During mutual authentication, the CHAP_C generated by the
+	 * initiator must not match the original CHAP_C generated by
+	 * the target.
+	 */
+	if (!memcmp(challenge_binhex, chap->challenge, CHAP_CHALLENGE_LENGTH)) {
+		pr_err("initiator CHAP_C matches target CHAP_C, failing"
+		       " login attempt\n");
+		goto out;
+	}
+	/*
 	 * Generate CHAP_N and CHAP_R for mutual authentication.
 	 */
 	tfm = crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
@@ -351,7 +341,9 @@ static int chap_server_compute_md5(
 		goto out;
 	}
 
-	sg_init_one(&sg, (void *)&id, 1);
+	/* To handle both endiannesses */
+	id_as_uchar = id;
+	sg_init_one(&sg, &id_as_uchar, 1);
 	ret = crypto_hash_update(&desc, &sg, 1);
 	if (ret < 0) {
 		pr_err("crypto_hash_update() failed for id\n");
@@ -359,7 +351,7 @@ static int chap_server_compute_md5(
 		goto out;
 	}
 
-	sg_init_one(&sg, (void *)auth->password_mutual,
+	sg_init_one(&sg, auth->password_mutual,
 				strlen(auth->password_mutual));
 	ret = crypto_hash_update(&desc, &sg, strlen(auth->password_mutual));
 	if (ret < 0) {
@@ -371,7 +363,7 @@ static int chap_server_compute_md5(
 	/*
 	 * Convert received challenge to binary hex.
 	 */
-	sg_init_one(&sg, (void *)challenge_binhex, challenge_len);
+	sg_init_one(&sg, challenge_binhex, challenge_len);
 	ret = crypto_hash_update(&desc, &sg, challenge_len);
 	if (ret < 0) {
 		pr_err("crypto_hash_update() failed for ma challenge\n");
@@ -414,7 +406,7 @@ static int chap_got_response(
 	char *nr_out_ptr,
 	unsigned int *nr_out_len)
 {
-	struct iscsi_chap *chap = (struct iscsi_chap *) conn->auth_protocol;
+	struct iscsi_chap *chap = conn->auth_protocol;
 
 	switch (chap->digest_type) {
 	case CHAP_DIGEST_MD5:
@@ -437,7 +429,7 @@ u32 chap_main_loop(
 	int *in_len,
 	int *out_len)
 {
-	struct iscsi_chap *chap = (struct iscsi_chap *) conn->auth_protocol;
+	struct iscsi_chap *chap = conn->auth_protocol;
 
 	if (!chap) {
 		chap = chap_server_open(conn, auth, in_text, out_text, out_len);

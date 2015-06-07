@@ -6,7 +6,6 @@
 #include <linux/init.h>
 #include <linux/bio.h>
 #include <linux/blkdev.h>
-#include <linux/bootmem.h>	/* for max_pfn/max_low_pfn */
 #include <linux/slab.h>
 
 #include "blk.h"
@@ -29,21 +28,6 @@ void get_io_context(struct io_context *ioc)
 }
 EXPORT_SYMBOL(get_io_context);
 
-/*
- * Releasing ioc may nest into another put_io_context() leading to nested
- * fast path release.  As the ioc's can't be the same, this is okay but
- * makes lockdep whine.  Keep track of nesting and use it as subclass.
- */
-#ifdef CONFIG_LOCKDEP
-#define ioc_release_depth(q)		((q) ? (q)->ioc_release_depth : 0)
-#define ioc_release_depth_inc(q)	(q)->ioc_release_depth++
-#define ioc_release_depth_dec(q)	(q)->ioc_release_depth--
-#else
-#define ioc_release_depth(q)		0
-#define ioc_release_depth_inc(q)	do { } while (0)
-#define ioc_release_depth_dec(q)	do { } while (0)
-#endif
-
 static void icq_free_icq_rcu(struct rcu_head *head)
 {
 	struct io_cq *icq = container_of(head, struct io_cq, __rcu_head);
@@ -51,10 +35,22 @@ static void icq_free_icq_rcu(struct rcu_head *head)
 	kmem_cache_free(icq->__rcu_icq_cache, icq);
 }
 
-/*
- * Exit and free an icq.  Called with both ioc and q locked.
- */
+/* Exit an icq. Called with both ioc and q locked. */
 static void ioc_exit_icq(struct io_cq *icq)
+{
+	struct elevator_type *et = icq->q->elevator->type;
+
+	if (icq->flags & ICQ_EXITED)
+		return;
+
+	if (et->ops.elevator_exit_icq_fn)
+		et->ops.elevator_exit_icq_fn(icq);
+
+	icq->flags |= ICQ_EXITED;
+}
+
+/* Release an icq.  Called with both ioc and q locked. */
+static void ioc_destroy_icq(struct io_cq *icq)
 {
 	struct io_context *ioc = icq->ioc;
 	struct request_queue *q = icq->q;
@@ -75,11 +71,7 @@ static void ioc_exit_icq(struct io_cq *icq)
 	if (rcu_dereference_raw(ioc->icq_hint) == icq)
 		rcu_assign_pointer(ioc->icq_hint, NULL);
 
-	if (et->ops.elevator_exit_icq_fn) {
-		ioc_release_depth_inc(q);
-		et->ops.elevator_exit_icq_fn(icq);
-		ioc_release_depth_dec(q);
-	}
+	ioc_exit_icq(icq);
 
 	/*
 	 * @icq->q might have gone away by the time RCU callback runs
@@ -97,51 +89,32 @@ static void ioc_release_fn(struct work_struct *work)
 {
 	struct io_context *ioc = container_of(work, struct io_context,
 					      release_work);
-	struct request_queue *last_q = NULL;
+	unsigned long flags;
 
-	spin_lock_irq(&ioc->lock);
+	/*
+	 * Exiting icq may call into put_io_context() through elevator
+	 * which will trigger lockdep warning.  The ioc's are guaranteed to
+	 * be different, use a different locking subclass here.  Use
+	 * irqsave variant as there's no spin_lock_irq_nested().
+	 */
+	spin_lock_irqsave_nested(&ioc->lock, flags, 1);
 
 	while (!hlist_empty(&ioc->icq_list)) {
 		struct io_cq *icq = hlist_entry(ioc->icq_list.first,
 						struct io_cq, ioc_node);
-		struct request_queue *this_q = icq->q;
+		struct request_queue *q = icq->q;
 
-		if (this_q != last_q) {
-			/*
-			 * Need to switch to @this_q.  Once we release
-			 * @ioc->lock, it can go away along with @cic.
-			 * Hold on to it.
-			 */
-			__blk_get_queue(this_q);
-
-			/*
-			 * blk_put_queue() might sleep thanks to kobject
-			 * idiocy.  Always release both locks, put and
-			 * restart.
-			 */
-			if (last_q) {
-				spin_unlock(last_q->queue_lock);
-				spin_unlock_irq(&ioc->lock);
-				blk_put_queue(last_q);
-			} else {
-				spin_unlock_irq(&ioc->lock);
-			}
-
-			last_q = this_q;
-			spin_lock_irq(this_q->queue_lock);
-			spin_lock(&ioc->lock);
-			continue;
+		if (spin_trylock(q->queue_lock)) {
+			ioc_destroy_icq(icq);
+			spin_unlock(q->queue_lock);
+		} else {
+			spin_unlock_irqrestore(&ioc->lock, flags);
+			cpu_relax();
+			spin_lock_irqsave_nested(&ioc->lock, flags, 1);
 		}
-		ioc_exit_icq(icq);
 	}
 
-	if (last_q) {
-		spin_unlock(last_q->queue_lock);
-		spin_unlock_irq(&ioc->lock);
-		blk_put_queue(last_q);
-	} else {
-		spin_unlock_irq(&ioc->lock);
-	}
+	spin_unlock_irqrestore(&ioc->lock, flags);
 
 	kmem_cache_free(iocontext_cachep, ioc);
 }
@@ -149,81 +122,79 @@ static void ioc_release_fn(struct work_struct *work)
 /**
  * put_io_context - put a reference of io_context
  * @ioc: io_context to put
- * @locked_q: request_queue the caller is holding queue_lock of (hint)
  *
  * Decrement reference count of @ioc and release it if the count reaches
- * zero.  If the caller is holding queue_lock of a queue, it can indicate
- * that with @locked_q.  This is an optimization hint and the caller is
- * allowed to pass in %NULL even when it's holding a queue_lock.
+ * zero.
  */
-void put_io_context(struct io_context *ioc, struct request_queue *locked_q)
+void put_io_context(struct io_context *ioc)
 {
-	struct request_queue *last_q = locked_q;
 	unsigned long flags;
+	bool free_ioc = false;
 
 	if (ioc == NULL)
 		return;
 
 	BUG_ON(atomic_long_read(&ioc->refcount) <= 0);
-	if (locked_q)
-		lockdep_assert_held(locked_q->queue_lock);
-
-	if (!atomic_long_dec_and_test(&ioc->refcount))
-		return;
 
 	/*
-	 * Destroy @ioc.  This is a bit messy because icq's are chained
-	 * from both ioc and queue, and ioc->lock nests inside queue_lock.
-	 * The inner ioc->lock should be held to walk our icq_list and then
-	 * for each icq the outer matching queue_lock should be grabbed.
-	 * ie. We need to do reverse-order double lock dancing.
-	 *
-	 * Another twist is that we are often called with one of the
-	 * matching queue_locks held as indicated by @locked_q, which
-	 * prevents performing double-lock dance for other queues.
-	 *
-	 * So, we do it in two stages.  The fast path uses the queue_lock
-	 * the caller is holding and, if other queues need to be accessed,
-	 * uses trylock to avoid introducing locking dependency.  This can
-	 * handle most cases, especially if @ioc was performing IO on only
-	 * single device.
-	 *
-	 * If trylock doesn't cut it, we defer to @ioc->release_work which
-	 * can do all the double-locking dancing.
+	 * Releasing ioc requires reverse order double locking and we may
+	 * already be holding a queue_lock.  Do it asynchronously from wq.
 	 */
-	spin_lock_irqsave_nested(&ioc->lock, flags,
-				 ioc_release_depth(locked_q));
-
-	while (!hlist_empty(&ioc->icq_list)) {
-		struct io_cq *icq = hlist_entry(ioc->icq_list.first,
-						struct io_cq, ioc_node);
-		struct request_queue *this_q = icq->q;
-
-		if (this_q != last_q) {
-			if (last_q && last_q != locked_q)
-				spin_unlock(last_q->queue_lock);
-			last_q = NULL;
-
-			if (!spin_trylock(this_q->queue_lock))
-				break;
-			last_q = this_q;
-			continue;
-		}
-		ioc_exit_icq(icq);
+	if (atomic_long_dec_and_test(&ioc->refcount)) {
+		spin_lock_irqsave(&ioc->lock, flags);
+		if (!hlist_empty(&ioc->icq_list))
+			queue_work(system_power_efficient_wq,
+					&ioc->release_work);
+		else
+			free_ioc = true;
+		spin_unlock_irqrestore(&ioc->lock, flags);
 	}
 
-	if (last_q && last_q != locked_q)
-		spin_unlock(last_q->queue_lock);
-
-	spin_unlock_irqrestore(&ioc->lock, flags);
-
-	/* if no icq is left, we're done; otherwise, kick release_work */
-	if (hlist_empty(&ioc->icq_list))
+	if (free_ioc)
 		kmem_cache_free(iocontext_cachep, ioc);
-	else
-		schedule_work(&ioc->release_work);
 }
 EXPORT_SYMBOL(put_io_context);
+
+/**
+ * put_io_context_active - put active reference on ioc
+ * @ioc: ioc of interest
+ *
+ * Undo get_io_context_active().  If active reference reaches zero after
+ * put, @ioc can never issue further IOs and ioscheds are notified.
+ */
+void put_io_context_active(struct io_context *ioc)
+{
+	unsigned long flags;
+	struct io_cq *icq;
+
+	if (!atomic_dec_and_test(&ioc->active_ref)) {
+		put_io_context(ioc);
+		return;
+	}
+
+	/*
+	 * Need ioc lock to walk icq_list and q lock to exit icq.  Perform
+	 * reverse double locking.  Read comment in ioc_release_fn() for
+	 * explanation on the nested locking annotation.
+	 */
+retry:
+	spin_lock_irqsave_nested(&ioc->lock, flags, 1);
+	hlist_for_each_entry(icq, &ioc->icq_list, ioc_node) {
+		if (icq->flags & ICQ_EXITED)
+			continue;
+		if (spin_trylock(icq->q->queue_lock)) {
+			ioc_exit_icq(icq);
+			spin_unlock(icq->q->queue_lock);
+		} else {
+			spin_unlock_irqrestore(&ioc->lock, flags);
+			cpu_relax();
+			goto retry;
+		}
+	}
+	spin_unlock_irqrestore(&ioc->lock, flags);
+
+	put_io_context(ioc);
+}
 
 /* Called by the exiting task */
 void exit_io_context(struct task_struct *task)
@@ -236,7 +207,7 @@ void exit_io_context(struct task_struct *task)
 	task_unlock(task);
 
 	atomic_dec(&ioc->nr_tasks);
-	put_io_context(ioc, NULL);
+	put_io_context_active(ioc);
 }
 
 /**
@@ -255,24 +226,25 @@ void ioc_clear_queue(struct request_queue *q)
 		struct io_context *ioc = icq->ioc;
 
 		spin_lock(&ioc->lock);
-		ioc_exit_icq(icq);
+		ioc_destroy_icq(icq);
 		spin_unlock(&ioc->lock);
 	}
 }
 
-void create_io_context_slowpath(struct task_struct *task, gfp_t gfp_flags,
-				int node)
+int create_task_io_context(struct task_struct *task, gfp_t gfp_flags, int node)
 {
 	struct io_context *ioc;
+	int ret;
 
 	ioc = kmem_cache_alloc_node(iocontext_cachep, gfp_flags | __GFP_ZERO,
 				    node);
 	if (unlikely(!ioc))
-		return;
+		return -ENOMEM;
 
 	/* initialize */
 	atomic_long_set(&ioc->refcount, 1);
 	atomic_set(&ioc->nr_tasks, 1);
+	atomic_set(&ioc->active_ref, 1);
 	spin_lock_init(&ioc->lock);
 	INIT_RADIX_TREE(&ioc->icq_tree, GFP_ATOMIC | __GFP_HIGH);
 	INIT_HLIST_HEAD(&ioc->icq_list);
@@ -291,7 +263,12 @@ void create_io_context_slowpath(struct task_struct *task, gfp_t gfp_flags,
 		task->io_context = ioc;
 	else
 		kmem_cache_free(iocontext_cachep, ioc);
+
+	ret = task->io_context ? 0 : -EBUSY;
+
 	task_unlock(task);
+
+	return ret;
 }
 
 /**
@@ -323,7 +300,7 @@ struct io_context *get_task_io_context(struct task_struct *task,
 			return ioc;
 		}
 		task_unlock(task);
-	} while (create_io_context(task, gfp_flags, node));
+	} while (!create_task_io_context(task, gfp_flags, node));
 
 	return NULL;
 }
@@ -367,32 +344,29 @@ EXPORT_SYMBOL(ioc_lookup_icq);
 
 /**
  * ioc_create_icq - create and link io_cq
+ * @ioc: io_context of interest
  * @q: request_queue of interest
  * @gfp_mask: allocation mask
  *
- * Make sure io_cq linking %current->io_context and @q exists.  If either
- * io_context and/or icq don't exist, they will be created using @gfp_mask.
+ * Make sure io_cq linking @ioc and @q exists.  If icq doesn't exist, they
+ * will be created using @gfp_mask.
  *
  * The caller is responsible for ensuring @ioc won't go away and @q is
  * alive and will stay alive until this function returns.
  */
-struct io_cq *ioc_create_icq(struct request_queue *q, gfp_t gfp_mask)
+struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
+			     gfp_t gfp_mask)
 {
 	struct elevator_type *et = q->elevator->type;
-	struct io_context *ioc;
 	struct io_cq *icq;
 
 	/* allocate stuff */
-	ioc = create_io_context(current, gfp_mask, q->node);
-	if (!ioc)
-		return NULL;
-
 	icq = kmem_cache_alloc_node(et->icq_cache, gfp_mask | __GFP_ZERO,
 				    q->node);
 	if (!icq)
 		return NULL;
 
-	if (radix_tree_preload(gfp_mask) < 0) {
+	if (radix_tree_maybe_preload(gfp_mask) < 0) {
 		kmem_cache_free(et->icq_cache, icq);
 		return NULL;
 	}
@@ -423,52 +397,6 @@ struct io_cq *ioc_create_icq(struct request_queue *q, gfp_t gfp_mask)
 	radix_tree_preload_end();
 	return icq;
 }
-
-void ioc_set_changed(struct io_context *ioc, int which)
-{
-	struct io_cq *icq;
-	struct hlist_node *n;
-
-	hlist_for_each_entry(icq, n, &ioc->icq_list, ioc_node)
-		set_bit(which, &icq->changed);
-}
-
-/**
- * ioc_ioprio_changed - notify ioprio change
- * @ioc: io_context of interest
- * @ioprio: new ioprio
- *
- * @ioc's ioprio has changed to @ioprio.  Set %ICQ_IOPRIO_CHANGED for all
- * icq's.  iosched is responsible for checking the bit and applying it on
- * request issue path.
- */
-void ioc_ioprio_changed(struct io_context *ioc, int ioprio)
-{
-	unsigned long flags;
-
-	spin_lock_irqsave(&ioc->lock, flags);
-	ioc->ioprio = ioprio;
-	ioc_set_changed(ioc, ICQ_IOPRIO_CHANGED);
-	spin_unlock_irqrestore(&ioc->lock, flags);
-}
-
-/**
- * ioc_cgroup_changed - notify cgroup change
- * @ioc: io_context of interest
- *
- * @ioc's cgroup has changed.  Set %ICQ_CGROUP_CHANGED for all icq's.
- * iosched is responsible for checking the bit and applying it on request
- * issue path.
- */
-void ioc_cgroup_changed(struct io_context *ioc)
-{
-	unsigned long flags;
-
-	spin_lock_irqsave(&ioc->lock, flags);
-	ioc_set_changed(ioc, ICQ_CGROUP_CHANGED);
-	spin_unlock_irqrestore(&ioc->lock, flags);
-}
-EXPORT_SYMBOL(ioc_cgroup_changed);
 
 static int __init blk_ioc_init(void)
 {

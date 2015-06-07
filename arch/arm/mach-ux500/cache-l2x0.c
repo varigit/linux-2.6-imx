@@ -5,50 +5,15 @@
  */
 
 #include <linux/io.h>
+#include <linux/of.h>
+
 #include <asm/cacheflush.h>
 #include <asm/hardware/cache-l2x0.h>
-#include <mach/hardware.h>
-#include <mach/id.h>
+
+#include "db8500-regs.h"
+#include "id.h"
 
 static void __iomem *l2x0_base;
-
-static inline void ux500_cache_wait(void __iomem *reg, unsigned long mask)
-{
-	/* wait for the operation to complete */
-	while (readl_relaxed(reg) & mask)
-		cpu_relax();
-}
-
-static inline void ux500_cache_sync(void)
-{
-	writel_relaxed(0, l2x0_base + L2X0_CACHE_SYNC);
-	ux500_cache_wait(l2x0_base + L2X0_CACHE_SYNC, 1);
-}
-
-/*
- * The L2 cache cannot be turned off in the non-secure world.
- * Dummy until a secure service is in place.
- */
-static void ux500_l2x0_disable(void)
-{
-}
-
-/*
- * This is only called when doing a kexec, just after turning off the L2
- * and L1 cache, and it is surrounded by a spinlock in the generic version.
- * However, we're not really turning off the L2 cache right now and the
- * PL310 does not support exclusive accesses (used to implement the spinlock).
- * So, the invalidation needs to be done without the spinlock.
- */
-static void ux500_l2x0_inv_all(void)
-{
-	uint32_t l2x0_way_mask = (1<<16) - 1;	/* Bitmask of active ways */
-
-	/* invalidate all ways */
-	writel_relaxed(l2x0_way_mask, l2x0_base + L2X0_INV_WAY);
-	ux500_cache_wait(l2x0_base + L2X0_INV_WAY, l2x0_way_mask);
-	ux500_cache_sync();
-}
 
 static int __init ux500_l2x0_unlock(void)
 {
@@ -72,22 +37,39 @@ static int __init ux500_l2x0_unlock(void)
 
 static int __init ux500_l2x0_init(void)
 {
-	if (cpu_is_u5500())
-		l2x0_base = __io_address(U5500_L2CC_BASE);
-	else if (cpu_is_u8500())
+	u32 aux_val = 0x3e000000;
+
+	if (cpu_is_u8500_family() || cpu_is_ux540_family())
 		l2x0_base = __io_address(U8500_L2CC_BASE);
 	else
-		ux500_unknown_soc();
+		/* Non-Ux500 platform */
+		return -ENODEV;
 
 	/* Unlock before init */
 	ux500_l2x0_unlock();
 
-	/* 64KB way size, 8 way associativity, force WA */
-	l2x0_init(l2x0_base, 0x3e060000, 0xc0000fff);
+	/* DBx540's L2 has 128KB way size */
+	if (cpu_is_ux540_family())
+		/* 128KB way size */
+		aux_val |= (0x4 << L2X0_AUX_CTRL_WAY_SIZE_SHIFT);
+	else
+		/* 64KB way size */
+		aux_val |= (0x3 << L2X0_AUX_CTRL_WAY_SIZE_SHIFT);
 
-	/* Override invalidate function */
-	outer_cache.disable = ux500_l2x0_disable;
-	outer_cache.inv_all = ux500_l2x0_inv_all;
+	/* 64KB way size, 8 way associativity, force WA */
+	if (of_have_populated_dt())
+		l2x0_of_init(aux_val, 0xc0000fff);
+	else
+		l2x0_init(l2x0_base, aux_val, 0xc0000fff);
+
+	/*
+	 * We can't disable l2 as we are in non secure mode, currently
+	 * this seems be called only during kexec path. So let's
+	 * override outer.disable with nasty assignment until we have
+	 * some SMI service available.
+	 */
+	outer_cache.disable = NULL;
+	outer_cache.set_debug = NULL;
 
 	return 0;
 }

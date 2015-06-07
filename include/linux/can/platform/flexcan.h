@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Marc Kleine-Budde <kernel@pengutronix.de>
+ * Copyright (C) 2014 Freescale Semiconductor, Inc.
  *
  * This file is released under the GPLv2
  *

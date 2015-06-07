@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Freescale Semiconductor, Inc.
+ * Copyright 2011-2014 Freescale Semiconductor, Inc.
  * Copyright 2011 Linaro Ltd.
  *
  * The code contained herein is licensed under the GNU General Public
@@ -12,14 +12,18 @@
 
 #include <linux/init.h>
 #include <linux/smp.h>
+#include <asm/cacheflush.h>
 #include <asm/page.h>
 #include <asm/smp_scu.h>
-#include <asm/hardware/gic.h>
 #include <asm/mach/map.h>
-#include <mach/common.h>
-#include <mach/hardware.h>
 
-static void __iomem *scu_base;
+#include "common.h"
+#include "hardware.h"
+
+#define SCU_STANDBY_ENABLE	(1 << 5)
+
+u32 g_diag_reg;
+void __iomem *imx_scu_base;
 
 static struct map_desc scu_io_desc __initdata = {
 	/* .virtual and .pfn are run-time assigned */
@@ -38,20 +42,18 @@ void __init imx_scu_map_io(void)
 	scu_io_desc.pfn = __phys_to_pfn(base);
 	iotable_init(&scu_io_desc, 1);
 
-	scu_base = IMX_IO_ADDRESS(base);
+	imx_scu_base = IMX_IO_ADDRESS(base);
 }
 
-void __cpuinit platform_secondary_init(unsigned int cpu)
+void imx_scu_standby_enable(void)
 {
-	/*
-	 * if any interrupts are already enabled for the primary
-	 * core (e.g. timer irq), then they will not have been enabled
-	 * for us: do so
-	 */
-	gic_secondary_init(0);
+	u32 val = readl_relaxed(imx_scu_base);
+
+	val |= SCU_STANDBY_ENABLE;
+	writel_relaxed(val, imx_scu_base);
 }
 
-int __cpuinit boot_secondary(unsigned int cpu, struct task_struct *idle)
+static int __cpuinit imx_boot_secondary(unsigned int cpu, struct task_struct *idle)
 {
 	imx_set_cpu_jump(cpu, v7_secondary_startup);
 	imx_enable_cpu(cpu, true);
@@ -62,24 +64,54 @@ int __cpuinit boot_secondary(unsigned int cpu, struct task_struct *idle)
  * Initialise the CPU possible map early - this describes the CPUs
  * which may be present or become present in the system.
  */
-void __init smp_init_cpus(void)
+static void __init imx_smp_init_cpus(void)
 {
-	int i, ncores;
+	int i, ncores = scu_get_core_count(imx_scu_base);
+	u32 me = smp_processor_id();
 
-	ncores = scu_get_core_count(scu_base);
+	if (setup_max_cpus < ncores)
+		ncores = (setup_max_cpus) ? setup_max_cpus : 1;
 
-	for (i = 0; i < ncores; i++)
-		set_cpu_possible(i, true);
+	for (i = ncores; i < NR_CPUS; i++)
+		set_cpu_possible(i, false);
 
-	set_smp_cross_call(gic_raise_softirq);
+	/* Set the SCU CPU Power status for each inactive core. */
+	for (i = 0; i < NR_CPUS;  i++) {
+		if (i != me)
+			__raw_writeb(SCU_PM_POWEROFF, imx_scu_base + 0x08 + i);
+	}
 }
 
 void imx_smp_prepare(void)
 {
-	scu_enable(scu_base);
+	scu_enable(imx_scu_base);
+	/* Need to enable SCU standby for entering WAIT mode */
+	imx_scu_standby_enable();
 }
 
-void __init platform_smp_prepare_cpus(unsigned int max_cpus)
+static void __init imx_smp_prepare_cpus(unsigned int max_cpus)
 {
 	imx_smp_prepare();
+
+	/*
+	 * The diagnostic register holds the errata bits.  Mostly bootloader
+	 * does not bring up secondary cores, so that when errata bits are set
+	 * in bootloader, they are set only for boot cpu.  But on a SMP
+	 * configuration, it should be equally done on every single core.
+	 * Read the register from boot cpu here, and will replicate it into
+	 * secondary cores when booting them.
+	 */
+	asm("mrc p15, 0, %0, c15, c0, 1" : "=r" (g_diag_reg) : : "cc");
+	__cpuc_flush_dcache_area(&g_diag_reg, sizeof(g_diag_reg));
+	outer_clean_range(__pa(&g_diag_reg), __pa(&g_diag_reg + 1));
 }
+
+struct smp_operations  imx_smp_ops __initdata = {
+	.smp_init_cpus		= imx_smp_init_cpus,
+	.smp_prepare_cpus	= imx_smp_prepare_cpus,
+	.smp_boot_secondary	= imx_boot_secondary,
+#ifdef CONFIG_HOTPLUG_CPU
+	.cpu_die		= imx_cpu_die,
+	.cpu_kill		= imx_cpu_kill,
+#endif
+};

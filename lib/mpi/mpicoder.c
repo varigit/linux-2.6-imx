@@ -18,72 +18,64 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+#include <linux/bitops.h>
+#include <asm-generic/bitops/count_zeros.h>
 #include "mpi-internal.h"
 
-#define DIM(v) (sizeof(v)/sizeof((v)[0]))
 #define MAX_EXTERN_MPI_BITS 16384
 
-static uint8_t asn[15] =	/* Object ID is 1.3.14.3.2.26 */
-{ 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03,
-	0x02, 0x1a, 0x05, 0x00, 0x04, 0x14
-};
-
-MPI do_encode_md(const void *sha_buffer, unsigned nbits)
+/**
+ * mpi_read_raw_data - Read a raw byte stream as a positive integer
+ * @xbuffer: The data to read
+ * @nbytes: The amount of data to read
+ */
+MPI mpi_read_raw_data(const void *xbuffer, size_t nbytes)
 {
-	int nframe = (nbits + 7) / 8;
-	uint8_t *frame, *fr_pt;
-	int i = 0, n;
-	size_t asnlen = DIM(asn);
-	MPI a = MPI_NULL;
+	const uint8_t *buffer = xbuffer;
+	int i, j;
+	unsigned nbits, nlimbs;
+	mpi_limb_t a;
+	MPI val = NULL;
 
-	if (SHA1_DIGEST_LENGTH + asnlen + 4 > nframe)
-		pr_info("MPI: can't encode a %d bit MD into a %d bits frame\n",
-		       (int)(SHA1_DIGEST_LENGTH * 8), (int)nbits);
-
-	/* We encode the MD in this way:
-	 *
-	 *       0  A PAD(n bytes)   0  ASN(asnlen bytes)  MD(len bytes)
-	 *
-	 * PAD consists of FF bytes.
-	 */
-	frame = kmalloc(nframe, GFP_KERNEL);
-	if (!frame)
-		return MPI_NULL;
-	n = 0;
-	frame[n++] = 0;
-	frame[n++] = 1;		/* block type */
-	i = nframe - SHA1_DIGEST_LENGTH - asnlen - 3;
-
-	if (i <= 1) {
-		pr_info("MPI: message digest encoding failed\n");
-		kfree(frame);
-		return a;
+	while (nbytes > 0 && buffer[0] == 0) {
+		buffer++;
+		nbytes--;
 	}
 
-	memset(frame + n, 0xff, i);
-	n += i;
-	frame[n++] = 0;
-	memcpy(frame + n, &asn, asnlen);
-	n += asnlen;
-	memcpy(frame + n, sha_buffer, SHA1_DIGEST_LENGTH);
-	n += SHA1_DIGEST_LENGTH;
-
-	i = nframe;
-	fr_pt = frame;
-
-	if (n != nframe) {
-		printk
-		    ("MPI: message digest encoding failed, frame length is wrong\n");
-		kfree(frame);
-		return a;
+	nbits = nbytes * 8;
+	if (nbits > MAX_EXTERN_MPI_BITS) {
+		pr_info("MPI: mpi too large (%u bits)\n", nbits);
+		return NULL;
 	}
+	if (nbytes > 0)
+		nbits -= count_leading_zeros(buffer[0]);
+	else
+		nbits = 0;
 
-	a = mpi_alloc((nframe + BYTES_PER_MPI_LIMB - 1) / BYTES_PER_MPI_LIMB);
-	mpi_set_buffer(a, frame, nframe, 0);
-	kfree(frame);
+	nlimbs = DIV_ROUND_UP(nbytes, BYTES_PER_MPI_LIMB);
+	val = mpi_alloc(nlimbs);
+	if (!val)
+		return NULL;
+	val->nbits = nbits;
+	val->sign = 0;
+	val->nlimbs = nlimbs;
 
-	return a;
+	if (nbytes > 0) {
+		i = BYTES_PER_MPI_LIMB - nbytes % BYTES_PER_MPI_LIMB;
+		i %= BYTES_PER_MPI_LIMB;
+		for (j = nlimbs; j > 0; j--) {
+			a = 0;
+			for (; i < BYTES_PER_MPI_LIMB; i++) {
+				a <<= 8;
+				a |= *buffer++;
+			}
+			i = 0;
+			val->d[j - 1] = a;
+		}
+	}
+	return val;
 }
+EXPORT_SYMBOL_GPL(mpi_read_raw_data);
 
 MPI mpi_read_from_buffer(const void *xbuffer, unsigned *ret_nread)
 {
@@ -91,7 +83,7 @@ MPI mpi_read_from_buffer(const void *xbuffer, unsigned *ret_nread)
 	int i, j;
 	unsigned nbits, nbytes, nlimbs, nread = 0;
 	mpi_limb_t a;
-	MPI val = MPI_NULL;
+	MPI val = NULL;
 
 	if (*ret_nread < 2)
 		goto leave;
@@ -104,11 +96,11 @@ MPI mpi_read_from_buffer(const void *xbuffer, unsigned *ret_nread)
 	buffer += 2;
 	nread = 2;
 
-	nbytes = (nbits + 7) / 8;
-	nlimbs = (nbytes + BYTES_PER_MPI_LIMB - 1) / BYTES_PER_MPI_LIMB;
+	nbytes = DIV_ROUND_UP(nbits, 8);
+	nlimbs = DIV_ROUND_UP(nbytes, BYTES_PER_MPI_LIMB);
 	val = mpi_alloc(nlimbs);
 	if (!val)
-		return MPI_NULL;
+		return NULL;
 	i = BYTES_PER_MPI_LIMB - nbytes % BYTES_PER_MPI_LIMB;
 	i %= BYTES_PER_MPI_LIMB;
 	val->nbits = nbits;
@@ -137,105 +129,6 @@ leave:
 EXPORT_SYMBOL_GPL(mpi_read_from_buffer);
 
 /****************
- * Make an mpi from a character string.
- */
-int mpi_fromstr(MPI val, const char *str)
-{
-	int hexmode = 0, sign = 0, prepend_zero = 0, i, j, c, c1, c2;
-	unsigned nbits, nbytes, nlimbs;
-	mpi_limb_t a;
-
-	if (*str == '-') {
-		sign = 1;
-		str++;
-	}
-	if (*str == '0' && str[1] == 'x')
-		hexmode = 1;
-	else
-		return -EINVAL;	/* other bases are not yet supported */
-	str += 2;
-
-	nbits = strlen(str) * 4;
-	if (nbits % 8)
-		prepend_zero = 1;
-	nbytes = (nbits + 7) / 8;
-	nlimbs = (nbytes + BYTES_PER_MPI_LIMB - 1) / BYTES_PER_MPI_LIMB;
-	if (val->alloced < nlimbs)
-		if (!mpi_resize(val, nlimbs))
-			return -ENOMEM;
-	i = BYTES_PER_MPI_LIMB - nbytes % BYTES_PER_MPI_LIMB;
-	i %= BYTES_PER_MPI_LIMB;
-	j = val->nlimbs = nlimbs;
-	val->sign = sign;
-	for (; j > 0; j--) {
-		a = 0;
-		for (; i < BYTES_PER_MPI_LIMB; i++) {
-			if (prepend_zero) {
-				c1 = '0';
-				prepend_zero = 0;
-			} else
-				c1 = *str++;
-			assert(c1);
-			c2 = *str++;
-			assert(c2);
-			if (c1 >= '0' && c1 <= '9')
-				c = c1 - '0';
-			else if (c1 >= 'a' && c1 <= 'f')
-				c = c1 - 'a' + 10;
-			else if (c1 >= 'A' && c1 <= 'F')
-				c = c1 - 'A' + 10;
-			else {
-				mpi_clear(val);
-				return 1;
-			}
-			c <<= 4;
-			if (c2 >= '0' && c2 <= '9')
-				c |= c2 - '0';
-			else if (c2 >= 'a' && c2 <= 'f')
-				c |= c2 - 'a' + 10;
-			else if (c2 >= 'A' && c2 <= 'F')
-				c |= c2 - 'A' + 10;
-			else {
-				mpi_clear(val);
-				return 1;
-			}
-			a <<= 8;
-			a |= c;
-		}
-		i = 0;
-
-		val->d[j - 1] = a;
-	}
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(mpi_fromstr);
-
-/****************
- * Special function to get the low 8 bytes from an mpi.
- * This can be used as a keyid; KEYID is an 2 element array.
- * Return the low 4 bytes.
- */
-u32 mpi_get_keyid(const MPI a, u32 *keyid)
-{
-#if BYTES_PER_MPI_LIMB == 4
-	if (keyid) {
-		keyid[0] = a->nlimbs >= 2 ? a->d[1] : 0;
-		keyid[1] = a->nlimbs >= 1 ? a->d[0] : 0;
-	}
-	return a->nlimbs >= 1 ? a->d[0] : 0;
-#elif BYTES_PER_MPI_LIMB == 8
-	if (keyid) {
-		keyid[0] = a->nlimbs ? (u32) (a->d[0] >> 32) : 0;
-		keyid[1] = a->nlimbs ? (u32) (a->d[0] & 0xffffffff) : 0;
-	}
-	return a->nlimbs ? (u32) (a->d[0] & 0xffffffff) : 0;
-#else
-#error Make this function work with other LIMB sizes
-#endif
-}
-
-/****************
  * Return an allocated buffer with the MPI (msb first).
  * NBYTES receives the length of this buffer. Caller must free the
  * return string (This function does return a 0 byte buffer with NBYTES
@@ -255,6 +148,8 @@ void *mpi_get_buffer(MPI a, unsigned *nbytes, int *sign)
 	if (!n)
 		n++;		/* avoid zero length allocation */
 	p = buffer = kmalloc(n, GFP_KERNEL);
+	if (!p)
+		return NULL;
 
 	for (i = a->nlimbs - 1; i >= 0; i--) {
 		alimb = a->d[i];
@@ -298,7 +193,7 @@ int mpi_set_buffer(MPI a, const void *xbuffer, unsigned nbytes, int sign)
 	int nlimbs;
 	int i;
 
-	nlimbs = (nbytes + BYTES_PER_MPI_LIMB - 1) / BYTES_PER_MPI_LIMB;
+	nlimbs = DIV_ROUND_UP(nbytes, BYTES_PER_MPI_LIMB);
 	if (RESIZE_IF_NEEDED(a, nlimbs) < 0)
 		return -ENOMEM;
 	a->sign = sign;

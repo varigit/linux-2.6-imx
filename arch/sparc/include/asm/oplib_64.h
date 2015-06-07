@@ -62,7 +62,8 @@ struct linux_mem_p1275 {
 /* You must call prom_init() before using any of the library services,
  * preferably as early as possible.  Pass it the romvec pointer.
  */
-extern void prom_init(void *cif_handler, void *cif_stack);
+extern void prom_init(void *cif_handler);
+extern void prom_init_report(void);
 
 /* Boot argument acquisition, returns the boot command line string. */
 extern char *prom_getbootargs(void);
@@ -98,7 +99,7 @@ extern unsigned char prom_get_idprom(char *idp_buffer, int idpbuf_size);
 extern void prom_console_write_buf(const char *buf, int len);
 
 /* Prom's internal routines, don't use in kernel/boot code. */
-extern void prom_printf(const char *fmt, ...);
+extern __printf(1, 2) void prom_printf(const char *fmt, ...);
 extern void prom_write(const char *buf, unsigned int len);
 
 /* Multiprocessor operations... */

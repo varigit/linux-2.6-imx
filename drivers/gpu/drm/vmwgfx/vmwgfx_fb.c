@@ -28,10 +28,10 @@
 
 #include <linux/export.h>
 
-#include "drmP.h"
+#include <drm/drmP.h>
 #include "vmwgfx_drv.h"
 
-#include "ttm/ttm_placement.h"
+#include <drm/ttm/ttm_placement.h>
 
 #define VMW_DIRTY_DELAY (HZ / 30)
 
@@ -147,7 +147,7 @@ static int vmw_fb_check_var(struct fb_var_screeninfo *var,
 	}
 
 	if (!vmw_kms_validate_mode_vram(vmw_priv,
-					info->fix.line_length,
+					var->xres * var->bits_per_pixel/8,
 					var->yoffset + var->yres)) {
 		DRM_ERROR("Requested geom can not fit in framebuffer\n");
 		return -EINVAL;
@@ -161,6 +161,8 @@ static int vmw_fb_set_par(struct fb_info *info)
 	struct vmw_fb_par *par = info->par;
 	struct vmw_private *vmw_priv = par->vmw_priv;
 	int ret;
+
+	info->fix.line_length = info->var.xres * info->var.bits_per_pixel/8;
 
 	ret = vmw_kms_write_svga(vmw_priv, info->var.xres, info->var.yres,
 				 info->fix.line_length,
@@ -414,10 +416,6 @@ int vmw_fb_init(struct vmw_private *vmw_priv)
 	unsigned fb_bpp, fb_depth, fb_offset, fb_pitch, fb_size;
 	int ret;
 
-	/* XXX These shouldn't be hardcoded. */
-	initial_width = 800;
-	initial_height = 600;
-
 	fb_bpp = 32;
 	fb_depth = 24;
 
@@ -425,8 +423,8 @@ int vmw_fb_init(struct vmw_private *vmw_priv)
 	fb_width = min(vmw_priv->fb_max_width, (unsigned)2048);
 	fb_height = min(vmw_priv->fb_max_height, (unsigned)2048);
 
-	initial_width = min(fb_width, initial_width);
-	initial_height = min(fb_height, initial_height);
+	initial_width = min(vmw_priv->initial_width, fb_width);
+	initial_height = min(vmw_priv->initial_height, fb_height);
 
 	fb_pitch = fb_width * fb_bpp / 8;
 	fb_size = fb_pitch * fb_height;
@@ -515,19 +513,7 @@ int vmw_fb_init(struct vmw_private *vmw_priv)
 	info->var.xres = initial_width;
 	info->var.yres = initial_height;
 
-#if 0
-	info->pixmap.size = 64*1024;
-	info->pixmap.buf_align = 8;
-	info->pixmap.access_align = 32;
-	info->pixmap.flags = FB_PIXMAP_SYSTEM;
-	info->pixmap.scan_align = 1;
-#else
-	info->pixmap.size = 0;
-	info->pixmap.buf_align = 8;
-	info->pixmap.access_align = 32;
-	info->pixmap.flags = FB_PIXMAP_SYSTEM;
-	info->pixmap.scan_align = 1;
-#endif
+	/* Use default scratch pixmap (info->pixmap.flags = FB_PIXMAP_SYSTEM) */
 
 	info->apertures = alloc_apertures(1);
 	if (!info->apertures) {
@@ -610,7 +596,7 @@ int vmw_fb_off(struct vmw_private *vmw_priv)
 	par->dirty.active = false;
 	spin_unlock_irqrestore(&par->dirty.lock, flags);
 
-	flush_delayed_work_sync(&info->deferred_work);
+	flush_delayed_work(&info->deferred_work);
 
 	par->bo_ptr = NULL;
 	ttm_bo_kunmap(&par->map);

@@ -31,8 +31,8 @@
 #include <asm/cacheflush.h>
 #include <asm/sizes.h>
 
-#include <mach/iommu_hw-8xxx.h>
-#include <mach/iommu.h>
+#include "msm_iommu_hw-8xxx.h"
+#include "msm_iommu.h"
 
 #define MRC(reg, processor, op1, crn, crm, op2)				\
 __asm__ __volatile__ (							\
@@ -226,6 +226,11 @@ static int msm_iommu_domain_init(struct iommu_domain *domain)
 
 	memset(priv->pgtable, 0, SZ_16K);
 	domain->priv = priv;
+
+	domain->geometry.aperture_start = 0;
+	domain->geometry.aperture_end   = (1ULL << 32) - 1;
+	domain->geometry.force_aperture = true;
+
 	return 0;
 
 fail_nomem:
@@ -482,23 +487,19 @@ static size_t msm_iommu_unmap(struct iommu_domain *domain, unsigned long va,
 
 	priv = domain->priv;
 
-	if (!priv) {
-		ret = -ENODEV;
+	if (!priv)
 		goto fail;
-	}
 
 	fl_table = priv->pgtable;
 
 	if (len != SZ_16M && len != SZ_1M &&
 	    len != SZ_64K && len != SZ_4K) {
 		pr_debug("Bad length: %d\n", len);
-		ret = -EINVAL;
 		goto fail;
 	}
 
 	if (!fl_table) {
 		pr_debug("Null page table\n");
-		ret = -EINVAL;
 		goto fail;
 	}
 
@@ -507,7 +508,6 @@ static size_t msm_iommu_unmap(struct iommu_domain *domain, unsigned long va,
 
 	if (*fl_pte == 0) {
 		pr_debug("First level PTE is 0\n");
-		ret = -ENODEV;
 		goto fail;
 	}
 
@@ -554,7 +554,7 @@ fail:
 }
 
 static phys_addr_t msm_iommu_iova_to_phys(struct iommu_domain *domain,
-					  unsigned long va)
+					  dma_addr_t va)
 {
 	struct msm_priv *priv;
 	struct msm_iommu_drvdata *iommu_drvdata;

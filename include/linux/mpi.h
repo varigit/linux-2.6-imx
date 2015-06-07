@@ -57,8 +57,6 @@ struct gcry_mpi {
 
 typedef struct gcry_mpi *MPI;
 
-#define MPI_NULL NULL
-
 #define mpi_get_nlimbs(a)     ((a)->nlimbs)
 #define mpi_is_neg(a)	      ((a)->sign)
 
@@ -78,6 +76,7 @@ void mpi_swap(MPI a, MPI b);
 
 /*-- mpicoder.c --*/
 MPI do_encode_md(const void *sha_buffer, unsigned nbits);
+MPI mpi_read_raw_data(const void *xbuffer, size_t nbytes);
 MPI mpi_read_from_buffer(const void *buffer, unsigned *ret_nread);
 int mpi_fromstr(MPI val, const char *str);
 u32 mpi_get_keyid(MPI a, u32 *keyid);

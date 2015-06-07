@@ -31,7 +31,6 @@
 #include <linux/compiler.h>
 #include <linux/kernel.h>
 #include <linux/errno.h>
-#include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/kref.h>
@@ -50,7 +49,6 @@
 #include "drv_types.h"
 #include "recv_osdep.h"
 #include "mlme_osdep.h"
-#include "rtl871x_byteorder.h"
 
 /*
 Caller and the r8712_cmd_thread can protect cmd_q by spin_lock.
@@ -526,7 +524,6 @@ u8 r8712_joinbss_cmd(struct _adapter  *padapter, struct wlan_network *pnetwork)
 		kfree(pcmd);
 		return _FAIL;
 	}
-	memset(psecnetwork, 0, t_len);
 	memcpy(psecnetwork, &pnetwork->network, t_len);
 	auth = &psecuritypriv->authenticator_ie[0];
 	psecuritypriv->authenticator_ie[0] = (unsigned char)
@@ -815,7 +812,7 @@ u8 r8712_setassocsta_cmd(struct _adapter *padapter, u8 *mac_addr)
 	struct cmd_priv			*pcmdpriv = &padapter->cmdpriv;
 	struct cmd_obj			*ph2c;
 	struct set_assocsta_parm	*psetassocsta_para;
-	struct set_stakey_rsp		*psetassocsta_rsp = NULL;
+	struct set_assocsta_rsp		*psetassocsta_rsp = NULL;
 
 	ph2c = (struct cmd_obj *)_malloc(sizeof(struct cmd_obj));
 	if (ph2c == NULL)
@@ -826,7 +823,7 @@ u8 r8712_setassocsta_cmd(struct _adapter *padapter, u8 *mac_addr)
 		kfree((u8 *) ph2c);
 		return _FAIL;
 	}
-	psetassocsta_rsp = (struct set_stakey_rsp *)_malloc(
+	psetassocsta_rsp = (struct set_assocsta_rsp *)_malloc(
 			    sizeof(struct set_assocsta_rsp));
 	if (psetassocsta_rsp == NULL) {
 		kfree((u8 *)ph2c);
@@ -967,7 +964,7 @@ void r8712_createbss_cmd_callback(struct _adapter *padapter,
 			psta = r8712_alloc_stainfo(&padapter->stapriv,
 						   pnetwork->MacAddress);
 			if (psta == NULL)
-				goto createbss_cmd_fail ;
+				goto createbss_cmd_fail;
 		}
 		r8712_indicate_connect(padapter);
 	} else {

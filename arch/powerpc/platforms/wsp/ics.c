@@ -18,6 +18,8 @@
 #include <linux/smp.h>
 #include <linux/spinlock.h>
 #include <linux/types.h>
+#include <linux/of_address.h>
+#include <linux/of_irq.h>
 
 #include <asm/io.h>
 #include <asm/irq.h>
@@ -346,7 +348,7 @@ static int wsp_chip_set_affinity(struct irq_data *d,
 	 * For the moment only implement delivery to all cpus or one cpu.
 	 * Get current irq_server for the given irq
 	 */
-	ret = cache_hwirq_map(ics, d->irq, cpumask);
+	ret = cache_hwirq_map(ics, hw_irq, cpumask);
 	if (ret == -1) {
 		char cpulist[128];
 		cpumask_scnprintf(cpulist, sizeof(cpulist), cpumask);
@@ -361,7 +363,7 @@ static int wsp_chip_set_affinity(struct irq_data *d,
 	xive = xive_set_server(xive, get_irq_server(ics, hw_irq));
 	wsp_ics_set_xive(ics, hw_irq, xive);
 
-	return 0;
+	return IRQ_SET_MASK_OK;
 }
 
 static struct irq_chip wsp_irq_chip = {

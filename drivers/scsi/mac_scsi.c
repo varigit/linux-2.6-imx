@@ -43,7 +43,6 @@
 
 #include <asm/io.h>
 #include <asm/irq.h>
-#include <asm/system.h>
 
 #include <asm/macintosh.h>
 #include <asm/macints.h>
@@ -261,6 +260,8 @@ int __init macscsi_detect(struct scsi_host_template * tpnt)
     /* Once we support multiple 5380s (e.g. DuoDock) we'll do
        something different here */
     instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
+    if (instance == NULL)
+	return 0;
 
     if (macintosh_config->ident == MAC_MODEL_IIFX) {
 	mac_scsi_regp  = via1+0x8000;
@@ -339,9 +340,6 @@ static void mac_scsi_reset_boot(struct Scsi_Host *instance)
 
 	printk(KERN_INFO "Macintosh SCSI: resetting the SCSI bus..." );
 
-	/* switch off SCSI IRQ - catch an interrupt without IRQ bit set else */
-	disable_irq(IRQ_MAC_SCSI);
-
 	/* get in phase */
 	NCR5380_write( TARGET_COMMAND_REG,
 		      PHASE_SR_TO_TCR( NCR5380_read(STATUS_REG) ));
@@ -356,9 +354,6 @@ static void mac_scsi_reset_boot(struct Scsi_Host *instance)
 
 	for( end = jiffies + AFTER_RESET_DELAY; time_before(jiffies, end); )
 		barrier();
-
-	/* switch on SCSI IRQ again */
-	enable_irq(IRQ_MAC_SCSI);
 
 	printk(KERN_INFO " done\n" );
 }
@@ -568,7 +563,8 @@ static int macscsi_pwrite (struct Scsi_Host *instance,
 
 static struct scsi_host_template driver_template = {
 	.proc_name			= "Mac5380",
-	.proc_info			= macscsi_proc_info,
+	.show_info			= macscsi_show_info,
+	.write_info			= macscsi_write_info,
 	.name				= "Macintosh NCR5380 SCSI",
 	.detect				= macscsi_detect,
 	.release			= macscsi_release,

@@ -30,6 +30,12 @@ enum pageblock_bits {
 	PB_migrate,
 	PB_migrate_end = PB_migrate + 3 - 1,
 			/* 3 bits required for migrate types */
+	PB_migrate_skip,/* If set the block is skipped by compaction */
+
+	/*
+	 * Assume the bits will always align on a word. If this assumption
+	 * changes then get/set pageblock needs updating.
+	 */
 	NR_PAGEBLOCK_BITS
 };
 
@@ -59,16 +65,44 @@ extern int pageblock_order;
 /* Forward declaration */
 struct page;
 
-/* Declarations for getting and setting flags. See mm/page_alloc.c */
-unsigned long get_pageblock_flags_group(struct page *page,
-					int start_bitidx, int end_bitidx);
-void set_pageblock_flags_group(struct page *page, unsigned long flags,
-					int start_bitidx, int end_bitidx);
+unsigned long get_pageblock_flags_mask(struct page *page,
+				unsigned long end_bitidx,
+				unsigned long mask);
+void set_pageblock_flags_mask(struct page *page,
+				unsigned long flags,
+				unsigned long end_bitidx,
+				unsigned long mask);
 
-#define get_pageblock_flags(page) \
-			get_pageblock_flags_group(page, 0, NR_PAGEBLOCK_BITS-1)
-#define set_pageblock_flags(page, flags) \
-			set_pageblock_flags_group(page, flags,	\
-						  0, NR_PAGEBLOCK_BITS-1)
+/* Declarations for getting and setting flags. See mm/page_alloc.c */
+static inline unsigned long get_pageblock_flags_group(struct page *page,
+					int start_bitidx, int end_bitidx)
+{
+	unsigned long nr_flag_bits = end_bitidx - start_bitidx + 1;
+	unsigned long mask = (1 << nr_flag_bits) - 1;
+
+	return get_pageblock_flags_mask(page, end_bitidx, mask);
+}
+
+static inline void set_pageblock_flags_group(struct page *page,
+					unsigned long flags,
+					int start_bitidx, int end_bitidx)
+{
+	unsigned long nr_flag_bits = end_bitidx - start_bitidx + 1;
+	unsigned long mask = (1 << nr_flag_bits) - 1;
+
+	set_pageblock_flags_mask(page, flags, end_bitidx, mask);
+}
+
+#ifdef CONFIG_COMPACTION
+#define get_pageblock_skip(page) \
+			get_pageblock_flags_group(page, PB_migrate_skip,     \
+							PB_migrate_skip)
+#define clear_pageblock_skip(page) \
+			set_pageblock_flags_group(page, 0, PB_migrate_skip,  \
+							PB_migrate_skip)
+#define set_pageblock_skip(page) \
+			set_pageblock_flags_group(page, 1, PB_migrate_skip,  \
+							PB_migrate_skip)
+#endif /* CONFIG_COMPACTION */
 
 #endif	/* PAGEBLOCK_FLAGS_H */

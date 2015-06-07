@@ -268,6 +268,10 @@ SYSCALL_DEFINE2(capset, cap_user_header_t, header, const cap_user_data_t, data)
 		i++;
 	}
 
+	effective.cap[CAP_LAST_U32] &= CAP_LAST_U32_VALID_MASK;
+	permitted.cap[CAP_LAST_U32] &= CAP_LAST_U32_VALID_MASK;
+	inheritable.cap[CAP_LAST_U32] &= CAP_LAST_U32_VALID_MASK;
+
 	new = prepare_creds();
 	if (!new)
 		return -ENOMEM;
@@ -277,7 +281,7 @@ SYSCALL_DEFINE2(capset, cap_user_header_t, header, const cap_user_data_t, data)
 	if (ret < 0)
 		goto error;
 
-	audit_log_capset(pid, new, current_cred());
+	audit_log_capset(new, current_cred());
 
 	return commit_creds(new);
 
@@ -384,13 +388,37 @@ bool ns_capable(struct user_namespace *ns, int cap)
 		BUG();
 	}
 
-	if (has_ns_capability(current, ns, cap)) {
+	if (security_capable(current_cred(), ns, cap) == 0) {
 		current->flags |= PF_SUPERPRIV;
 		return true;
 	}
 	return false;
 }
 EXPORT_SYMBOL(ns_capable);
+
+/**
+ * file_ns_capable - Determine if the file's opener had a capability in effect
+ * @file:  The file we want to check
+ * @ns:  The usernamespace we want the capability in
+ * @cap: The capability to be tested for
+ *
+ * Return true if task that opened the file had a capability in effect
+ * when the file was opened.
+ *
+ * This does not set PF_SUPERPRIV because the caller may not
+ * actually be privileged.
+ */
+bool file_ns_capable(const struct file *file, struct user_namespace *ns, int cap)
+{
+	if (WARN_ON_ONCE(!cap_valid(cap)))
+		return false;
+
+	if (security_capable(file->f_cred, ns, cap) == 0)
+		return true;
+
+	return false;
+}
+EXPORT_SYMBOL(file_ns_capable);
 
 /**
  * capable - Determine if the current task has a superior capability in effect
@@ -409,13 +437,19 @@ bool capable(int cap)
 EXPORT_SYMBOL(capable);
 
 /**
- * nsown_capable - Check superior capability to one's own user_ns
+ * capable_wrt_inode_uidgid - Check nsown_capable and uid and gid mapped
+ * @inode: The inode in question
  * @cap: The capability in question
  *
- * Return true if the current task has the given superior capability
- * targeted at its own user namespace.
+ * Return true if the current task has the given capability targeted at
+ * its own user namespace and that the given inode's uid and gid are
+ * mapped into the current user namespace.
  */
-bool nsown_capable(int cap)
+bool capable_wrt_inode_uidgid(const struct inode *inode, int cap)
 {
-	return ns_capable(current_user_ns(), cap);
+	struct user_namespace *ns = current_user_ns();
+
+	return ns_capable(ns, cap) && kuid_has_mapping(ns, inode->i_uid) &&
+		kgid_has_mapping(ns, inode->i_gid);
 }
+EXPORT_SYMBOL(capable_wrt_inode_uidgid);

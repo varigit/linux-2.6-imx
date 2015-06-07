@@ -118,12 +118,18 @@ struct vio_disk_attr_info {
 	u8			vdisk_type;
 #define VD_DISK_TYPE_SLICE	0x01 /* Slice in block device	*/
 #define VD_DISK_TYPE_DISK	0x02 /* Entire block device	*/
-	u16			resv1;
+	u8			vdisk_mtype;		/* v1.1 */
+#define VD_MEDIA_TYPE_FIXED	0x01 /* Fixed device */
+#define VD_MEDIA_TYPE_CD	0x02 /* CD Device    */
+#define VD_MEDIA_TYPE_DVD	0x03 /* DVD Device   */
+	u8			resv1;
 	u32			vdisk_block_size;
 	u64			operations;
-	u64			vdisk_size;
+	u64			vdisk_size;		/* v1.1 */
 	u64			max_xfer_size;
-	u64			resv2[2];
+	u32			phys_block_size;	/* v1.2 */
+	u32			resv2;
+	u64			resv3[1];
 };
 
 struct vio_disk_desc {
@@ -259,7 +265,7 @@ static inline u32 vio_dring_avail(struct vio_dring_state *dr,
 				  unsigned int ring_size)
 {
 	return (dr->pending -
-		((dr->prod - dr->cons) & (ring_size - 1)));
+		((dr->prod - dr->cons) & (ring_size - 1)) - 1);
 }
 
 #define VIO_MAX_TYPE_LEN	32
@@ -284,6 +290,7 @@ struct vio_dev {
 };
 
 struct vio_driver {
+	const char			*name;
 	struct list_head		node;
 	const struct vio_device_id	*id_table;
 	int (*probe)(struct vio_dev *dev, const struct vio_device_id *id);
@@ -371,7 +378,13 @@ do {	if (vio->debug & VIO_DEBUG_##TYPE) \
 		       vio->vdev->channel_id, ## a); \
 } while (0)
 
-extern int vio_register_driver(struct vio_driver *drv);
+extern int __vio_register_driver(struct vio_driver *drv, struct module *owner,
+				 const char *mod_name);
+/*
+ * vio_register_driver must be a macro so that KBUILD_MODNAME can be expanded
+ */
+#define vio_register_driver(driver)		\
+	__vio_register_driver(driver, THIS_MODULE, KBUILD_MODNAME)
 extern void vio_unregister_driver(struct vio_driver *drv);
 
 static inline struct vio_driver *to_vio_driver(struct device_driver *drv)

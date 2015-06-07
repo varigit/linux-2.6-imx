@@ -23,7 +23,7 @@
 #include "ics.h"
 #include "wsp.h"
 
-static void __devinit smp_a2_setup_cpu(int cpu)
+static void smp_a2_setup_cpu(int cpu)
 {
 	doorbell_setup_this_cpu();
 
@@ -31,7 +31,7 @@ static void __devinit smp_a2_setup_cpu(int cpu)
 		xics_setup_cpu();
 }
 
-int __devinit smp_a2_kick_cpu(int nr)
+int smp_a2_kick_cpu(int nr)
 {
 	const char *enable_method;
 	struct device_node *np;
@@ -71,7 +71,7 @@ int __devinit smp_a2_kick_cpu(int nr)
 
 static int __init smp_a2_probe(void)
 {
-	return cpus_weight(cpu_possible_map);
+	return num_possible_cpus();
 }
 
 static struct smp_ops_t a2_smp_ops = {

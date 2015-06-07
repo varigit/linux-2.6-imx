@@ -3,6 +3,9 @@
  *
  *   Author: Ryan Wilson <hap9@epoch.ncsc.mil>
  */
+
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/list.h>
@@ -206,6 +209,7 @@ static int xen_pcibk_publish_pci_dev(struct xen_pcibk_device *pdev,
 		goto out;
 	}
 
+	/* Note: The PV protocol uses %02x, don't change it */
 	err = xenbus_printf(XBT_NIL, pdev->xdev->nodename, str,
 			    "%04x:%02x:%02x.%02x", domain, bus,
 			    PCI_SLOT(devfn), PCI_FUNC(devfn));
@@ -229,7 +233,7 @@ static int xen_pcibk_export_device(struct xen_pcibk_device *pdev,
 		err = -EINVAL;
 		xenbus_dev_fatal(pdev->xdev, err,
 				 "Couldn't locate PCI device "
-				 "(%04x:%02x:%02x.%01x)! "
+				 "(%04x:%02x:%02x.%d)! "
 				 "perhaps already in-use?",
 				 domain, bus, slot, func);
 		goto out;
@@ -274,7 +278,7 @@ static int xen_pcibk_remove_device(struct xen_pcibk_device *pdev,
 	if (!dev) {
 		err = -EINVAL;
 		dev_dbg(&pdev->xdev->dev, "Couldn't locate PCI device "
-			"(%04x:%02x:%02x.%01x)! not owned by this domain\n",
+			"(%04x:%02x:%02x.%d)! not owned by this domain\n",
 			domain, bus, slot, func);
 		goto out;
 	}
@@ -722,14 +726,13 @@ int __init xen_pcibk_xenbus_register(void)
 {
 	xen_pcibk_wq = create_workqueue("xen_pciback_workqueue");
 	if (!xen_pcibk_wq) {
-		printk(KERN_ERR "%s: create"
-			"xen_pciback_workqueue failed\n", __func__);
+		pr_err("%s: create xen_pciback_workqueue failed\n", __func__);
 		return -EFAULT;
 	}
 	xen_pcibk_backend = &xen_pcibk_vpci_backend;
 	if (passthrough)
 		xen_pcibk_backend = &xen_pcibk_passthrough_backend;
-	pr_info(DRV_NAME ": backend is %s\n", xen_pcibk_backend->name);
+	pr_info("backend is %s\n", xen_pcibk_backend->name);
 	return xenbus_register_backend(&xen_pcibk_driver);
 }
 

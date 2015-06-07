@@ -697,7 +697,7 @@ static ssize_t adb_read(struct file *file, char __user *buf,
 	int ret = 0;
 	struct adbdev_state *state = file->private_data;
 	struct adb_request *req;
-	wait_queue_t wait = __WAITQUEUE_INITIALIZER(wait,current);
+	DECLARE_WAITQUEUE(wait,current);
 	unsigned long flags;
 
 	if (count < 2)
@@ -710,7 +710,7 @@ static ssize_t adb_read(struct file *file, char __user *buf,
 	req = NULL;
 	spin_lock_irqsave(&state->lock, flags);
 	add_wait_queue(&state->wait_queue, &wait);
-	current->state = TASK_INTERRUPTIBLE;
+	set_current_state(TASK_INTERRUPTIBLE);
 
 	for (;;) {
 		req = state->completed;
@@ -734,7 +734,7 @@ static ssize_t adb_read(struct file *file, char __user *buf,
 		spin_lock_irqsave(&state->lock, flags);
 	}
 
-	current->state = TASK_RUNNING;
+	set_current_state(TASK_RUNNING);
 	remove_wait_queue(&state->wait_queue, &wait);
 	spin_unlock_irqrestore(&state->lock, flags);
 	

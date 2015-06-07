@@ -2934,6 +2934,26 @@ extern unsigned long sun4v_reboot_data_set(unsigned long ra,
 					   unsigned long len);
 #endif
 
+#define HV_FAST_VT_GET_PERFREG		0x184
+#define HV_FAST_VT_SET_PERFREG		0x185
+
+#ifndef __ASSEMBLY__
+extern unsigned long sun4v_vt_get_perfreg(unsigned long reg_num,
+					  unsigned long *reg_val);
+extern unsigned long sun4v_vt_set_perfreg(unsigned long reg_num,
+					  unsigned long reg_val);
+#endif
+
+#define	HV_FAST_T5_GET_PERFREG		0x1a8
+#define	HV_FAST_T5_SET_PERFREG		0x1a9
+
+#ifndef	__ASSEMBLY__
+unsigned long sun4v_t5_get_perfreg(unsigned long reg_num,
+				   unsigned long *reg_val);
+unsigned long sun4v_t5_set_perfreg(unsigned long reg_num,
+				   unsigned long reg_val);
+#endif
+
 /* Function numbers for HV_CORE_TRAP.  */
 #define HV_CORE_SET_VER			0x00
 #define HV_CORE_PUTCHAR			0x01
@@ -2964,6 +2984,8 @@ extern unsigned long sun4v_reboot_data_set(unsigned long ra,
 #define HV_GRP_NIU			0x0204
 #define HV_GRP_VF_CPU			0x0205
 #define HV_GRP_KT_CPU			0x0209
+#define HV_GRP_VT_CPU			0x020c
+#define HV_GRP_T5_CPU			0x0211
 #define HV_GRP_DIAG			0x0300
 
 #ifndef __ASSEMBLY__
