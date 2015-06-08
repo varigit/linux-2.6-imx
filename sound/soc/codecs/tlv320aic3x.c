@@ -304,9 +304,14 @@ static DECLARE_TLV_DB_SCALE(output_stage_tlv, -5900, 50, 1);
 
 static const struct snd_kcontrol_new aic3x_snd_controls[] = {
 	/* Output */
+#if 0
 	SOC_DOUBLE_R_TLV("PCM Playback Volume",
 			 LDAC_VOL, RDAC_VOL, 0, 0x7f, 1, dac_tlv),
+#endif
+	SOC_DOUBLE_R_TLV("PCM Playback Volume",
+				 LADC_VOL, RADC_VOL, 0, 0x7f, 1, dac_tlv),
 
+	
 	/*
 	 * Output controls that map to output mixer switches. Note these are
 	 * only for swapped L-to-R and R-to-L routes. See below stereo controls
@@ -1281,12 +1286,18 @@ static int aic3x_init(struct snd_soc_codec *codec)
 	snd_soc_write(codec, AIC3X_RESET, SOFT_RESET);
 
 	/* DAC default volume and mute */
+#if 0
 	snd_soc_write(codec, LDAC_VOL, DEFAULT_VOL | MUTE_ON);
 	snd_soc_write(codec, RDAC_VOL, DEFAULT_VOL | MUTE_ON);
+#endif
+	/* DAC default volume and mute */
+	snd_soc_write(codec, LDAC_VOL, INVERT_VOL(0x70) | MUTE_ON);
+	snd_soc_write(codec, RDAC_VOL, INVERT_VOL(0x70) | MUTE_ON);
+
 
 	/* DAC to HP default volume and route to Output mixer */
-	snd_soc_write(codec, DACL1_2_HPLOUT_VOL, DEFAULT_VOL | ROUTE_ON);
-	snd_soc_write(codec, DACR1_2_HPROUT_VOL, DEFAULT_VOL | ROUTE_ON);
+	snd_soc_write(codec, DACL1_2_HPLOUT_VOL, INVERT_VOL(0x70) | ROUTE_ON);
+	snd_soc_write(codec, DACR1_2_HPROUT_VOL, INVERT_VOL(0x70) | ROUTE_ON);
 	snd_soc_write(codec, DACL1_2_HPLCOM_VOL, DEFAULT_VOL | ROUTE_ON);
 	snd_soc_write(codec, DACR1_2_HPRCOM_VOL, DEFAULT_VOL | ROUTE_ON);
 	/* DAC to Line Out default volume and route to Output mixer */
