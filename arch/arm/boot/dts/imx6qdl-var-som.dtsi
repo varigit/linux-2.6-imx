@@ -98,16 +98,46 @@
 		enable-active-high;
 	};
 
-#if 0
+#ifdef VAR_SOM_SOLO_VSC
+	/* Keys may interfere with touch */
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		home {
+			label = "Home";
+			gpios = <&gpio5 14 1>;
+			linux,code = <172>; /* KEY_HOME */
+			gpio-key,wakeup;
+		};
+
+		back {
+			label = "Back";
+			gpios = <&gpio5 20 1>;
+			linux,code = <158>; /* KEY_BACK */
+			gpio-key,wakeup;
+		};
+
+		menu {
+			label = "Menu";
+			gpios = <&gpio5 12 1>;
+			linux,code = <139>; /* KEY_MENU */
+			gpio-key,wakeup;
+		};
+
+
+	};
+#else
 	gpio-keys {
 		compatible = "gpio-keys";
 		power {
 			label = "Back";
-			gpios = <&gpio5 20 0>;
+			gpios = <&gpio5 20 1>;
 			linux,code = <158>; /* KEY_BACK */
 		};
 	};
-#endif	
+
+#endif
+
 	sound {
 		compatible = "fsl,imx6q-var-som-tlv320aic3x", "fsl,imx-audio-tlv320aic3x";
 		model = "tlv320aic3x-audio";
