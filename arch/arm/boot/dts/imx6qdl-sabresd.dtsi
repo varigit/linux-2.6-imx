@@ -18,29 +18,7 @@
 		mxcfb1 = &mxcfb2;
 		mxcfb2 = &mxcfb3;
 		mxcfb3 = &mxcfb4;
-	};
 
-	battery: max8903@0 {
-		compatible = "fsl,max8903-charger";
-		pinctrl-names = "default";
-		dok_input = <&gpio2 24 1>;
-		uok_input = <&gpio1 27 1>;
-		chg_input = <&gpio3 23 1>;
-		flt_input = <&gpio5 2 1>;
-		fsl,dcm_always_high;
-		fsl,dc_valid;
-		fsl,usb_valid;
-		status = "okay";
-	};
-
-	leds {
-		compatible = "gpio-leds";
-
-		charger-led {
-			gpios = <&gpio1 2 0>;
-			linux,default-trigger = "max8903-charger-charging";
-			retain-state-suspended;
-		};
 	};
 
 	memory {
@@ -308,16 +286,6 @@
 		>;
        };
 
-	mma8451@1c {
-		compatible = "fsl,mma8451";
-		reg = <0x1c>;
-		position = <0>;
-		vdd-supply = <&reg_sensor>;
-		vddio-supply = <&reg_sensor>;
-		interrupt-parent = <&gpio1>;
-		interrupts = <18 8>;
-		interrupt-route = <1>;
-	};
 
 	ov564x: ov564x@3c {
 		compatible = "ovti,ov564x";
@@ -349,13 +317,6 @@
 		reg = <0x50>;
 	};
 
-	max11801@48 {
-		compatible = "maxim,max11801";
-		reg = <0x48>;
-		interrupt-parent = <&gpio3>;
-		interrupts = <26 2>;
-		work-mode = <1>;/*DCM mode*/
-	};
 
 	pmic: pfuze100@08 {
 		compatible = "fsl,pfuze100";
@@ -472,14 +433,6 @@
 		mclk_source = <0>;
 	};
 
-	egalax_ts@04 {
-		compatible = "eeti,egalax_ts";
-		reg = <0x04>;
-		interrupt-parent = <&gpio6>;
-		interrupts = <8 2>;
-		wakeup-gpios = <&gpio6 8 0>;
-	};
-
 };
 
 &i2c3 {
@@ -496,24 +449,6 @@
 		wakeup-gpios = <&gpio6 7 0>;
 	};
 
-	mag3110@0e {
-		compatible = "fsl,mag3110";
-		reg = <0x0e>;
-		position = <2>;
-		vdd-supply = <&reg_sensor>;
-		vddio-supply = <&reg_sensor>;
-		interrupt-parent = <&gpio3>;
-		interrupts = <16 1>;
-	};
-
-	isl29023@44 {
-		compatible = "fsl,isl29023";
-		reg = <0x44>;
-		rext = <499>;
-		vdd-supply = <&reg_sensor>;
-		interrupt-parent = <&gpio3>;
-		interrupts = <9 2>;
-	};
 };
 
 &iomuxc {

@@ -1,4 +1,7 @@
 /*
+ * Copyright (C) 2014 Variscite, Ltd. All Rights Reserved
+ * Donio Ron: ron.d@variscite.com
+ *
  * Copyright 2012 Freescale Semiconductor, Inc.
  * Copyright 2011 Linaro Ltd.
  *
@@ -12,22 +15,24 @@
 
 /dts-v1/;
 
+#define VAR_SOM_MX6
+
 #include "imx6q.dtsi"
-#include "imx6qdl-sabresd.dtsi"
+#include "imx6qdl-var-som.dtsi"
 
 / {
-	model = "Freescale i.MX6 Quad SABRE Smart Device Board";
-	compatible = "fsl,imx6q-sabresd", "fsl,imx6q";
+	model = "Freescale i.MX6 Quad VAR-SOM-MX6 Smart Device Board";
+	compatible = "fsl,imx6q-var-som", "fsl,imx6q";
 };
 
 
 &ldb {
 	lvds-channel@0 {
-		crtc = "ipu2-di0";
+		crtc = "ipu1-di0";
 	};
 
 	lvds-channel@1 {
-		crtc = "ipu2-di1";
+		crtc = "ipu2-di0";
 	};
 };
 
