@@ -21,7 +21,7 @@
 #include "imx6qdl-var-dart.dtsi"
 
 / {
-	model = "Freescale i.MX6 Quad VAR-DART Smart Device Board";
+	model = "Variscite i.MX6 QUAD VAR-DART Smart Device Board";
 	compatible = "fsl,imx6q-var-dart", "fsl,imx6q";
 };
 
