@@ -18,7 +18,7 @@
 #include "imx6qdl-var-som.dtsi"
 
 / {
-	model = "Variscite i.MX6 VAR-SOM-QUAD SoloCustomBoard";
+	model = "Variscite i.MX6 QUAD VAR-SOM-MX6 SoloCustomBoard";
 	compatible = "fsl,imx6q-var-som", "fsl,imx6q";
 };
 
