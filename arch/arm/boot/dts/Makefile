@@ -129,6 +129,7 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6dl-var-som.dtb \
 	imx6dl-var-som-solo.dtb \
 	imx6dl-var-som-solo-vsc.dtb \
+	imx6q-var-som-vsc.dtb\
 	imx6q-sabreauto-ecspi.dtb \
 	imx6q-sabreauto-flexcan1.dtb \
 	imx6q-sabreauto-gpmi-weim.dtb \
