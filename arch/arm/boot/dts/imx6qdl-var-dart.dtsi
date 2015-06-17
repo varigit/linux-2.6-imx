@@ -213,13 +213,14 @@
 		default-brightness-level = <7>;
 	};
 
+#if 0
 	wlan-32k-clk {
 		compatible = "pwm-backlight";
 		pwms = <&pwm4 0 30518>;
 		brightness-levels = <0 4 8 16 32 64 128 248>;
 		default-brightness-level = <6>;
 	};
-
+#endif
 
 	v4l2_cap_0 {
 		compatible = "fsl,imx6q-v4l2-capture";
@@ -363,7 +364,7 @@
 		DVDD-supply = <&reg_audio>;
 		AVDD-supply = <&reg_audio>;
 		DRVDD-supply = <&reg_audio>;
-		gpio-reset = <&gpio1 0 1>;
+		gpio-reset = <&gpio4 5 1>;
 		gpio-cfg = <
 			0x0000 /* 0:Default */
 			0x0000 /* 1:Default */
@@ -428,8 +429,7 @@
 				/* PMIC INT */
 				MX6QDL_PAD_GPIO_17__GPIO7_IO12			0x80000000
 				/* Wifi Slow Clock */
-//				MX6QDL_PAD_ENET_RXD0__OSC32K_32K_OUT		0x000b0			/* WIFI Slow clock */
-//				MX6QDL_PAD_SD4_DAT2__PWM4_OUT			0x000b0			/* WIFI Slow clock */
+				MX6QDL_PAD_ENET_RXD0__OSC32K_32K_OUT		0x000b0			/* WIFI Slow clock */
 				/* Audio Clock */
 				MX6QDL_PAD_GPIO_0__CCM_CLKO1 			0x130b0			/* Audio Codec Clock */
 				/* Camera Clock */
