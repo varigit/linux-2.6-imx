@@ -21,7 +21,7 @@
 #include "imx6qdl-var-som.dtsi"
 
 / {
-	model = "Freescale i.MX6 Quad/Dual- VAR-SOM-MX6";
+	model = "Freescale i.MX6 Dualite/Solo VAR-SOM-MX6";
 	compatible = "fsl,imx6q-var-som", "fsl,imx6q";
 };
 
@@ -32,7 +32,7 @@
 	};
 
 	lvds-channel@1 {
-		crtc = "ipu2-di0";
+		crtc = "ipu1-di1";
 	};
 };
 
@@ -44,14 +44,3 @@
 	status = "okay";
 };
 
-&mxcfb3 {
-	status = "okay";
-};
-
-&mxcfb4 {
-	status = "okay";
-};
-
-&sata {
-	status = "okay";
-};
