@@ -35,6 +35,7 @@
 #include <asm/proc-fns.h>
 #include <asm/suspend.h>
 #include <asm/tlb.h>
+#include <linux/gpio.h>
 
 #include "common.h"
 #include "hardware.h"
@@ -737,8 +738,12 @@ static int imx6q_pm_enter(suspend_state_t state)
 					sizeof(struct qspi_regs));
 		}
 
-		/* Zzz ... */
-		cpu_suspend(0, imx6q_suspend_finish);
+                gpio_request_one(95,2,"33_per");
+                gpio_set_value(95,0);
+                /* Zzz ... */
+                cpu_suspend(0, imx6q_suspend_finish);
+                gpio_set_value(95,1);
+
 
 		if (cpu_is_imx6sx() && imx_gpc_is_mf_mix_off()) {
 			writel_relaxed(ccm_ccgr4, ccm_base + CCGR4);
