@@ -478,9 +478,7 @@
 
 		pinctrl_gpio_keys: gpio_keysgrp {
 			fsl,pins = <
-				MX6QDL_PAD_EIM_D29__GPIO3_IO29 0x80000000
-				MX6QDL_PAD_GPIO_4__GPIO1_IO04  0x80000000
-				MX6QDL_PAD_GPIO_5__GPIO1_IO05  0x80000000
+//				MX6QDL_PAD_GPIO_5__GPIO1_IO05  0x80000000
 			>;
 		};
 
