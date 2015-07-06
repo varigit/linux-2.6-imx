@@ -15,15 +15,17 @@
 
 /dts-v1/;
 
-#define VAR_SOM_MX6
+#define VAR_DART_MX6
 
 #include "imx6q.dtsi"
-#include "imx6qdl-var-som.dtsi"
+#include "imx6qdl-var-dart.dtsi"
 
 / {
-	model = "Variscite i.MX6 QUAD/DUAL VAR-SOM-MX6";
-	compatible = "fsl,imx6q-var-som", "fsl,imx6q";
+	model = "Variscite i.MX6 QUAD VAR-DART Smart Device Board";
+	compatible = "fsl,imx6q-var-dart", "fsl,imx6q";
 };
+
+
 
 &i2c2 {
 	pmic: pfuze100@08 {
@@ -154,5 +156,5 @@
 };
 
 &sata {
-	status = "okay";
+	status = "disabled";
 };

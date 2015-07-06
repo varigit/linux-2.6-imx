@@ -388,6 +388,9 @@
 				MX6QDL_PAD_GPIO_0__CCM_CLKO1 			0x130b0			/* Audio Codec Clock */
 				/* Camera Clock */
 				MX6QDL_PAD_GPIO_3__CCM_CLKO2			0x130b0			/* Camera MCLK */
+                               MX6QDL_PAD_KEY_ROW0__GPIO4_IO07                 0xb0b1
+                               MX6QDL_PAD_KEY_COL1__GPIO4_IO08                 0xb0b1
+
 			>;
 		};
 
@@ -540,6 +543,15 @@
 			>;
 		};
 
+                pinctrl_uart2_4: uart2grp-4 { /* RTS/CTS only mode */
+                        fsl,pins = <
+                                MX6QDL_PAD_SD3_DAT4__UART2_RX_DATA  0x1b0b1
+                                MX6QDL_PAD_SD3_DAT5__UART2_TX_DATA  0x1b0b1
+                                MX6QDL_PAD_SD4_DAT6__UART2_CTS_B    0x1b0b1
+                                MX6QDL_PAD_SD4_DAT5__UART2_RTS_B    0x1b0b1
+                        >;
+                };
+
 		/* Variscite Uart2 support */
 		pinctrl_uart3_2: uart3grp-2 {	/* RX/TX RTS/CTS */
 			fsl,pins = <
@@ -556,6 +568,12 @@
 			>;
 		};
 
+                pinctrl_usbotg_2: usbotggrp-2 {
+                        fsl,pins = <
+                                MX6QDL_PAD_ENET_RX_ER__USB_OTG_ID 0x17059
+                        >;
+                };
+
 
 		pinctrl_usdhc1_1: usdhc1grp {
 			fsl,pins = <
@@ -568,6 +586,32 @@
 			>;
 		};
 
+                pinctrl_usdhc1_2_100mhz: usdhc1grp-2-100mhz {
+                        fsl,pins = <
+                                MX6QDL_PAD_SD1_CMD__SD1_CMD     0x170B9
+                                MX6QDL_PAD_SD1_CLK__SD1_CLK     0x100B9
+                                MX6QDL_PAD_SD1_DAT0__SD1_DATA0  0x170B9
+                                MX6QDL_PAD_SD1_DAT1__SD1_DATA1  0x170B9
+                                MX6QDL_PAD_SD1_DAT2__SD1_DATA2  0x170B9
+                                MX6QDL_PAD_SD1_DAT3__SD1_DATA3  0x170B9
+                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x130B9   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x130B9   // this is for wl_irq which driver will configure as an input with a pull down
+                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130B9   // used for BT_EN
+                        >;
+                };
+                pinctrl_usdhc1_2_200mhz: usdhc1grp-2-200mhz {
+                        fsl,pins = <
+                                MX6QDL_PAD_SD1_CMD__SD1_CMD     0x170F9
+                                MX6QDL_PAD_SD1_CLK__SD1_CLK     0x100F9
+                                MX6QDL_PAD_SD1_DAT0__SD1_DATA0  0x170F9
+                                MX6QDL_PAD_SD1_DAT1__SD1_DATA1  0x170F9
+                                MX6QDL_PAD_SD1_DAT2__SD1_DATA2  0x170F9
+                                MX6QDL_PAD_SD1_DAT3__SD1_DATA3  0x170F9
+                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 0x130F9   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  0x130F9   // this is for wl_irq which driver will configure as an input with a pull down
+                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130F9   // used for BT_EN
+                        >;
+                };
 		pinctrl_usdhc2_2: usdhc2grp {
 			fsl,pins = <
 				MX6QDL_PAD_SD2_CMD__SD2_CMD    		0x17059
@@ -618,6 +662,17 @@
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 	0x130F9   // used for BT_EN 
 			>;
 		};
+                pinctrl_usdhc3_3: usdhc3grp-3 {
+                        fsl,pins = <
+                                MX6QDL_PAD_SD3_CMD__SD3_CMD    0x17059
+                                MX6QDL_PAD_SD3_CLK__SD3_CLK    0x10059
+                                MX6QDL_PAD_SD3_DAT0__SD3_DATA0 0x17059
+                                MX6QDL_PAD_SD3_DAT1__SD3_DATA1 0x17059
+                                MX6QDL_PAD_SD3_DAT2__SD3_DATA2 0x17059
+                                MX6QDL_PAD_SD3_DAT3__SD3_DATA3 0x17059
+                        >;
+                };
+  
 
 		pinctrl_gpmi_nand_v1: gpmi-nand-1 {
 			fsl,pins = <
@@ -787,11 +842,6 @@
 	status = "okay";
 };
 
-&pwm4 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_pwm4_1>;
-	status = "okay";
-};
 
 &ssi2 {
 	fsl,mode = "i2s-slave";
