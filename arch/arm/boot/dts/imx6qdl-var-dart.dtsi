@@ -314,11 +314,7 @@
 		DVDD-supply = <&reg_audio>;
 		AVDD-supply = <&reg_audio>;
 		DRVDD-supply = <&reg_audio>;
-#ifndef VAR_SOM_MX6
-		gpio-reset = <&gpio1 0 1>;
-#else
 		gpio-reset = <&gpio4 5 1>;
-#endif
 		gpio-cfg = <
 			0x0000 /* 0:Default */
 			0x0000 /* 1:Default */
@@ -342,7 +338,7 @@
 			reg = <0x38>;
 			focaltech,family-id = <0x54>;
 			interrupt-parent = <&gpio1>;
-			interrupts = <47 0>;
+			interrupts = <4 0>;
 			vdd-supply = <&touch_3v3_regulator>;
 			vcc_i2c-supply = <&touch_3v3_regulator>;
 			focaltech,irq-gpio = <&gpio1 4 0x00>;
@@ -929,7 +925,7 @@
 	pinctrl-0 = <&pinctrl_usbotg_2>;
 	disable-over-current;
 	/* dr_mode: One of "host", "peripheral" or "otg". Defaults to "otg" */
-	dr_mode = "otg" ;	/* Use "host" if you would like to use the USB0 type A connector (host mode only on VAR-SOM-SOLO) */
+	dr_mode = "host" ;	/* Use "host" if you would like to use the USB0 type A connector (host mode only on VAR-SOM-SOLO) */
 	status = "okay";
 };
 
