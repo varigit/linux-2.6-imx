@@ -263,6 +263,7 @@
 	pinctrl-0 = <&pinctrl_ecspi3_1>;
 	status = "okay";
 
+#ifndef VAR_SOM_SOLO_VSC
 	ads7846@0 {
 		reg = <0>;	/* CS0 */
 		compatible = "ti,ads7846";
@@ -284,6 +285,7 @@
 		ti,keep-vref-on;	
 		linux,wakeup;
 		};
+#endif
 };
 
 &fec {
