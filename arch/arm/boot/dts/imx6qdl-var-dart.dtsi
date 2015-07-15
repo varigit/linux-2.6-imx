@@ -92,7 +92,6 @@
 		enable-active-high;
 	};
 
-#if 0
 	/* Keys may interfere with touch */
 	gpio-keys {
 		compatible = "gpio-keys";
@@ -113,14 +112,14 @@
 
 		right {
 			label = "Right";
-			gpios = <&gpio1 2 1>;
+			gpios = <&gpio4 25 1>;
 			linux,code = <106 >; /* KEY_BACK */
 			gpio-key,wakeup;
 		};
 
 
 	};
-#endif
+
 	sound {
 		compatible = "fsl,imx6q-var-som-tlv320aic3x", "fsl,imx-audio-tlv320aic3x";
 		model = "tlv320aic3x-audio";
@@ -212,15 +211,6 @@
 		brightness-levels = <0 4 8 16 32 64 128 248>;
 		default-brightness-level = <7>;
 	};
-
-#if 0
-	wlan-32k-clk {
-		compatible = "pwm-backlight";
-		pwms = <&pwm4 0 30518>;
-		brightness-levels = <0 4 8 16 32 64 128 248>;
-		default-brightness-level = <6>;
-	};
-#endif
 
 	v4l2_cap_0 {
 		compatible = "fsl,imx6q-v4l2-capture";
