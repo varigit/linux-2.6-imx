@@ -72,12 +72,12 @@ struct ti_st {
  * available */
 static long st_receive(void *priv_data, struct sk_buff *skb)
 {
-	struct ti_st	*hst = (void *) priv_data;
+	struct ti_st	*hst = (void *)priv_data;
 
 	pr_debug("@ %s", __func__);
 #ifdef VERBOSE
 	print_hex_dump(KERN_INFO, ">rx>", DUMP_PREFIX_NONE,
-			16, 1, skb->data, skb->len, 0);
+		       16, 1, skb->data, skb->len, 0);
 #endif
 	skb_queue_tail(&hst->rx_list, skb);
 	wake_up_interruptible(&hst->data_q);
@@ -90,7 +90,7 @@ static long st_receive(void *priv_data, struct sk_buff *skb)
  */
 static void st_reg_completion_cb(void *priv_data, char data)
 {
-	struct ti_st	*lhst = (void *) priv_data;
+	struct ti_st	*lhst = (void *)priv_data;
 
 	pr_info("@ %s\n", __func__);
 	/* Save registration status for use in ti_st_open() */
@@ -139,7 +139,7 @@ int hci_tty_open(struct inode *inod, struct file *file)
 	unsigned long timeleft;
 	struct ti_st *hst;
 
-	pr_debug("inside %s (%p, %p)\n", __func__, inod, file);
+	pr_info("inside %s (%p, %p)\n", __func__, inod, file);
 
 	hst = kzalloc(sizeof(*hst), GFP_KERNEL);
 	file->private_data = hst;
@@ -166,30 +166,30 @@ int hci_tty_open(struct inode *inod, struct file *file)
 
 		if (err != -EINPROGRESS) {
 			pr_err("st_register failed %d", err);
-			return err;
+			goto error;
 		}
 
 		/* ST is busy with either protocol
 		 * registration or firmware download.
 		 */
-		pr_debug("waiting for registration "
-				"completion signal from ST");
+		pr_debug("waiting for registration completion signal from ST");
 		timeleft = wait_for_completion_timeout
 			(&hst->wait_reg_completion,
 			 msecs_to_jiffies(BT_REGISTER_TIMEOUT));
 		if (!timeleft) {
-			pr_err("Timeout(%d sec),didn't get reg "
-					"completion signal from ST",
-					BT_REGISTER_TIMEOUT / 1000);
-			return -ETIMEDOUT;
+			pr_err("Timeout(%d sec),didn't get reg completion signal from ST",
+			       BT_REGISTER_TIMEOUT / 1000);
+			err = -ETIMEDOUT;
+			goto error;
 		}
 
 		/* Is ST registration callback
 		 * called with ERROR status? */
 		if (hst->reg_status != 0) {
-			pr_err("ST registration completed with invalid "
-					"status %d", hst->reg_status);
-			return -EAGAIN;
+			pr_err("ST registration completed with invalid status %d",
+			       hst->reg_status);
+			err = -EAGAIN;
+			goto error;
 		}
 
 done:
@@ -200,8 +200,8 @@ done:
 				/* Undo registration with ST */
 				err = st_unregister(&ti_st_proto[i]);
 				if (err)
-					pr_err("st_unregister() failed with "
-							"error %d", err);
+					pr_err("st_unregister() failed with error %d",
+					       err);
 				hst->st_write = NULL;
 			}
 			return -EIO;
@@ -212,6 +212,10 @@ done:
 	init_waitqueue_head(&hst->data_q);
 
 	return 0;
+
+error:
+	kfree(hst);
+	return err;
 }
 
 /** hci_tty_release Function
@@ -228,13 +232,13 @@ int hci_tty_release(struct inode *inod, struct file *file)
 	int err, i;
 	struct ti_st *hst = file->private_data;
 
-	pr_debug("inside %s (%p, %p)\n", __func__, inod, file);
+	pr_info("inside %s (%p, %p)\n", __func__, inod, file);
 
 	for (i = 0; i < MAX_BT_CHNL_IDS; i++) {
 		err = st_unregister(&ti_st_proto[i]);
 		if (err)
 			pr_err("st_unregister(%d) failed with error %d",
-					ti_st_proto[i].chnl_id, err);
+			       ti_st_proto[i].chnl_id, err);
 	}
 
 	hst->st_write = NULL;
@@ -261,7 +265,7 @@ ssize_t hci_tty_read(struct file *file, char __user *data, size_t size,
 	struct ti_st	*hst;
 
 	pr_debug("inside %s (%p, %p, %u, %p)\n",
-			__func__, file, data, size, offset);
+		 __func__, file, data, size, offset);
 
 	/* Validate input parameters */
 	if ((NULL == file) || (((NULL == data) || (0 == size)))) {
@@ -292,7 +296,7 @@ ssize_t hci_tty_read(struct file *file, char __user *data, size_t size,
 
 #ifdef VERBOSE
 	print_hex_dump(KERN_INFO, ">in>", DUMP_PREFIX_NONE,
-			16, 1, skb->data, skb->len, 0);
+		       16, 1, skb->data, skb->len, 0);
 #endif
 
 	/* Forward the data to the user */
@@ -344,7 +348,7 @@ ssize_t hci_tty_write(struct file *file, const char __user *data,
 	struct	sk_buff *skb;
 
 	pr_debug("inside %s (%p, %p, %u, %p)\n",
-			__func__, file, data, size, offset);
+		 __func__, file, data, size, offset);
 
 	if (!hst->st_write) {
 		pr_err(" Can't write to ST, hhci_tty->st_write null ?");
@@ -368,7 +372,7 @@ ssize_t hci_tty_write(struct file *file, const char __user *data,
 #ifdef VERBOSE
 	pr_debug("start data..");
 	print_hex_dump(KERN_INFO, "<out<", DUMP_PREFIX_NONE,
-			16, 1, skb->data, size, 0);
+		       16, 1, skb->data, size, 0);
 	pr_debug("\n..end data");
 #endif
 
@@ -391,7 +395,7 @@ static long hci_tty_ioctl(struct file *file,
 		unsigned int cmd, unsigned long arg)
 {
 	struct sk_buff *skb = NULL;
-	int		retCode = 0;
+	int		retcode = 0;
 	struct ti_st	*hst;
 
 	pr_debug("inside %s (%p, %u, %lx)", __func__, file, cmd, arg);
@@ -423,11 +427,11 @@ static long hci_tty_ioctl(struct file *file,
 		break;
 	default:
 		pr_debug("Un-Identified IOCTL %d", cmd);
-		retCode = 0;
-	break;
+		retcode = 0;
+		break;
 	}
 
-	return retCode;
+	return retcode;
 }
 
 /** hci_tty_poll Function
@@ -487,13 +491,13 @@ static struct device *hci_tty_dev;	/* dev during device_create */
  */
 static int __init hci_tty_init(void)
 {
-	pr_debug("inside %s\n", __func__);
+	pr_info("inside %s\n", __func__);
 
 	/* Expose the device DEVICE_NAME to user space
 	 * And obtain the major number for the device
 	 */
-	hci_tty_major = register_chrdev(0, DEVICE_NAME, \
-			&hci_tty_chrdev_ops);
+	hci_tty_major = register_chrdev(0, DEVICE_NAME, &hci_tty_chrdev_ops);
+
 	if (0 > hci_tty_major) {
 		pr_err("Error when registering to char dev");
 		return hci_tty_major;
@@ -509,7 +513,7 @@ static int __init hci_tty_init(void)
 
 	hci_tty_dev =
 		device_create(hci_tty_class, NULL, MKDEV(hci_tty_major, 0),
-				NULL, DEVICE_NAME);
+			      NULL, DEVICE_NAME);
 	if (IS_ERR(hci_tty_dev)) {
 		pr_err("Error in device create");
 		unregister_chrdev(hci_tty_major, DEVICE_NAME);
