@@ -517,6 +517,8 @@ static int ft5x06_ts_suspend(struct device *dev)
 	char txbuf[2], i;
 	int err;
 
+	return 0;
+	dev_err(dev, "Enterd ft5x06_ts_suspend\n");
 	if (data->loading_fw) {
 		dev_info(dev, "Firmware loading in process...\n");
 		return 0;
@@ -576,6 +578,8 @@ static int ft5x06_ts_resume(struct device *dev)
 	struct ft5x06_ts_data *data = dev_get_drvdata(dev);
 	int err;
 
+	return 0;
+	dev_err(dev, "Enterd ft5x06_ts_resume\n");
 	if (!data->suspended) {
 		dev_dbg(dev, "Already in awake state\n");
 		return 0;
