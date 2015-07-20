@@ -17,12 +17,35 @@
 
 #define VAR_DART_MX6
 
-#include "imx6q-dart.dtsi"
+#include "imx6q.dtsi"
 #include "imx6qdl-var-dart.dtsi"
 
 / {
 	model = "Variscite i.MX6 QUAD VAR-DART Smart Device Board";
 	compatible = "fsl,imx6q-var-dart", "fsl,imx6q";
+};
+
+&cpu0 {
+		operating-points = <
+			/* kHz    uV */
+			1200000 1275000
+			996000  1250000
+			852000  1250000
+			792000  1275000
+			396000  1270000
+		>;
+		fsl,soc-operating-points = <
+			/* ARM kHz  SOC-PU uV */
+			1200000 1275000
+			996000	1250000
+			852000	1250000
+			792000	1275000
+			396000	1275000
+		>;
+
+		arm-supply = <&reg_arm>;
+		pu-supply = <&reg_pu>;
+		soc-supply = <&reg_soc>;
 };
 
 &i2c2 {
