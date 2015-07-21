@@ -25,6 +25,7 @@
 	compatible = "fsl,imx6q-var-dart", "fsl,imx6q";
 };
 
+#if 0
 &cpu0 {
 		operating-points = <
 			/* kHz    uV */
@@ -47,7 +48,7 @@
 		pu-supply = <&reg_pu>;
 		soc-supply = <&reg_soc>;
 };
-
+#endif
 &i2c2 {
 	pmic: pfuze100@08 {
 		compatible = "fsl,pfuze100";
