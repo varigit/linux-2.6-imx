@@ -17,7 +17,7 @@
 
 #define VAR_DART_MX6
 
-#include "imx6q-dart.dtsi"
+#include "imx6q.dtsi"
 #include "imx6qdl-var-dart.dtsi"
 
 / {
