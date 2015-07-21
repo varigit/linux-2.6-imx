@@ -43,12 +43,13 @@
 			regulator-name = "usb_h1_vbus";
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
-                        gpio = <&gpio1 28 0>;
-                        enable-active-high;
+			gpio = <&gpio1 28 0>;
+			enable-active-high;
 		};
 
 		reg_audio: tlv320aic3x_supply {
 			compatible = "regulator-fixed";
+			reg = <2>;
 			regulator-name = "tlv320aic3x-supply";
 			enable-active-high;
 		};
@@ -60,12 +61,14 @@
 			regulator-max-microvolt = <3300000>;
 			regulator-always-on;
 		};
+
 		touch_3v3_regulator: touch_3v3_regulator {
 			compatible = "regulator-fixed";
 			regulator-name = "touch_3v3_supply";
 			regulator-always-on;
 			status = "okay";
 		};
+
 	};
 
 	wlcore {
@@ -123,24 +126,15 @@
 	sound {
 		compatible = "fsl,imx6q-var-som-tlv320aic3x", "fsl,imx-audio-tlv320aic3x";
 		model = "tlv320aic3x-audio";
-		ssi-controller = <&ssi2>;
+		cpu-dai = <&ssi2>;
 		audio-codec = <&codec>;
 		audio-routing =
 			/* Headphone connected to HPLOUT, HPROUT */
 			"Headphone Jack",       "HPLOUT",
 			"Headphone Jack",       "HPROUT",
-			/* Line Out connected to LLOUT, RLOUT */
-			"Line Out",      	"LLOUT",
-			"Line Out",     	"RLOUT",
-			/* Mic connected to (MIC3L | MIC3R) */
-			"Mic Bias",		"MIC3L",
-			"Mic Bias",		"MIC3R",
-			"Mic Jack",		"Mic Bias",
 			/* Line In connected to (LINE1L | LINE2L), (LINE1R | LINE2R) */
-			"Line In",		"LINE1L",
-			"Line In",		"LINE2L",
-			"Line In",		"LINE1R",
-			"Line In",		"LINE2R";
+			"Line In Jack",		"LINE1L",
+			"Line In Jack",		"LINE1R";
 		mux-int-port = <2>;
 		mux-ext-port = <3>;
 	};
@@ -195,16 +189,17 @@
 		status = "disabled";
 	};
 
+#if 0
 	lcd@0 {
 		compatible = "fsl,lcd";
 		ipu_id = <0>;
 		disp_id = <0>;
 		default_ifmt = "RGB565";
-//		pinctrl-names = "default";
-//		pinctrl-0 = <&pinctrl_ipu1_1>;
-		status = "disabled";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_ipu1>;
+		status = "okay";
 	};
-
+#endif
 	backlight {
 		compatible = "pwm-backlight";
 		pwms = <&pwm2 0 50000>;
@@ -266,7 +261,7 @@
 
 &audmux {
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_audmux_2>;
+	pinctrl-0 = <&pinctrl_audmux_2_var>;
 	status = "okay";
 };
 
@@ -412,6 +407,8 @@
 			focaltech,mirror_h;
 			focaltech,mirror_v;
 		};
+
+        /* DS1307 RTC module */
         rtc@0x68 {
                  compatible = "dallas,ds1307";
                  reg = <0x68>;
@@ -542,11 +539,6 @@
 	status = "okay";
 };
 
-&pwm4 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_pwm4_1>;
-	status = "okay";
-};
 
 &ssi2 {
 	fsl,mode = "i2s-slave";
