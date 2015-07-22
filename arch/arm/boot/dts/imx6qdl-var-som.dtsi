@@ -53,6 +53,7 @@
 
 		reg_audio: tlv320aic3x_supply {
 			compatible = "regulator-fixed";
+			reg = <2>;
 			regulator-name = "tlv320aic3x-supply";
 			enable-active-high;
 		};
@@ -147,18 +148,9 @@
 			/* Headphone connected to HPLOUT, HPROUT */
 			"Headphone Jack",       "HPLOUT",
 			"Headphone Jack",       "HPROUT",
-			/* Line Out connected to LLOUT, RLOUT */
-			"Line Out Jack",      	"LLOUT",
-			"Line Out Jack",     	"RLOUT",
-			/* Mic connected to (MIC3L | MIC3R) */
-			"Mic Jack",		"MIC3L",
-			"Mic Jack",		"MIC3R",
-			"Mic Jack",		"Mic Bias",
 			/* Line In connected to (LINE1L | LINE2L), (LINE1R | LINE2R) */
 			"Line In Jack",		"LINE1L",
-			"Line In Jack",		"LINE2L",
-			"Line In Jack",		"LINE1R",
-			"Line In Jack",		"LINE2R";
+			"Line In Jack",		"LINE1R";
 		mux-int-port = <2>;
 		mux-ext-port = <3>;
 	};
@@ -217,16 +209,17 @@
 		status = "disabled";
 	};
 
+#if 0
 	lcd@0 {
 		compatible = "fsl,lcd";
 		ipu_id = <0>;
 		disp_id = <0>;
 		default_ifmt = "RGB565";
-//		pinctrl-names = "default";
-//		pinctrl-0 = <&pinctrl_ipu1_1>;
-		status = "disabled";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_ipu1>;
+		status = "okay";
 	};
-
+#endif
 	backlight {
 		compatible = "pwm-backlight";
 		pwms = <&pwm2 0 50000>;
@@ -285,7 +278,7 @@
 
 &audmux {
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_audmux_2>;
+	pinctrl-0 = <&pinctrl_audmux_2_var>;
 	status = "okay";
 };
 
