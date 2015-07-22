@@ -643,10 +643,7 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
 	/* Make sure PFDs are disabled at boot. */
 	reg = readl_relaxed(anatop_base + 0x100);
 	/* Cannot disable pll2_pfd2_396M, as it is the MMDC clock in iMX6DL */
-	if (cpu_is_imx6dl())
-		reg |= 0x80008080;
-	else
-		reg |= 0x80808080;
+	reg |= 0x80008080;
 	writel_relaxed(reg, anatop_base + 0x100);
 
 	/* Disable PLL3 PFDs. */

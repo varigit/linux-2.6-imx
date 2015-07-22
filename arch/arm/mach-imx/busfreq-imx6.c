@@ -78,6 +78,7 @@ static u32 org_arm_rate;
 static int bus_freq_scaling_is_active;
 static int high_bus_count, med_bus_count, audio_bus_count, low_bus_count;
 static unsigned int ddr_low_rate;
+static int sk_imx6q_ddr_400;
 
 extern unsigned long iram_tlb_phys_addr;
 extern int unsigned long iram_tlb_base_addr;
@@ -748,6 +749,11 @@ static ssize_t bus_freq_scaling_enable_store(struct device *dev,
 				 struct device_attribute *attr,
 				 const char *buf, size_t size)
 {
+	if (sk_imx6q_ddr_400) {
+		printk("SK: i.MX6Q DDR 400M, bus frequency scaling is disabled\n");
+		return size;
+	}
+
 	if (strncmp(buf, "1", 1) == 0) {
 		bus_freq_scaling_is_active = 1;
 		set_high_bus_freq(1);
@@ -1080,6 +1086,16 @@ static int busfreq_probe(struct platform_device *pdev)
 	if (err) {
 		dev_err(busfreq_dev, "Busfreq init of MMDC failed\n");
 		return err;
+	}
+
+	sk_imx6q_ddr_400 = 0;
+	if (cpu_is_imx6q() && (clk_get_rate(periph_pre_clk) == 396000000)) {
+		clk_set_parent(periph_pre_clk, pll2_400);
+		clk_set_parent(periph_clk, periph_pre_clk);
+
+		sk_imx6q_ddr_400 = 1;
+		printk("SK: i.MX6Q DDR 400M, disable bus frequency scaling\n");
+		bus_freq_scaling_is_active = 0;
 	}
 	return 0;
 }
