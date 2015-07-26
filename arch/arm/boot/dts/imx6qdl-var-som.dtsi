@@ -134,6 +134,7 @@
 			label = "Back";
 			gpios = <&gpio5 20 1>;
 			linux,code = <158>; /* KEY_BACK */
+			gpio-key,wakeup;
 		};
 	};
 
