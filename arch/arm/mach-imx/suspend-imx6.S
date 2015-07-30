@@ -705,6 +705,7 @@
 	str	r10, [r8, #0x750] /* DDRMODE_CTL */
 	str	r10, [r8, #0x774] /* DDRMODE */
 
+#if 0
 	str	r10, [r8, #0x5a8] /* DRAM_SDQS0 */
 	str	r10, [r8, #0x5b0] /* DRAM_SDQS1 */
 	str	r10, [r8, #0x524] /* DRAM_SDQS2 */
@@ -714,7 +715,7 @@
 	str	r10, [r8, #0x50c] /* DRAM_SDQS5 */
 	str	r10, [r8, #0x5b8] /* DRAM_SDQS6 */
 	str	r10, [r8, #0x5c0] /* DRAM_SDQS7 */
-
+#endif
 	str	r10, [r8, #0x784] /* GPR_B0DS */
 	str	r10, [r8, #0x788] /* GPR_B1DS */
 	str	r10, [r8, #0x794] /* GPR_B2DS */
