@@ -343,9 +343,22 @@ void st_int_recv(void *disc_data,
 			/* Unknow packet? */
 		default:
 			type = *ptr;
-			if (st_gdata->list[type] == NULL) {
-				pr_err("chip/interface misbehavior dropping"
-					" frame starting with 0x%02x", type);
+			/* Default case means non-HCILL packets,
+			 * possibilities are packets for:
+			 * (a) valid protocol -  Supported Protocols within
+			 *     the ST_MAX_CHANNELS.
+			 * (b) registered protocol - Checked by
+			 *     "st_gdata->list[type] == NULL)" are supported
+			 *     protocols only.
+			 *  Rules out any invalid protocol and
+			 *  unregistered protocols with channel ID < 16.
+			 */
+
+			if ((type >= ST_MAX_CHANNELS) ||
+					(st_gdata->list[type] == NULL)) {
+				pr_err("chip/interface misbehavior: "
+						"dropping frame starting "
+						"with 0x%02x\n", type);
 				goto done;
 
 			}
@@ -562,7 +575,9 @@ long st_register(struct st_proto_s *new_proto)
 			if ((st_gdata->protos_registered != ST_EMPTY) &&
 			    (test_bit(ST_REG_PENDING, &st_gdata->st_state))) {
 				pr_err(" KIM failure complete callback ");
+				spin_lock_irqsave(&st_gdata->lock, flags);
 				st_reg_complete(st_gdata, err);
+				spin_unlock_irqrestore(&st_gdata->lock, flags);
 				clear_bit(ST_REG_PENDING, &st_gdata->st_state);
 			}
 			return -EINVAL;
