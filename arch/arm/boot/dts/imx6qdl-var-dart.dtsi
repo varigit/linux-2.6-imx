@@ -250,6 +250,20 @@
 		type = <2>;     /* bluetooth */
 		gpios = <&gpio6 18 0>;
 	};
+	btwilink {
+		compatible = "btwilink";
+	};
+
+#if 0
+	kim {
+		compatible = "kim";
+		nshutdown_gpio = <&gpio6 18 0>;
+		dev_name = "/dev/ttymxc1";
+		flow_cntrl = <1>;
+		baud_rate = <3000000>;
+	};
+#endif
+
 };
 
 &audmux {

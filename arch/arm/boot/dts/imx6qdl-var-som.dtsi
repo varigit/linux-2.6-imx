@@ -236,12 +236,26 @@
 		};
 	};
 
+
 	wlan_bt_rfkill {
 		compatible = "net,rfkill-gpio";
 		name = "wlan_bt_rfkill";
 		type = <2>;     /* bluetooth */
 		gpios = <&gpio6 18 0>;
 	};
+	btwilink {
+		compatible = "btwilink";
+	};
+
+#if 0
+	kim {
+		compatible = "kim";
+		nshutdown_gpio = <&gpio6 18 0>;
+		dev_name = "/dev/ttymxc1";
+		flow_cntrl = <1>;
+		baud_rate = <3000000>;
+	};
+#endif
 };
 
 &audmux {
@@ -421,6 +435,7 @@
 				MX6QDL_PAD_EIM_DA7__GPIO3_IO07 			0x80000000
 				/* Touch */
 				/* for Bluetooth/wifi enable */
+				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18			0x1b0b1
 				/* SDMMC2 CD/WP */
 				MX6QDL_PAD_KEY_COL4__GPIO4_IO14			0x80000000
 				MX6QDL_PAD_KEY_ROW4__GPIO4_IO15			0x80000000
