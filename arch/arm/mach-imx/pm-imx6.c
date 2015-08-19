@@ -39,6 +39,8 @@
 
 #include "common.h"
 #include "hardware.h"
+#include <linux/gpio.h>
+
 
 #define CCR				0x0
 #define BM_CCR_WB_COUNT			(0x7 << 16)
@@ -660,6 +662,7 @@ static int imx6q_pm_enter(suspend_state_t state)
 {
 	unsigned int console_saved_reg[11] = {0};
 	static unsigned int ccm_ccgr4, ccm_ccgr6;
+	static int request_once=0;
 
 	if (imx_src_is_m4_enabled()) {
 		if (imx_gpc_is_m4_sleeping() && imx_mu_is_m4_in_low_freq()) {
@@ -737,8 +740,13 @@ static int imx6q_pm_enter(suspend_state_t state)
 					sizeof(qspi_regs_imx6sx) /
 					sizeof(struct qspi_regs));
 		}
+		
+		if (!request_once)
+		{
+                	gpio_request_one(95,2,"33_per");
+			request_once=1;
+		}
 
-                gpio_request_one(95,2,"33_per");
                 gpio_set_value(95,0);
                 /* Zzz ... */
                 cpu_suspend(0, imx6q_suspend_finish);

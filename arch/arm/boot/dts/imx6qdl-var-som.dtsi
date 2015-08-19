@@ -292,7 +292,10 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_enet_4>;
 	phy-mode = "rgmii";
-	phy-reset-gpios = <&gpio1 25 0>;
+	phy-reset-gpios= <&gpio1 25 1>;
+	phy-reset-duration=<100>;
+/*  new flag to signal the driver to reset the chip on resume from power down */
+	phy-reset-on-resume;
 	fsl,magic-packet;
 	status = "okay";
 };
@@ -417,8 +420,11 @@
 
 		pinctrl_hog: hoggrp {
 			fsl,pins = <
-				/* CTW6120 IRQ */
-				MX6QDL_PAD_EIM_DA7__GPIO3_IO07 			0x80000000
+				MX6QDL_PAD_EIM_DA7__GPIO3_IO07 			0x80000000 /* CTW6120 IRQ */
+				MX6QDL_PAD_DI0_PIN2__GPIO4_IO18			0x80000000 /* WLAN CD */
+				MX6QDL_PAD_DI0_PIN4__GPIO4_IO20			0x80000000 /* WLAN CD2 */
+				MX6QDL_PAD_EIM_D18__GPIO3_IO18			0x80000000 /* WLAN Power enable */
+
 				/* Touch */
 				/* for Bluetooth/wifi enable */
 				/* SDMMC2 CD/WP */
@@ -972,10 +978,8 @@
 	pinctrl-0 = <&pinctrl_usdhc3_2>;
 	pinctrl-1 = <&pinctrl_usdhc3_2_100mhz>;
 	pinctrl-2 = <&pinctrl_usdhc3_2_200mhz>;
-	keep-power-in-suspend;
-	enable-sdio-wakeup;
 	vmmc-supply = <&wlan_en_reg>;        
-	non-removable;
+	cd-gpios = <&gpio4 18 0>; // gpio 4_18 and 4_20 are shorted
 	cap-power-off-card;
 	status = "okay";
 };
