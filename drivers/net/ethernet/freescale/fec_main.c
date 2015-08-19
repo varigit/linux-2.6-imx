@@ -3201,10 +3201,7 @@ static void fec_reset_phy(struct platform_device *pdev)
 
 	err = devm_gpio_request_one(&pdev->dev, phy_reset,
 				    GPIOF_OUT_INIT_LOW, "phy-reset");
-	if (err) {
-		dev_err(&pdev->dev, "failed to get phy-reset-gpios: %d\n", err);
-		return;
-	}
+
 	msleep(msec);
 	gpio_set_value(phy_reset, 1);
 }
@@ -3479,7 +3476,8 @@ static int __maybe_unused fec_suspend(struct device *dev)
 {
 	struct net_device *ndev = dev_get_drvdata(dev);
 	struct fec_enet_private *fep = netdev_priv(ndev);
-
+	struct device_node *np = fep->pdev->dev.of_node;
+	int phy_reset;
 	rtnl_lock();
 	if (netif_running(ndev)) {
 		if (fep->wol_flag & FEC_WOL_FLAG_ENABLE)
@@ -3502,6 +3500,12 @@ static int __maybe_unused fec_suspend(struct device *dev)
 	if (fep->reg_phy && !(fep->wol_flag & FEC_WOL_FLAG_ENABLE))
 		regulator_disable(fep->reg_phy);
 
+	phy_reset = of_get_named_gpio(np, "phy-reset-gpios", 0);
+	gpio_set_value(phy_reset, 0);
+
+
+
+
 	/* SOC supply clock to phy, when clock is disabled, phy link down
 	 * SOC control phy regulator, when regulator is disabled, phy link down
 	 */
@@ -3518,7 +3522,11 @@ static int __maybe_unused fec_resume(struct device *dev)
 	struct fec_platform_data *pdata = fep->pdev->dev.platform_data;
 	int ret;
 	int val;
+	struct device_node *np = fep->pdev->dev.of_node;
 
+	if (of_find_property(np, "phy-reset-on-resume", NULL))
+		fec_reset_phy(fep->pdev);
+	
 	if (fep->reg_phy && !(fep->wol_flag & FEC_WOL_FLAG_ENABLE)) {
 		ret = regulator_enable(fep->reg_phy);
 		if (ret)
