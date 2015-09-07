@@ -256,6 +256,28 @@
 };
 
 
+&ecspi1 {
+	fsl,spi-num-chipselects = <1>;
+	cs-gpios = <&gpio4 9 0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi1_2>;
+	status = "okay";
+
+        chip1: spidev@0 {
+               compatible = "spidev";
+               spi-max-frequency = <12000000>;
+               reg = <0>;
+        };
+/*
+        chip2: spidev@1 {
+               compatible = "spidev";
+               spi-max-frequency = <20000000>;
+               reg = <1>;
+	};
+*/
+};
+
+
 &ecspi3 {
 	fsl,spi-num-chipselects = <1>;
 	cs-gpios = <&gpio4 24 0>;
@@ -699,6 +721,15 @@
 				MX6QDL_PAD_NANDF_WP_B__NAND_WP_B	0xb0b1
 			>;
 		};
+
+		pinctrl_ecspi1_2: ecspi1grp-2 {
+			fsl,pins = <
+				MX6QDL_PAD_KEY_COL1__ECSPI1_MISO 0x100b1
+				MX6QDL_PAD_KEY_ROW0__ECSPI1_MOSI 0x100b1
+				MX6QDL_PAD_KEY_COL0__ECSPI1_SCLK 0x100b1
+			>;
+		};
+
 
 		pinctrl_ecspi3_1: ecspi3grp {
 			fsl,pins = <
