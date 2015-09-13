@@ -99,6 +99,20 @@
 		enable-active-high;
 	};
 
+	reg_fec_supply: fixedregulator@3 {
+		compatible = "regulator-fixed";
+		regulator-name = "ethernet-en-regulator";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		/* PHY_EN GPIO for this board - Bank1, pin25 */
+		gpio = <&gpio1 25 0>;
+
+		/* PHY specific delay */
+		startup-delay-us = <70000>;
+		enable-active-high;
+	};
+
 #ifdef VAR_SOM_SOLO_VSC
 	/* Keys may interfere with touch */
 	gpio-keys {
@@ -326,6 +340,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_enet_4>;
 	phy-mode = "rgmii";
+	phy-supply = <&reg_fec_supply>;
 	status = "okay";
 };
 

@@ -31,6 +31,7 @@
 #include <asm/tlb.h>
 #include <asm/hardware/cache-l2x0.h>
 #include <asm/mach/map.h>
+#include <linux/gpio.h>
 
 #include "common.h"
 #include "hardware.h"
@@ -547,6 +548,7 @@ static int imx6_pm_enter(suspend_state_t state)
 {
 	struct regmap *g;
 	unsigned int console_saved_reg[11] = {0};
+	static int request_once=0;
 
 	if (imx_src_is_m4_enabled()) {
 		if (imx_gpc_is_m4_sleeping() && m4_freq_low) {
@@ -602,6 +604,11 @@ static int imx6_pm_enter(suspend_state_t state)
 		imx6_set_lpm(WAIT_CLOCKED);
 		break;
 	case PM_SUSPEND_MEM:
+		if (!request_once){
+			gpio_request_one(95,2,"33_per");
+			request_once=1;
+		}
+		
 		imx6_enable_wb(true);
 		imx6_set_cache_lpm_in_wait(false);
 		imx6_set_lpm(STOP_POWER_OFF);
@@ -616,8 +623,13 @@ static int imx6_pm_enter(suspend_state_t state)
 			if (imx_src_is_m4_enabled())
 				imx6_qspi_save(qspi_regs_imx6sx, sizeof(qspi_regs_imx6sx)/sizeof(struct qspi_regs));
 		}
+		
+		gpio_set_value(95,0);
+		
 		/* Zzz ... */
 		cpu_suspend(0, imx6_suspend_finish);
+		gpio_set_value(95,1);
+		
 		if (cpu_is_imx6sx() && imx_gpc_is_mf_mix_off()) {
 			memcpy(ocram_base, ocram_saved_in_ddr, ocram_size);
 			imx6_console_restore(console_saved_reg);
