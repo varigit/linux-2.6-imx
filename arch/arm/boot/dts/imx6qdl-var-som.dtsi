@@ -82,16 +82,6 @@
 #endif
 	};
 
-	wlcore {
-		compatible = "wlcore";
-		gpio = <177>;   /* The wl8 driver expects gpio to be an integer, so gpio6_17 is (6-1)*32+17=207
-		        	   irq property must not be set as driver derives irq number from gpio if no irq set
-	 			   use edge irqs for suspend/resume */
-		platform-quirks = <1>;
-		/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
-		board-ref-clock = <4>;
-	};
-
 	wlan_en_reg: fixedregulator@2 {
 		compatible = "regulator-fixed";
 		regulator-name = "wlan-en-regulator";
@@ -224,6 +214,7 @@
 		status = "okay";
 	};
 
+#if 0
 	wlan {
 		compatible = "ti,wilink8";
 		interrupt-parent = <&gpio6>;
@@ -237,6 +228,7 @@
 			clock-frequency = <38400000>;
 		};
 	};
+#endif
 
 
 	wlan_bt_rfkill {
@@ -658,12 +650,12 @@
 
 		pinctrl_usdhc3_2: usdhc3grp {
 			fsl,pins = <
-				MX6QDL_PAD_SD3_CMD__SD3_CMD    		0x17059
-				MX6QDL_PAD_SD3_CLK__SD3_CLK    		0x10059
-				MX6QDL_PAD_SD3_DAT0__SD3_DATA0 		0x17059
-				MX6QDL_PAD_SD3_DAT1__SD3_DATA1 		0x17059
-				MX6QDL_PAD_SD3_DAT2__SD3_DATA2 		0x17059
-				MX6QDL_PAD_SD3_DAT3__SD3_DATA3 		0x17059
+				MX6QDL_PAD_SD3_CMD__SD3_CMD    		0x17069
+				MX6QDL_PAD_SD3_CLK__SD3_CLK    		0x10069
+				MX6QDL_PAD_SD3_DAT0__SD3_DATA0 		0x17069
+				MX6QDL_PAD_SD3_DAT1__SD3_DATA1 		0x17069
+				MX6QDL_PAD_SD3_DAT2__SD3_DATA2 		0x17069
+				MX6QDL_PAD_SD3_DAT3__SD3_DATA3 		0x17069
                                 MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 	0x13059   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
                                 MX6QDL_PAD_SD3_RST__GPIO7_IO08  	0x13059   // this is for wl_irq which driver will configure as an input with a pull down
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 	0x13059   // used for BT_EN 
@@ -992,10 +984,31 @@
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
 	vmmc-supply = <&wlan_en_reg>;        
+	bus-width = <4>;
 	non-removable;
 	cap-power-off-card;
 	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	wlcore: wlcore@0 {
+		compatible = "ti,wl1835";
+		reg = <2>;
+#if 0
+		gpio = <177>;   /* The wl8 driver expects gpio to be an integer, so gpio6_17 is (6-1)*32+17=207
+		        	   irq property must not be set as driver derives irq number from gpio if no irq set
+	 			   use edge irqs for suspend/resume */
+
+		platform-quirks = <1>;
+#endif
+		interrupt-parent = <&gpio6>;
+		interrupts = <17 IRQ_TYPE_EDGE_RISING>;
+
+		/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
+		board-ref-clock = <4>;
+	};
+
 };
+
 
 &wdog1 {
 	status = "disabled";
