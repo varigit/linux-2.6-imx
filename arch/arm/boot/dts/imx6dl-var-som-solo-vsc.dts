@@ -1,0 +1,99 @@
+/*
+ * Copyright (C) 2014 Variscite, Ltd. All Rights Reserved
+ * Donio Ron: ron.d@variscite.com
+ *
+ * Copyright (C) 2013 Freescale Semiconductor, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+/dts-v1/;
+
+#define VAR_SOM_MX6
+#define VAR_SOM_SOLO_VSC
+
+#include "imx6dl.dtsi"
+#include "imx6qdl-var-som.dtsi"
+
+/ {
+	model = "Variscite i.MX6 DL/Solo SOM-SOLO SOM-DUAL SoloCustomBoard";
+	compatible = "fsl,imx6q-var-som", "fsl,imx6q";
+};
+
+&mxcfb1 {
+	status = "okay";
+};
+
+&mxcfb2 {
+	status = "okay";
+};
+
+&pxp {
+	status = "okay";
+};
+
+
+&cpu0 {
+	arm-supply = <&reg_arm>;
+	soc-supply = <&reg_soc>;
+};
+
+&gpc {
+	/* use ldo-enable, u-boot will check it and configure */
+	fsl,ldo-bypass = <0>;
+	/* watchdog select of reset source */
+	fsl,wdog-reset = <1>;
+};
+
+
+&ldb {
+	status = "okay";
+
+	lvds-channel@0 {
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+		crtc = "ipu1-di0";
+		status = "okay";
+
+	display-timings {
+			native-mode = <&timingr0>;
+			timingr0: hsd100pxn1 {
+				clock-frequency = <35714000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <24>;
+				hfront-porch = <15>;
+				vback-porch = <13>;
+				vfront-porch = <20>;
+				hsync-len = <20>;
+				vsync-len = <13>;
+			};
+		};
+	};
+
+	lvds-channel@1 {
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <18>;
+		crtc = "ipu1-di1";
+		primary;
+		status = "okay";
+
+		display-timings {
+			native-mode = <&timing1>;
+			timing1: hsd100pxn1 {
+				clock-frequency = <35714000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <28>;
+				hfront-porch = <17>;
+				vback-porch = <13>;
+				vfront-porch = <20>;
+				hsync-len = <20>;
+				vsync-len = <13>;
+			};
+		};
+	};
+};
+

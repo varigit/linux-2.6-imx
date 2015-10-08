@@ -183,6 +183,12 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6q-sabresd-uart.dtb \
 	imx6q-sabresd-hdcp.dtb \
 	imx6q-sabresd-ldo.dtb \
+	imx6q-var-som.dtb \
+	imx6q-var-dart.dtb \
+	imx6dl-var-som.dtb \
+	imx6dl-var-som-solo.dtb \
+	imx6dl-var-som-solo-vsc.dtb \
+	imx6q-var-som-vsc.dtb\
 	imx6q-sbc6x.dtb \
 	imx6q-udoo.dtb \
 	imx6q-wandboard.dtb \
