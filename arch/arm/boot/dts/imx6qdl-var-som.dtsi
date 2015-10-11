@@ -319,8 +319,8 @@
 	pinctrl-0 = <&pinctrl_i2c1_2>;
 	status = "okay";
 
-	ov5640_mipi: ov5640_mipi@3c {
-		compatible = "ovti,ov5640_mipi";
+	ov564x_mipi: ov564x_mipi@3c {
+		compatible = "ovti,ov564x_mipi";
 		reg = <0x3c>;
 		clocks = <&clks 200>;
 		clock-names = "csi_mclk";
