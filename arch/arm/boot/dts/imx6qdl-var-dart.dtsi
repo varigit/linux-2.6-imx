@@ -298,8 +298,8 @@
 		reg = <0x50>;
 	};
 	
-	ov5640_mipi: ov5640_mipi@3c {
-		compatible = "ovti,ov5640_mipi";
+	ov564x_mipi: ov564x_mipi@3c {
+		compatible = "ovti,ov564x_mipi";
 		reg = <0x3c>;
 		clocks = <&clks 200>;
 		clock-names = "csi_mclk";
