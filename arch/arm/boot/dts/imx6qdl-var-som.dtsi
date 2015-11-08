@@ -214,23 +214,6 @@
 		status = "okay";
 	};
 
-#if 0
-	wlan {
-		compatible = "ti,wilink8";
-		interrupt-parent = <&gpio6>;
-		interrupts = <17 0>;
-		clocks = <&refclock>;
-		clock-names = "refclock";
-
-		refclock: refclock {
-			compatible = "ti,wilink-clock";
-			#clock-cells = <0>;
-			clock-frequency = <38400000>;
-		};
-	};
-#endif
-
-
 	wlan_bt_rfkill {
 		compatible = "net,rfkill-gpio";
 		name = "wlan_bt_rfkill";

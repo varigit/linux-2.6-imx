@@ -77,16 +77,6 @@
 
 	};
 
-	wlcore {
-		compatible = "wlcore";
-		gpio = <177>;   /* The wl8 driver expects gpio to be an integer, so gpio6_17 is (6-1)*32+17=207
-		        	   irq property must not be set as driver derives irq number from gpio if no irq set
-	 			   use edge irqs for suspend/resume */
-		platform-quirks = <1>;
-		/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
-		board-ref-clock = <4>;
-	};
-
 	wlan_en_reg: fixedregulator@2 {
 		compatible = "regulator-fixed";
 		regulator-name = "wlan-en-regulator";
@@ -228,20 +218,6 @@
 	v4l2_out {
 		compatible = "fsl,mxc_v4l2_output";
 		status = "okay";
-	};
-
-	wlan {
-		compatible = "ti,wilink8";
-		interrupt-parent = <&gpio6>;
-		interrupts = <17 0>;
-		clocks = <&refclock>;
-		clock-names = "refclock";
-
-		refclock: refclock {
-			compatible = "ti,wilink-clock";
-			#clock-cells = <0>;
-			clock-frequency = <38400000>;
-		};
 	};
 
 	wlan_bt_rfkill {
@@ -943,6 +919,7 @@
 	status = "okay";
 };
 
+
 &usdhc1 {	/* uSDHC1, TiWi wl1271 7 Wilink8 WL18xx*/
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc1_1>;
@@ -952,10 +929,29 @@
 //	pinctrl-0 = <&pinctrl_usdhc1_1>;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
-	vmmc-supply = <&wlan_en_reg>;        
+	vmmc-supply = <&wlan_en_reg>;
+	bus-width = <4>;        
 	non-removable;
 	cap-power-off-card;
 	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	wlcore: wlcore@0 {
+		compatible = "ti,wl1835";
+		reg = <2>;
+#if 0
+		gpio = <177>;   /* The wl8 driver expects gpio to be an integer, so gpio6_17 is (6-1)*32+17=207
+		        	   irq property must not be set as driver derives irq number from gpio if no irq set
+	 			   use edge irqs for suspend/resume */
+
+		platform-quirks = <1>;
+#endif
+		interrupt-parent = <&gpio6>;
+		interrupts = <17 IRQ_TYPE_EDGE_RISING>;
+
+		/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
+		board-ref-clock = <4>;
+	};
 };
 
 &usdhc2 {	/* uSDHC2, MMC/SD card */
