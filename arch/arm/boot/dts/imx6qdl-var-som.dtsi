@@ -930,7 +930,7 @@
 	disable-over-current;
 	/* dr_mode: One of "host", "peripheral" or "otg". Defaults to "otg" */
 #ifdef VAR_SOM_SOLO_VSC
-	dr_mode = "otg" ;	/* Use "host" if you would like to use the USB0 type A connector (host mode only on VAR-SOM-SOLO) */
+	dr_mode = "otg" ;	/* Use "host" if you would like to use the USB0 type A connector */
 #else
 	dr_mode = "host" ;
 #endif
