@@ -994,9 +994,9 @@
 
 
 &wdog1 {
-	status = "disabled";
+	status = "okay";
 };
 
 &wdog2 {
-	status = "okay";
+	status = "disabled";
 };
