@@ -11,6 +11,19 @@ menuconfig INPUT_TOUCHSCREEN
 
 if INPUT_TOUCHSCREEN
 
+config TOUCHSCREEN_FT5X06
+       tristate "FocalTech 5X06 touchscreens"
+       depends on I2C
+       help
+         Say Y here if you have a ft5x06 touchscreen.
+         Ft5x06 controllers are multi touch controllers which can
+         report 5 touches at a time.
+
+         If unsure, say N.
+
+         To compile this driver as a module, choose M here: the
+         module will be called ft5x06_ts.
+
 config TOUCHSCREEN_88PM860X
 	tristate "Marvell 88PM860x touchscreen"
 	depends on MFD_88PM860X

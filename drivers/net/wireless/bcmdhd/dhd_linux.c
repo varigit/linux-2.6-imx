@@ -3058,7 +3058,7 @@ dhd_stop(struct net_device *net)
 		 * For CFG80211: Clean up all the left over virtual interfaces
 		 * when the primary Interface is brought down. [ifconfig wlan0 down]
 		 */
-		if (!dhd_download_fw_on_driverload) {
+		if (dhd_download_fw_on_driverload) {
 			if ((dhd->dhd_state & DHD_ATTACH_STATE_ADD_IF) &&
 				(dhd->dhd_state & DHD_ATTACH_STATE_CFG80211)) {
 				int i;
@@ -3081,7 +3081,7 @@ dhd_stop(struct net_device *net)
 	OLD_MOD_DEC_USE_COUNT;
 exit:
 #if defined(WL_CFG80211)
-	if (ifidx == 0 && !dhd_download_fw_on_driverload)
+	if (ifidx == 0 && dhd_download_fw_on_driverload)
 		wl_android_wifi_off(net);
 #endif 
 	dhd->pub.rxcnt_timeout = 0;
@@ -3090,7 +3090,7 @@ exit:
 	dhd->pub.hang_was_sent = 0;
 
 	/* Clear country spec for for built-in type driver */
-	if (!dhd_download_fw_on_driverload) {
+	if (dhd_download_fw_on_driverload) {
 		dhd->pub.dhd_cspec.country_abbrev[0] = 0x00;
 		dhd->pub.dhd_cspec.rev = 0;
 		dhd->pub.dhd_cspec.ccode[0] = 0x00;
@@ -3258,7 +3258,7 @@ dhd_open(struct net_device *net)
 	if (ifidx == 0) {
 		atomic_set(&dhd->pend_8021x_cnt, 0);
 #if defined(WL_CFG80211)
-		if (!dhd_download_fw_on_driverload) {
+		if (dhd_download_fw_on_driverload) {
 			DHD_ERROR(("\n%s\n", dhd_version));
 #if defined(USE_INITIAL_2G_SCAN) || defined(USE_INITIAL_SHORT_DWELL_TIME)
 			g_first_broadcast_scan = TRUE;
@@ -3890,7 +3890,7 @@ bool dhd_update_fw_nv_path(dhd_info_t *dhdinfo)
 	 */
 
 	/* set default firmware and nvram path for built-in type driver */
-	if (!dhd_download_fw_on_driverload) {
+	if (dhd_download_fw_on_driverload) {
 #ifdef CONFIG_BCMDHD_FW_PATH
 		fw = CONFIG_BCMDHD_FW_PATH;
 #endif /* CONFIG_BCMDHD_FW_PATH */
@@ -3941,17 +3941,19 @@ bool dhd_update_fw_nv_path(dhd_info_t *dhdinfo)
 	}
 
 	/* clear the path in module parameter */
-	firmware_path[0] = '\0';
-	nvram_path[0] = '\0';
+//	firmware_path[0] = '\0';
+//	nvram_path[0] = '\0';
 
 	if (dhdinfo->fw_path[0] == '\0') {
 		DHD_ERROR(("firmware path not found\n"));
 		return FALSE;
 	}
+	DHD_ERROR(("firmware path %s\n", dhdinfo->fw_path));
 	if (dhdinfo->nv_path[0] == '\0') {
 		DHD_ERROR(("nvram path not found\n"));
 		return FALSE;
 	}
+	DHD_ERROR(("nvram path %s\n", dhdinfo->nv_path));
 
 	return TRUE;
 }
@@ -5257,7 +5259,7 @@ dhd_register_if(dhd_pub_t *dhdp, int ifidx, bool need_rtnl_lock)
 #ifdef BCMLXSDMMC
 		up(&dhd_registration_sem);
 #endif
-		if (!dhd_download_fw_on_driverload) {
+		if (dhd_download_fw_on_driverload) {
 #ifdef BCMSDIO
 			dhd_net_bus_devreset(net, TRUE);
 			dhd_net_bus_suspend(net);
