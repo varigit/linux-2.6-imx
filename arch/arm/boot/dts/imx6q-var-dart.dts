@@ -43,10 +43,6 @@
 				792000	1175000
 				396000	1175000
 			>;
-
-			arm-supply = <&reg_arm>;
-			pu-supply = <&reg_pu>;
-			soc-supply = <&reg_soc>;
 };
 
 &i2c2 {

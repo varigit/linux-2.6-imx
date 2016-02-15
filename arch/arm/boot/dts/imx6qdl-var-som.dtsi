@@ -899,6 +899,7 @@
 		label = "rootfs";
 		reg = <0x00a00000 0x3f600000>;
 	};
+#if 0
 /* Overlaped partition used to flash Android */
 	partition@4 {
 		label = "android_boot";
@@ -912,6 +913,7 @@
 		label = "android_rootfs";
 		reg = <0x03000000 0x3d000000>;
 	};
+#endif
 };
 
 &usbh1 {

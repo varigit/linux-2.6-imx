@@ -864,46 +864,6 @@
 	status = "okay";
 };
 
-&gpmi { /* nand flash 0.5 GB partition table */
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_gpmi_nand_v1>;
-	status = "okay";
-
-	partition@0 {
-		label = "spl";
-		reg = <0x00000000 0x00200000>;
-	};
-
-	partition@1 {
-		label = "bootloader";
-		reg = <0x00200000 0x00200000>;
-	};
-
-
-	partition@2 {
-		label = "kernel";
-		reg = <0x00400000 0x00600000>;
-	};
-
-	partition@3 {
-		label = "rootfs";
-		reg = <0x00a00000 0x3f600000>;
-	};
-/* Overlaped partition used to flash Android */
-	partition@4 {
-		label = "android_boot";
-		reg = <0x00400000 0x01000000>;
-	};
-	partition@5 {
-		label = "android_recovery";
-		reg = <0x01400000 0x01c00000>;
-	};
-	partition@6 {
-		label = "android_rootfs";
-		reg = <0x03000000 0x3d000000>;
-	};
-};
-
 &usbh1 {
 	vbus-supply = <&reg_usb_h1_vbus>;
 	status = "okay";
