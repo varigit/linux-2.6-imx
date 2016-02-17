@@ -165,6 +165,12 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6dl-sabresd-ldo.dtb \
 	imx6dl-sabresd-pf200.dtb \
 	imx6dl-sabresd-hdcp.dtb \
+	imx6dl-var-som.dtb \
+	imx6dl-var-som-solo.dtb \
+	imx6dl-var-som-solo-vsc.dtb \
+	imx6dl-var-som-cap.dtb \
+	imx6dl-var-som-solo-cap.dtb \
+	imx6dl-var-som-solo-vsc-cap.dtb \
 	imx6dl-wandboard.dtb \
 	imx6q-arm2.dtb \
 	imx6q-pop-arm2.dtb \
@@ -190,6 +196,12 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6q-sabresd-hdcp.dtb \
 	imx6q-sbc6x.dtb \
 	imx6q-udoo.dtb \
+	imx6q-var-dart.dtb \
+	imx6q-var-som.dtb \
+	imx6q-var-som-vsc.dtb\
+	imx6q-var-dart-cap.dtb \
+	imx6q-var-som-cap.dtb \
+	imx6q-var-som-vsc-cap.dtb\
 	imx6q-wandboard.dtb \
 	imx6sl-evk.dtb \
 	imx6sl-evk-btwifi.dtb \
