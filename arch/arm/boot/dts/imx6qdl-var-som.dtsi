@@ -434,11 +434,11 @@
 				/* PMIC INT */
 				MX6QDL_PAD_GPIO_17__GPIO7_IO12			0x80000000
 				/* Wifi Slow Clock */
-				MX6QDL_PAD_ENET_RXD0__OSC32K_32K_OUT		0x000b0			/* WIFI Slow clock */
+				MX6QDL_PAD_ENET_RXD0__OSC32K_32K_OUT		0x000b0
 				/* Audio Clock */
-				MX6QDL_PAD_GPIO_0__CCM_CLKO1 			0x130b0			/* Audio Codec Clock */
+				MX6QDL_PAD_GPIO_0__CCM_CLKO1 			0x130b0
 				/* Camera Clock */
-				MX6QDL_PAD_GPIO_3__CCM_CLKO2			0x130b0			/* Camera MCLK */
+				MX6QDL_PAD_GPIO_3__CCM_CLKO2			0x130b0
 			>;
 		};
 
