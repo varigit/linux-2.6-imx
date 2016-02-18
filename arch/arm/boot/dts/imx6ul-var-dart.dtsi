@@ -106,7 +106,7 @@
 	
 #ifdef WIFI
 
-	/* Murata -- define hook for BCMDHD driver.   */
+	/* define hook for BCMDHD driver.   */
 	/* Include WL_HOST_WAKE and WL_REG_ON GPIO's. */
 	bcmdhd_wlan_0: bcmdhd_wlan@0 {
 		compatible = "android,bcmdhd_wlan";
@@ -311,18 +311,18 @@
 };
 
 #ifdef WIFI
-/* Murata -- this is Wi-Fi/BT SD Card Slot Definition */
+/*  Wi-Fi/BT SD Card Slot Definition */
 &usdhc1 {
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc1>;
 	pinctrl-1 = <&pinctrl_usdhc1_100mhz>;
 	pinctrl-2 = <&pinctrl_usdhc1_200mhz>;
 //	cd-gpios = <&gpio4 19 0>;
-	no-1-8-v; /* Murata -- fix VIO at 3.3V */
+	no-1-8-v;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
 	vmmc-supply = <&reg_sd1_vmmc>; 
-	wifi-host; /* Murata -- add hook for SD card detect mechanism */
+	wifi-host;			 /* add hook for SD card detect mechanism */
 	non-removable;
 	status = "okay";
 };
@@ -568,7 +568,7 @@
 		pinctrl_usdhc1: usdhc1grp {
 			fsl,pins = <
 				MX6UL_PAD_SD1_CMD__USDHC1_CMD     0x17059
-				MX6UL_PAD_SD1_CLK__USDHC1_CLK     0x17059 /* Murata: FSL Fix for drive strength; was 0x10059  */
+				MX6UL_PAD_SD1_CLK__USDHC1_CLK     0x17059
 				MX6UL_PAD_SD1_DATA0__USDHC1_DATA0 0x17059
 				MX6UL_PAD_SD1_DATA1__USDHC1_DATA1 0x17059
 				MX6UL_PAD_SD1_DATA2__USDHC1_DATA2 0x17059
