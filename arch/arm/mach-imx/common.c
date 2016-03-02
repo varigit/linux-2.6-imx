@@ -57,6 +57,10 @@ void __init imx6_enet_mac_init(const char *compatible)
 
 		from = enet_np;
 
+/*
+Bugfix: This code prevents second MAC of 6UL to run
+*/
+               if (i==0) 
 		if (of_get_mac_address(enet_np))
 			goto put_enet_node;
 
