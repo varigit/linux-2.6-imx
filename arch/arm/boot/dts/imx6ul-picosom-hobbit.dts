@@ -300,6 +300,7 @@
 	adc: adc081c {
 		compatible = "ti,adc081c";
 		reg = <0x50>;
+		vref-supply = <&reg_3p3v>;
 	};
 };
 
