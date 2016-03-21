@@ -5256,7 +5256,7 @@ dhd_register_if(dhd_pub_t *dhdp, int ifidx, bool need_rtnl_lock)
 #ifdef BCMLXSDMMC
 		up(&dhd_registration_sem);
 #endif
-		if (dhd_download_fw_on_driverload) {
+		if (!dhd_download_fw_on_driverload) {
 #ifdef BCMSDIO
 			dhd_net_bus_devreset(net, TRUE);
 			dhd_net_bus_suspend(net);

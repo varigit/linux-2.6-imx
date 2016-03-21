@@ -175,7 +175,8 @@ static struct esdhc_soc_data usdhc_imx6sl_data = {
 
 static struct esdhc_soc_data usdhc_imx6sx_data = {
 	.flags = ESDHC_FLAG_USDHC | ESDHC_FLAG_STD_TUNING
-			| ESDHC_FLAG_HAVE_CAP1,
+			| ESDHC_FLAG_HAVE_CAP1
+			| ESDHC_FLAG_BUSFREQ,
 };
 
 static struct esdhc_soc_data usdhc_imx7d_data = {
