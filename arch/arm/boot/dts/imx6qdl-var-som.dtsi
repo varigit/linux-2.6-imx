@@ -946,7 +946,7 @@
 #ifdef VAR_SOM_SOLO_VSC
 	dr_mode = "otg" ;	/* Use "host" if you would like to use the USB0 type A connector */
 #else
-	dr_mode = "host" ;
+	dr_mode = "peripheral";	/* Allow adb working */
 #endif
 	status = "okay";
 };
