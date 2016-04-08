@@ -747,7 +747,6 @@
 		fsl,data-width = <24>;
 		status = "okay";
 
-#ifndef VAR_SOM_CAPACITIVE_DISPLAY
 /* Resistive Display */
 		display-timings {
 			native-mode = <&timingr0>;
@@ -763,9 +762,9 @@
 				vsync-len = <13>;
 			};
 		};
-#else		
+
 /* Capacitive Display */
-		display-timings {
+		display-timings-alternate {
 			native-mode = <&timing0c>;
 			timing0c: hsd100pxn1 {
 				clock-frequency = <32000000>;
@@ -779,7 +778,6 @@
 				vsync-len = <2>;
 			};
 		};
-#endif
 	};
 
 	lvds-channel@1 {

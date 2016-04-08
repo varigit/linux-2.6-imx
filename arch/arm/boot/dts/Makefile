@@ -170,7 +170,6 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6dl-var-som-solo-vsc.dtb \
 	imx6dl-var-som-cap.dtb \
 	imx6dl-var-som-solo-cap.dtb \
-	imx6dl-var-som-solo-vsc-cap.dtb \
 	imx6dl-wandboard.dtb \
 	imx6q-arm2.dtb \
 	imx6q-cubox-i.dtb \
@@ -198,9 +197,7 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6q-var-dart.dtb \
 	imx6q-var-som.dtb \
 	imx6q-var-som-vsc.dtb\
-	imx6q-var-dart-cap.dtb \
 	imx6q-var-som-cap.dtb \
-	imx6q-var-som-vsc-cap.dtb\
 	imx6q-wandboard.dtb \
 	imx6sl-evk.dtb \
 	imx6sl-evk-btwifi.dtb \
