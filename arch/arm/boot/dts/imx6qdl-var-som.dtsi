@@ -281,7 +281,6 @@
 		interrupts = <25 0>;	
 		spi-max-frequency = <1500000>;
 		pendown-gpio = <&gpio4 25 0>;
-		vcc-supply = <&reg_soc>;
 		ti,x-min = /bits/ 16 <4200>;
 		ti,x-max = /bits/ 16 <8080>;
 		ti,y-min = /bits/ 16 <4330>;
