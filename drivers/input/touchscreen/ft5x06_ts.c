@@ -349,7 +349,7 @@ static irqreturn_t ft5x06_ts_interrupt(int irq, void *dev_id)
 			x=data->pdata->x_max-x;
 		if(data->pdata->mirror_v)
 			y=data->pdata->y_max-y;
-			
+
 		status = buf[FT_TOUCH_EVENT_POS + FT_ONE_TCH_LEN * i] >> 6;
 
 		num_touches = buf[FT_TD_STATUS] & FT_STATUS_NUM_TP_MASK;
@@ -357,7 +357,7 @@ static irqreturn_t ft5x06_ts_interrupt(int irq, void *dev_id)
 		/* invalid combination */
 		if (!num_touches && !status && !id)
 			break;
-			
+
 		if(num_touches==0)
 			break;
 
@@ -381,7 +381,7 @@ static irqreturn_t ft5x06_ts_interrupt(int irq, void *dev_id)
 			input_report_abs(ip_dev, ABS_X, x);
 			input_report_abs(ip_dev, ABS_Y, y);
 			input_report_abs(ip_dev, ABS_PRESSURE, 100);	/* FIXME: calculate real pressure */
-		} 
+		}
 #endif
 	}
 
@@ -1511,7 +1511,7 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 	input_set_abs_params(input_dev, ABS_PRESSURE, 0, 100, 0, 0);
 
 #endif
-			 
+
 	err = input_register_device(input_dev);
 	if (err) {
 		dev_err(&client->dev, "Input device registration failed\n");
