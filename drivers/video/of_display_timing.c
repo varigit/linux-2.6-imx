@@ -13,19 +13,6 @@
 #include <video/display_timing.h>
 #include <video/of_display_timing.h>
 
-static int screen_alternate;
-static int __init alternate_screen_type(char *options)
-{
-
-	if (strcmp(options, "yes"))
-		screen_alternate= 0;
-	else
-		screen_alternate = 1;
-
-	return 0;
-}
-__setup("screen_alternate=", alternate_screen_type);
-
 /**
  * parse_timing_property - parse timing_entry from device_node
  * @np: device_node with the property
@@ -268,16 +255,9 @@ int of_display_timings_exist(struct device_node *np)
 	if (!np)
 		return -EINVAL;
 
-	if (screen_alternate == 1)
-		timings_np = of_parse_phandle(np, "display-timings-alternate", 0);
-	else
-		timings_np = NULL;
-
-	if (!timings_np){
-		timings_np = of_parse_phandle(np, "display-timings", 0);
-		if (!timings_np)
-			return -EINVAL;
-	}
+	timings_np = of_parse_phandle(np, "display-timings", 0);
+	if (!timings_np)
+		return -EINVAL;
 
 	of_node_put(timings_np);
 	return 1;

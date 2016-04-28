@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Variscite, Ltd. All Rights Reserved
+ * Copyright (C) 2014-2016 Variscite, Ltd. All Rights Reserved
  * Donio Ron: ron.d@variscite.com
  *
  * Copyright 2012 Freescale Semiconductor, Inc.
@@ -15,11 +15,9 @@
 
 /dts-v1/;
 
-#define VAR_SOM_MX6
-#define VAR_SOM_SOLO_VSC
-
 #include "imx6q.dtsi"
 #include "imx6qdl-var-som.dtsi"
+#include "imx6qdl-var-solocb-dt6cb-displays.dtsi"
 
 / {
 	model = "Variscite i.MX6 QUAD VAR-SOM-MX6 SoloCustomBoard";
@@ -27,24 +25,39 @@
 };
 
 &cpu0 {
-			operating-points = <
-				/* kHz    uV */
-				1200000 1350000
-				996000  1250000
-				852000  1250000
-				792000  1175000
-				396000  1175000
-			>;
-			fsl,soc-operating-points = <
-				/* ARM kHz  SOC-PU uV */
-				1200000 1350000
-				996000	1250000
-				852000	1250000
-				792000	1175000
-				396000	1175000
-			>;
+	operating-points = <
+		/* kHz    uV */
+		1200000 1350000
+		996000  1250000
+		852000  1250000
+		792000  1175000
+		396000  1175000
+	>;
+	fsl,soc-operating-points = <
+		/* ARM kHz  SOC-PU uV */
+		1200000 1350000
+		996000	1250000
+		852000	1250000
+		792000	1175000
+		396000	1175000
+	>;
 };
 
+&iomuxc {
+	imx6qdl-var-som-mx6 {
+		pinctrl_usbotg_1: usbotggrp-1 {
+			fsl,pins = <
+				MX6QDL_PAD_GPIO_1__USB_OTG_ID		0x17059
+			>;
+		};
+
+		pinctrl_ft5406_pins: ft5406_pins {
+			fsl,pins = <
+				MX6QDL_PAD_DISP0_DAT23__GPIO5_IO17	0x1B0B0
+			>;
+		};
+	};
+};
 
 &i2c2 {
 	pmic: pfuze100@08 {
@@ -58,6 +71,7 @@
 				regulator-always-on;
 				regulator-ramp-delay = <6250>;
 			};
+
 			sw1c_reg: sw1c {
 				regulator-min-microvolt = <300000>;
 				regulator-max-microvolt = <1875000>;
@@ -145,6 +159,31 @@
 	};
 };
 
+&reg_usb_otg_vbus {
+	gpio = <&gpio3 22 0>;
+	enable-active-high;
+};
+
+&reg_usb_h1_vbus {
+	gpio = <&gpio4 15 0>;
+	enable-active-high;
+};
+
+&usbotg {
+	pinctrl-0 = <&pinctrl_usbotg_1>;
+	dr_mode = "otg"; /* Use "host" if you would like to use the USB0 type A connector */
+};
+
+&touch {
+	interrupt-parent = <&gpio5>;
+	interrupts = <17 0>;
+	focaltech,irq-gpio = <&gpio5 17 0x00>;
+};
+
+&usdhc2 {       /* uSDHC2, MMC/SD card */
+	wp-gpios = <>;
+};
+
 &mxcfb1 {
 	status = "okay";
 };
@@ -164,53 +203,3 @@
 &sata {
 	status = "okay";
 };
-
-&ldb {
-	status = "okay";
-
-	lvds-channel@0 {
-		fsl,data-mapping = "spwg";
-		fsl,data-width = <24>;
-		crtc = "ipu1-di0";
-		status = "okay";
-
-	display-timings {
-			native-mode = <&timingr0>;
-			timingr0: hsd100pxn1 {
-				clock-frequency = <35714000>;
-				hactive = <800>;
-				vactive = <480>;
-				hback-porch = <24>;
-				hfront-porch = <15>;
-				vback-porch = <13>;
-				vfront-porch = <20>;
-				hsync-len = <20>;
-				vsync-len = <13>;
-			};
-		};
-	};
-
-	lvds-channel@1 {
-		fsl,data-mapping = "spwg";
-		fsl,data-width = <18>;
-		crtc = "ipu1-di1";
-		primary;
-		status = "okay";
-
-		display-timings {
-			native-mode = <&timing1>;
-			timing1: hsd100pxn1 {
-				clock-frequency = <32000000>;
-				hactive = <800>;
-				vactive = <480>;
-				hback-porch = <39>;
-				hfront-porch = <39>;
-				vback-porch = <29>;
-				vfront-porch = <13>;
-				hsync-len = <47>;
-				vsync-len = <2>;
-			};
-		};
-	};
-};
-

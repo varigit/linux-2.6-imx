@@ -1,0 +1,17 @@
+/*
+ * Copyright (C) 2016 Variscite, Ltd. All Rights Reserved
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include "imx6dl-var-som.dtsi"
+#include "imx6qdl-var-solocb-dt6cb-displays.dtsi"
+
+
+&touch {
+	interrupt-parent = <&gpio5>;
+	interrupts = <17 0>;
+	focaltech,irq-gpio = <&gpio5 17 0x00>;
+};
