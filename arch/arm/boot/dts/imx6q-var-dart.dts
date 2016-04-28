@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Variscite, Ltd. All Rights Reserved
+ * Copyright (C) 2014-2016 Variscite, Ltd. All Rights Reserved
  * Donio Ron: ron.d@variscite.com
  *
  * Copyright 2012 Freescale Semiconductor, Inc.
@@ -15,34 +15,32 @@
 
 /dts-v1/;
 
-#define VAR_DART_MX6
-
 #include "imx6q.dtsi"
 #include "imx6qdl-var-dart.dtsi"
+#include "imx6qdl-var-solocb-dt6cb-displays.dtsi"
 
 / {
 	model = "Variscite i.MX6 QUAD VAR-DART Smart Device Board";
 	compatible = "fsl,imx6q-var-dart", "fsl,imx6q";
 };
 
-
 &cpu0 {
-			operating-points = <
-				/* kHz    uV */
-				1200000 1350000
-				996000  1250000
-				852000  1250000
-				792000  1175000
-				396000  1175000
-			>;
-			fsl,soc-operating-points = <
-				/* ARM kHz  SOC-PU uV */
-				1200000 1275000
-				996000	1250000
-				852000	1250000
-				792000	1175000
-				396000	1175000
-			>;
+	operating-points = <
+		/* kHz    uV */
+		1200000 1350000
+		996000  1250000
+		852000  1250000
+		792000  1175000
+		396000  1175000
+	>;
+	fsl,soc-operating-points = <
+		/* ARM kHz  SOC-PU uV */
+		1200000 1275000
+		996000	1250000
+		852000	1250000
+		792000	1175000
+		396000	1175000
+	>;
 };
 
 &i2c2 {
@@ -144,16 +142,11 @@
 	};
 };
 
-&ldb {
-	lvds-channel@0 {
-		crtc = "ipu1-di0";
-	};
-
-	lvds-channel@1 {
-		crtc = "ipu2-di0";
-	};
+&touch {
+	interrupt-parent = <&gpio1>;
+	interrupts = <4 0>;
+	focaltech,irq-gpio = <&gpio1 4 0x00>;
 };
-
 
 &mxcfb1 {
 	status = "okay";
