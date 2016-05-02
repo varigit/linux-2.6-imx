@@ -61,15 +61,6 @@
 			enable-active-high;
 		};
 
-		bt_on: bt_on {
-			compatible = "regulator-fixed";
-			regulator-min-microvolt = <3300000>;
-			regulator-max-microvolt = <3300000>;
-			regulator-name = "bt_on";
-			gpio = <&gpio5 9 GPIO_ACTIVE_HIGH>;
-			regulator-boot-on;
-		};
-
 		reg_2p5v: 2p5v {
 			compatible = "regulator-fixed";
 			regulator-name = "2P5V";
@@ -146,6 +137,11 @@
 			gpios = <&gpio1 29 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "timer";
 		};
+	};
+	bt_rfkill {
+		compatible = "fsl,mxc_bt_rfkill";
+		bt-power-gpios = <&gpio5 9 GPIO_ACTIVE_LOW>;
+		status ="okay";
 	};
 };
 
@@ -300,6 +296,7 @@
 	adc: adc081c {
 		compatible = "ti,adc081c";
 		reg = <0x50>;
+		vref-supply = <&reg_3p3v>;
 	};
 };
 
@@ -309,14 +306,6 @@
 	pinctrl-0 = <&pinctrl_i2c2>;
 	status = "okay";
 
-};
-
-&i2c3 {
-	clock_frequency = <100000>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_i2c3>;
-	status = "okay";
-
 	codec: sgtl5000@0a {
 		compatible = "fsl,sgtl5000";
 		reg = <0x0a>;
@@ -324,6 +313,13 @@
 		VDDA-supply = <&reg_2p5v>;
 		VDDIO-supply = <&reg_3p3v>;
 	};
+};
+
+&i2c3 {
+	clock_frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c3>;
+	status = "okay";
 };
 
 &iomuxc {
@@ -353,7 +349,16 @@
 				MX6UL_PAD_SD1_DATA1__USDHC1_DATA1 0x17059
 				MX6UL_PAD_SD1_DATA2__USDHC1_DATA2 0x17059
 				MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 0x17059
-				MX6UL_PAD_UART1_CTS_B__GPIO1_IO18 0x03029
+				MX6UL_PAD_UART1_RTS_B__USDHC1_CD_B 0x03029
+			>;
+		};
+
+		pinctrl_usdhc1b: usdhc1grpB {
+			fsl,pins = <
+				MX6UL_PAD_NAND_READY_B__USDHC1_DATA4 0x17059
+				MX6UL_PAD_NAND_CE0_B__USDHC1_DATA5   0x17059
+				MX6UL_PAD_NAND_CE1_B__USDHC1_DATA6   0x17059
+				MX6UL_PAD_NAND_CLE__USDHC1_DATA7     0x17059
 			>;
 		};
 
@@ -428,8 +433,6 @@
 				MX6UL_PAD_LCD_ENABLE__LCDIF_ENABLE  0x79
 				MX6UL_PAD_LCD_HSYNC__LCDIF_HSYNC    0x79
 				MX6UL_PAD_LCD_VSYNC__LCDIF_VSYNC    0x79
-				/* used for lcd reset */
-				MX6UL_PAD_SNVS_TAMPER9__GPIO5_IO09  0x79
 			>;
 		};
 
@@ -603,36 +606,7 @@
 };
 
 &lcdif {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_lcdif_dat
-		     &pinctrl_lcdif_ctrl>;
-	display = <&display0>;
-	status = "okay";
-
-	display0: display {
-		bits-per-pixel = <32>;
-		bus-width = <24>;
-
-		display-timings {
-			native-mode = <&timing0>;
-			timing0: timing0 {
-			clock-frequency = <33200000>;
-			hactive = <800>;
-			vactive = <480>;
-			hfront-porch = <210>;
-			hback-porch = <46>;
-			hsync-len = <1>;
-			vback-porch = <22>;
-			vfront-porch = <23>;
-			vsync-len = <1>;
-
-			hsync-active = <0>;
-			vsync-active = <0>;
-			de-active = <1>;
-			pixelclk-active = <0>;
-			};
-		};
-	};
+	status = "disabled";
 };
 
 &gpmi {
@@ -661,7 +635,7 @@
 			reg = <1>;
 			max-speed = <100>;
 			interrupt-parent = <&gpio5>;
-			interrupts = <6 IRQ_TYPE_LEVEL_HIGH 0>;
+			interrupts = <6 IRQ_TYPE_LEVEL_LOW 0>;
 		};
 	};
 };
@@ -670,9 +644,10 @@
 &usdhc1 {  /* Baseboard microSD slot */
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usdhc1>;
+	pinctrl-1 = <&pinctrl_usdhc1b>;
+	bus-width = <8>;
 	no-1-8-v;
 	keep-power-in-suspend;
-	cd-gpios = <&gpio1 18 0>;
 	status = "okay";
 };
 
@@ -723,7 +698,7 @@
 &qspi {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_qspi>;
-	status = "okay";
+	status = "disabled";
 	fsl,qspi-has-second-chip = <1>;
 	ddrsmp=<0>;
 
