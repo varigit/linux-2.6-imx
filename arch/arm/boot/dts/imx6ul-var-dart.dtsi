@@ -116,26 +116,22 @@
 		
 	};
 
-	btwilink {
-		compatible = "btwilink";
+	bt_rfkill {
+		compatible = "fsl,mxc_bt_rfkill";
+		bt-power-gpios = <&gpio5 4 GPIO_ACTIVE_LOW>;
+		status ="okay";
 	};
-
 #endif
 
 	leds {
-        compatible = "gpio-leds";
-        hdd {
-                label = "IDE Activity";
-                gpios = <&gpio4 20 0>;
-                linux,default-trigger = "ide-disk";
-        };
+		compatible = "gpio-leds";
 
-        heartbeat {
-                label = "Heart Beat";
-                gpios = <&gpio4 21 0>;
-                linux,default-trigger = "heartbeat";
-        };
-};
+		led0 {
+			label = "led0";
+			gpios = <&gpio4 20 0>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
 
 };
 
@@ -187,12 +183,6 @@
 &flexcan1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_flexcan1>;
-	status = "okay";
-};
-
-&flexcan2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_flexcan2>;
 	status = "okay";
 };
 
@@ -492,15 +482,8 @@
 
 		pinctrl_flexcan1: flexcan1grp{
 			fsl,pins = <
-				MX6UL_PAD_UART3_RTS_B__FLEXCAN1_RX	0x1b020
-				MX6UL_PAD_UART3_CTS_B__FLEXCAN1_TX	0x1b020
-			>;
-		};
-
-		pinctrl_flexcan2: flexcan2grp{
-			fsl,pins = <
-				MX6UL_PAD_UART2_RTS_B__FLEXCAN2_RX	0x1b020
-				MX6UL_PAD_UART2_CTS_B__FLEXCAN2_TX	0x1b020
+				MX6UL_PAD_LCD_DATA08__FLEXCAN1_TX	0x1b020
+				MX6UL_PAD_LCD_DATA09__FLEXCAN1_RX	0x1b020
 			>;
 		};
 
