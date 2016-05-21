@@ -4345,12 +4345,8 @@ dhd_bus_init(dhd_pub_t *dhdp, bool enforce_mutex)
 	dhdsdio_clkctl(bus, CLK_AVAIL, FALSE);
 	if (bus->clkstate != CLK_AVAIL) {
 		DHD_ERROR(("%s: clock state is wrong. state = %d\n", __FUNCTION__, bus->clkstate));
-#if 0
-//RD tmp bypass error!
 		ret = -1;
 		goto exit;
-#endif
-		ret = 0;
 	}
 
 
