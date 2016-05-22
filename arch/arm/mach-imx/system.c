@@ -142,6 +142,7 @@ void mxc_restart(enum reboot_mode mode, const char *cmd)
 
 	if (cpu_is_mx1())
 		wcr_enable = (1 << 0);
+#if 0 /* variscite boards not used wcr_enable = 0x14 mode */
 	/*
 	 * Some i.MX6 boards use WDOG2 to reset external pmic in bypass mode,
 	 * so do WDOG2 reset here. Do not set SRS, since we will
@@ -154,6 +155,7 @@ void mxc_restart(enum reboot_mode mode, const char *cmd)
 			cpu_is_imx6sl())) || cpu_is_imx6sx() || cpu_is_imx7d()
 			|| cpu_is_imx6ul())
 		wcr_enable = 0x14;
+#endif
 	else
 		wcr_enable = (1 << 2);
 
