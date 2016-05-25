@@ -283,12 +283,12 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6dl-tx6u-811x.dtb \
 	imx6dl-udoo.dtb \
 	imx6dl-sabresd-enetirq.dtb \
-	imx6dl-var-som-cap.dts \
-	imx6dl-var-som-res.dts \
-	imx6dl-var-som-solo-cap.dts \
-	imx6dl-var-som-solo-res.dts \
-	imx6dl-var-som-solo-vsc.dts \
-	imx6dl-var-som-vsc.dts \
+	imx6dl-var-som-cap.dtb \
+	imx6dl-var-som-res.dtb \
+	imx6dl-var-som-solo-cap.dtb \
+	imx6dl-var-som-solo-res.dtb \
+	imx6dl-var-som-solo-vsc.dtb \
+	imx6dl-var-som-vsc.dtb \
 	imx6dl-wandboard.dtb \
 	imx6dl-wandboard-revb1.dtb \
 	imx6q-arm2.dtb \
@@ -337,10 +337,10 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6q-tx6q-1020-comtft.dtb \
 	imx6q-tx6q-1110.dtb \
 	imx6q-udoo.dtb \
-	imx6q-var-dart.dts \
-	imx6q-var-som-cap.dts \
-	imx6q-var-som-res.dts \
-	imx6q-var-som-vsc.dts \
+	imx6q-var-dart.dtb \
+	imx6q-var-som-cap.dtb \
+	imx6q-var-som-res.dtb \
+	imx6q-var-som-vsc.dtb \
 	imx6q-wandboard.dtb \
 	imx6q-wandboard-revb1.dtb
 dtb-$(CONFIG_SOC_IMX6SL) += \
