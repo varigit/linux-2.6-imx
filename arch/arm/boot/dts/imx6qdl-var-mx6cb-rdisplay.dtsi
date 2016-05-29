@@ -27,10 +27,10 @@
 		interrupts = <25 0>;
 		spi-max-frequency = <1500000>;
 		pendown-gpio = <&gpio4 25 0>;
-		ti,x-min = /bits/ 16 <4200>;
-		ti,x-max = /bits/ 16 <8080>;
-		ti,y-min = /bits/ 16 <4330>;
-		ti,y-max = /bits/ 16 <7980>;
+		ti,x-min = /bits/ 16 <125>;
+		ti,x-max = /bits/ 16 <4008>;
+		ti,y-min = /bits/ 16 <282>;
+		ti,y-max = /bits/ 16 <3864>;
 		ti,x-plate-ohms = /bits/ 16 <180>;
 		ti,pressure-max = /bits/ 16 <255>;
 		ti,debounce-max = /bits/ 16 <10>;
