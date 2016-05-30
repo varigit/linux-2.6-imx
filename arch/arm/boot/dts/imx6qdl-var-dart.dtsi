@@ -915,7 +915,7 @@
 	pinctrl-0 = <&pinctrl_usbotg_2>;
 	disable-over-current;
 	/* dr_mode: One of "host", "peripheral" or "otg". Defaults to "otg" */
-	dr_mode = "host" ;	/* Use "host" if you would like to use the USB0 type A connector (host mode only on VAR-SOM-SOLO) */
+	dr_mode = "otg" ;	/* Use "host" if you would like to use the USB0 type A connector */
 	status = "okay";
 };
 
