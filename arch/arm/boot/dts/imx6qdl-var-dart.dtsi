@@ -216,25 +216,25 @@
 		status = "okay";
 	};
 
+#if 0
 	wlan_bt_rfkill {
 		compatible = "net,rfkill-gpio";
 		name = "wlan_bt_rfkill";
 		type = <2>;     /* bluetooth */
 		gpios = <&gpio6 18 0>;
 	};
+#endif
 	btwilink {
 		compatible = "btwilink";
 	};
 
-#if 0
 	kim {
 		compatible = "kim";
-		nshutdown_gpio = <&gpio6 18 0>;
+		nshutdown_gpio = <178>;	/* GPIO6_18 */
 		dev_name = "/dev/ttymxc1";
 		flow_cntrl = <1>;
 		baud_rate = <3000000>;
 	};
-#endif
 
 };
 
@@ -370,9 +370,6 @@
 				MX6QDL_PAD_GPIO_0__CCM_CLKO1 			0x130b0			/* Audio Codec Clock */
 				/* Camera Clock */
 				MX6QDL_PAD_GPIO_3__CCM_CLKO2			0x130b0			/* Camera MCLK */
-                               MX6QDL_PAD_KEY_ROW0__GPIO4_IO07                 0xb0b1
-                               MX6QDL_PAD_KEY_COL1__GPIO4_IO08                 0xb0b1
-
 			>;
 		};
 
@@ -527,14 +524,14 @@
 			>;
 		};
 
-                pinctrl_uart2_4: uart2grp-4 { /* RTS/CTS only mode */
-                        fsl,pins = <
-                                MX6QDL_PAD_SD3_DAT4__UART2_RX_DATA  0x1b0b1
-                                MX6QDL_PAD_SD3_DAT5__UART2_TX_DATA  0x1b0b1
-                                MX6QDL_PAD_SD4_DAT6__UART2_CTS_B    0x1b0b1
-                                MX6QDL_PAD_SD4_DAT5__UART2_RTS_B    0x1b0b1
-                        >;
-                };
+		pinctrl_uart2_4: uart2grp-4 { /* RTS/CTS only mode */
+			fsl,pins = <
+				MX6QDL_PAD_SD3_DAT4__UART2_RX_DATA  0x1b0b1
+				MX6QDL_PAD_SD3_DAT5__UART2_TX_DATA  0x1b0b1
+				MX6QDL_PAD_SD4_DAT6__UART2_CTS_B    0x1b0b1
+				MX6QDL_PAD_SD4_DAT5__UART2_RTS_B    0x1b0b1
+			>;
+		};
 
 		/* Variscite Uart2 support */
 		pinctrl_uart3_2: uart3grp-2 {	/* RX/TX RTS/CTS */
@@ -567,6 +564,9 @@
 				MX6QDL_PAD_SD1_DAT1__SD1_DATA1 		0x17071
 				MX6QDL_PAD_SD1_DAT2__SD1_DATA2 		0x17071
 				MX6QDL_PAD_SD1_DAT3__SD1_DATA3 		0x17071
+				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x13059   // reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN
+				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x13059   // this is for wl_irq which driver will configure as an input with a pull down
+				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x13059   // used for BT_EN
 			>;
 		};
 
