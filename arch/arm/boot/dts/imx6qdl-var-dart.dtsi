@@ -99,7 +99,7 @@
 		home {
 			label = "Home";
 			gpios = <&gpio5 11 1>;
-			linux,code = <KEY_HOME>; /* KEY_HOME */
+			linux,code = <KEY_HOMEPAGE>; /* KEY_HOME */
 			gpio-key,wakeup;
 		};
 
