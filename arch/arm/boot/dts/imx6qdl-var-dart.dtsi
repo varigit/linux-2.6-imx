@@ -558,7 +558,7 @@
                 };
 
 
-		pinctrl_usdhc1_1: usdhc1grp {
+		pinctrl_usdhc3_1: usdhc3grp {
 			fsl,pins = <
 				MX6QDL_PAD_SD1_CMD__SD1_CMD    		0x17071
 				MX6QDL_PAD_SD1_CLK__SD1_CLK    		0x10071
@@ -572,7 +572,7 @@
 			>;
 		};
 
-                pinctrl_usdhc1_2_100mhz: usdhc1grp-2-100mhz {
+                pinctrl_usdhc3_2_100mhz: usdhc3grp-2-100mhz {
                         fsl,pins = <
                                 MX6QDL_PAD_SD1_CMD__SD1_CMD     0x170B9
                                 MX6QDL_PAD_SD1_CLK__SD1_CLK     0x100B9
@@ -585,7 +585,7 @@
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130B9   // used for BT_EN
                         >;
                 };
-                pinctrl_usdhc1_2_200mhz: usdhc1grp-2-200mhz {
+                pinctrl_usdhc3_2_200mhz: usdhc3grp-2-200mhz {
                         fsl,pins = <
                                 MX6QDL_PAD_SD1_CMD__SD1_CMD     0x170F9
                                 MX6QDL_PAD_SD1_CLK__SD1_CLK     0x100F9
@@ -598,7 +598,7 @@
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 0x130F9   // used for BT_EN
                         >;
                 };
-		pinctrl_usdhc2_2: usdhc2grp {
+		pinctrl_usdhc1_2: usdhc1grp {
 			fsl,pins = <
 				MX6QDL_PAD_SD2_CMD__SD2_CMD    		0x17059
 				MX6QDL_PAD_SD2_CLK__SD2_CLK    		0x10059
@@ -609,7 +609,7 @@
 			>;
 		};
 
-		pinctrl_usdhc3_2: usdhc3grp {
+		pinctrl_usdhc2_2: usdhc2grp {
 			fsl,pins = <
 				MX6QDL_PAD_SD3_CMD__SD3_CMD    		0x17059
 				MX6QDL_PAD_SD3_CLK__SD3_CLK    		0x10059
@@ -622,7 +622,7 @@
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 	0x13059   // used for BT_EN 
 			>;
 		};
-		pinctrl_usdhc3_2_100mhz: usdhc3grp-100mhz {
+		pinctrl_usdhc2_2_100mhz: usdhc2grp-100mhz {
 			fsl,pins = <
 				MX6QDL_PAD_SD3_CMD__SD3_CMD     	0x170B9
 				MX6QDL_PAD_SD3_CLK__SD3_CLK     	0x100B9
@@ -635,7 +635,7 @@
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 	0x130B9   // used for BT_EN 
 			>;
 		};
-		pinctrl_usdhc3_2_200mhz: usdhc3grp-200mhz {
+		pinctrl_usdhc2_2_200mhz: usdhc2grp-200mhz {
 			fsl,pins = <
 				MX6QDL_PAD_SD3_CMD__SD3_CMD     	0x170F9
 				MX6QDL_PAD_SD3_CLK__SD3_CLK     	0x100F9
@@ -648,7 +648,7 @@
                                 MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 	0x130F9   // used for BT_EN 
 			>;
 		};
-                pinctrl_usdhc3_3: usdhc3grp-3 {
+                pinctrl_usdhc2_3: usdhc2grp-3 {
                         fsl,pins = <
                                 MX6QDL_PAD_SD3_CMD__SD3_CMD    0x17059
                                 MX6QDL_PAD_SD3_CLK__SD3_CLK    0x10059
@@ -920,17 +920,17 @@
 };
 
 
-&usdhc1 {	/* uSDHC1, TiWi wl1271 7 Wilink8 WL18xx*/
+&usdhc3 {	/* uSDHC3, TiWi wl1271 7 Wilink8 WL18xx*/
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
-	pinctrl-0 = <&pinctrl_usdhc1_1>;
-	pinctrl-1 = <&pinctrl_usdhc1_2_100mhz>;
-	pinctrl-2 = <&pinctrl_usdhc1_2_200mhz>;
+	pinctrl-0 = <&pinctrl_usdhc3_1>;
+	pinctrl-1 = <&pinctrl_usdhc3_2_100mhz>;
+	pinctrl-2 = <&pinctrl_usdhc3_2_200mhz>;
 //	pinctrl-names = "default";
-//	pinctrl-0 = <&pinctrl_usdhc1_1>;
+//	pinctrl-0 = <&pinctrl_usdhc3_1>;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
 	vmmc-supply = <&wlan_en_reg>;
-	bus-width = <4>;        
+	bus-width = <4>;
 	non-removable;
 	cap-power-off-card;
 	status = "okay";
@@ -954,9 +954,9 @@
 	};
 };
 
-&usdhc2 {	/* uSDHC2, MMC/SD card */
+&usdhc1 {	/* uSDHC1, MMC/SD card */
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_usdhc2_2>;
+	pinctrl-0 = <&pinctrl_usdhc1_2>;
 	cd-gpios = <&gpio1 6 0>;
 	no-1-8-v;
 	keep-power-in-suspend;
@@ -965,9 +965,9 @@
 };
 
 
-&usdhc3 {	/* uSDHC3, eMMC */
+&usdhc2 {	/* uSDHC2, eMMC */
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_usdhc3_3>;
+	pinctrl-0 = <&pinctrl_usdhc2_3>;
 	non-removable;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
