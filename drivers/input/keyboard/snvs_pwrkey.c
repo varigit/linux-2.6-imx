@@ -53,23 +53,30 @@ static void imx_imx_snvs_check_for_events(unsigned long data)
 	u32 state;
 
 	clk_enable(pdata->clk);
-	state = ((readl_relaxed(ioaddr + SNVS_HPSR_REG) & SNVS_HPSR_BTN) ?
-		1 : 0);
-	clk_disable(pdata->clk);
+//	state = ((readl_relaxed(ioaddr + SNVS_HPSR_REG) & SNVS_HPSR_BTN) ?
+//		1 : 0);
+//	clk_disable(pdata->clk);
 
 	/* only report new event if status changed */
-	if (state ^ pdata->keystate) {
-		pdata->keystate = state;
-		input_event(input, EV_KEY, pdata->keycode, state);
-		input_sync(input);
-		pm_relax(pdata->input->dev.parent);
-	}
+//	if (state ^ pdata->keystate) {
+//		pdata->keystate = state;
+//		input_event(input, EV_KEY, pdata->keycode, state);
+//		input_sync(input);
+//		pm_relax(pdata->input->dev.parent);
+//	}
 
 	/* repeat check if pressed long */
-	if (state) {
-		mod_timer(&pdata->check_timer,
-			  jiffies + msecs_to_jiffies(60));
-	}
+//	if (state) {
+//		mod_timer(&pdata->check_timer,
+//			  jiffies + msecs_to_jiffies(60));
+//	}
+	/* interrupt only reports release of key so do not wait for state change */
+	state=1;
+	input_event(input, EV_KEY, pdata->keycode, state);
+	input_sync(input);
+	state=0;
+	input_event(input, EV_KEY, pdata->keycode, state);
+	input_sync(input);
 }
 
 static irqreturn_t imx_snvs_pwrkey_interrupt(int irq, void *dev_id)
@@ -100,6 +107,8 @@ static int imx_snvs_pwrkey_probe(struct platform_device *pdev)
 	void __iomem *ioaddr;
 	u32 val;
 	int ret = 0;
+
+        dev_err(&pdev->dev, "i.MX snvs powerkey start probe\n");
 
 	pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
 	if (!pdata)
@@ -188,7 +197,7 @@ static int imx_snvs_pwrkey_probe(struct platform_device *pdev)
 	device_init_wakeup(&pdev->dev, pdata->wakeup);
 	clk_disable(pdata->clk);
 
-	dev_info(&pdev->dev, "i.MX snvs powerkey probed\n");
+	dev_err(&pdev->dev, "i.MX snvs powerkey probed\n");
 
 	return 0;
 

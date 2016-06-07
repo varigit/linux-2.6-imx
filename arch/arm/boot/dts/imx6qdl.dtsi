@@ -758,6 +758,15 @@
 				};
 			};
 
+			pwrkey:snvs-pwrkey@020cc000 {
+				compatible = "fsl,imx6sx-snvs-pwrkey";
+				reg = <0x020cc000 0x4000>;
+				interrupts = <0 4 IRQ_TYPE_LEVEL_HIGH>;
+				fsl,keycode = <116>; /* KEY_POWER */
+				fsl,wakeup;
+				status="okay";
+			};
+			
 			epit1: epit@020d0000 { /* EPIT1 */
 				reg = <0x020d0000 0x4000>;
 				interrupts = <0 56 IRQ_TYPE_LEVEL_HIGH>;
