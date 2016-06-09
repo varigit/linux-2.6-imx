@@ -220,26 +220,26 @@
 		status = "okay";
 	};
 
+#if 0
 	wlan_bt_rfkill {
 		compatible = "net,rfkill-gpio";
 		name = "wlan_bt_rfkill";
 		type = <2>;     /* bluetooth */
 		gpios = <&gpio6 18 0>;
 	};
+#endif
+
 	btwilink {
 		compatible = "btwilink";
 	};
 
-#if 0
 	kim {
 		compatible = "kim";
-		nshutdown_gpio = <&gpio6 18 0>;
+		nshutdown_gpio = <178>;	/* GPIO6_18 */
 		dev_name = "/dev/ttymxc1";
 		flow_cntrl = <1>;
 		baud_rate = <3000000>;
 	};
-#endif
-
 };
 
 &audmux {
