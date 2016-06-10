@@ -25,8 +25,8 @@
 			operating-points = <
 				/* kHz    uV */
 				996000  1275000
-				792000  1175000
-				396000  1150000
+				792000  1200000
+				396000  1175000
 			>;
 			fsl,soc-operating-points = <
 				/* ARM kHz  SOC-PU uV */
