@@ -165,10 +165,9 @@ static int imx_hifi_hw_params_slv_mode(struct snd_pcm_substream *substream,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
 	struct snd_soc_dai *codec_dai = rtd->codec_dai;
-	struct snd_soc_card *card = codec_dai->codec->card;
-	struct imx_wm8731_data *data = snd_soc_card_get_drvdata(card);
+	struct imx_wm8731_data *data = snd_soc_card_get_drvdata(rtd->card);
 	
-	u32 dai_format, pll_out;
+	u32 dai_format;
 	snd_pcm_format_t sample_format;
 	unsigned int channels;
 	unsigned int tx_mask, rx_mask;
@@ -181,7 +180,7 @@ static int imx_hifi_hw_params_slv_mode(struct snd_pcm_substream *substream,
 	
 	channels = params_channels(params);
 	/*
-	printk("%s:%s  sampling rate = %u  channels = %u \n", __FUNCTION__,
+	pr_info("%s:%s  sampling rate = %u  channels = %u \n", __FUNCTION__,
 		   (substream->stream == SNDRV_PCM_STREAM_PLAYBACK ? "Playback" : "Capture"),
 		   sampling_rate, channels);
 	*/
@@ -273,7 +272,7 @@ static int imx_hifi_hw_params_slv_mode(struct snd_pcm_substream *substream,
 				     SND_SOC_CLOCK_IN);
 
 	if (ret < 0) {
-		pr_err("Failed to set codec master clock to %u: %d \n",
+		pr_err("Failed to set codec master clock to %ld: %d \n",
 		       data->sysclk, ret);
 		return ret;
 	}
@@ -285,8 +284,7 @@ static void imx_hifi_shutdown(struct snd_pcm_substream *substream)
 {
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_dai *codec_dai = rtd->codec_dai;
-	struct snd_soc_card *card = codec_dai->codec->card;
-	struct imx_wm8731_data *data = snd_soc_card_get_drvdata(card);
+	struct imx_wm8731_data *data = snd_soc_card_get_drvdata(rtd->card);
 	
 	if (!codec_dai->active)
 		wm8731_slv_mode_clock_enable(0,data);
