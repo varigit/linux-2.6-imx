@@ -315,7 +315,6 @@
 	pinctrl-0 = <&pinctrl_usdhc1>;
 	pinctrl-1 = <&pinctrl_usdhc1_100mhz>;
 	pinctrl-2 = <&pinctrl_usdhc1_200mhz>;
-//	cd-gpios = <&gpio4 19 0>;
 	no-1-8-v;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
@@ -326,12 +325,14 @@
 };
 #else
 &usdhc1 {
-	pinctrl-names = "default";
+	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc1>;
+	pinctrl-1 = <&pinctrl_usdhc1_100mhz>;
+	pinctrl-2 = <&pinctrl_usdhc1_200mhz>;
 	no-1-8-v;
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
-	cd-gpios = <&gpio4 19 0>;
+	cd-gpios = <&gpio4 19 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 #endif
