@@ -13,6 +13,7 @@
 #include <linux/of_address.h>
 #include <linux/of_net.h>
 #include <linux/slab.h>
+#include "hardware.h"
 
 unsigned long iram_tlb_base_addr;
 unsigned long iram_tlb_phys_addr;
@@ -56,12 +57,18 @@ void __init imx6_enet_mac_init(const char *enet_compat, const char *ocotp_compat
 
 		from = enet_np;
 
-/*
-Bugfix: This code prevents second MAC of 6UL to run
-*/
-               if (i==0) 
-		if (of_get_mac_address(enet_np))
-			goto put_enet_node;
+		/*
+		 * Bugfix: This code prevents second MAC of 6UL to run
+		 */
+		if (cpu_is_imx6ul()) {
+			if(0 == i) {
+				if (of_get_mac_address(enet_np))
+					goto put_enet_node;
+			}
+		} else {
+			if (of_get_mac_address(enet_np))
+				goto put_enet_node;
+		}
 
 		ocotp_np = of_find_compatible_node(NULL, NULL, ocotp_compat);
 		if (!ocotp_np) {
