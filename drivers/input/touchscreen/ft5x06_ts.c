@@ -42,8 +42,6 @@
 #define FT_SUSPEND_LEVEL 1
 #endif
 
-#define REPORT_ABS_MT_NOT_ABS	0
-
 #define FT_DRIVER_VERSION	0x02
 
 #define FT_META_REGS		3
@@ -51,7 +49,7 @@
 #define FT_TCH_LEN(x)		(FT_META_REGS + FT_ONE_TCH_LEN * x)
 
 #define FT_PRESS		0x7F
-#define FT_MAX_ID		0x0F
+#define FT_MAX_ID		0x10
 #define FT_TOUCH_X_H_POS	3
 #define FT_TOUCH_X_L_POS	4
 #define FT_TOUCH_Y_H_POS	5
@@ -318,7 +316,8 @@ static irqreturn_t ft5x06_ts_interrupt(int irq, void *dev_id)
 	int rc, i;
 	u32 id, x, y, status, num_touches;
 	u8 reg = 0x00, *buf;
-	bool update_input = false;
+	DECLARE_BITMAP(reported, FT_MAX_ID);
+	static DECLARE_BITMAP(previously_reported, FT_MAX_ID);
 
 	if (!data) {
 		pr_err("%s: Invalid data\n", __func__);
@@ -335,7 +334,15 @@ static irqreturn_t ft5x06_ts_interrupt(int irq, void *dev_id)
 		return IRQ_HANDLED;
 	}
 
-	for (i = 0; i < data->pdata->num_max_touches; i++) {
+	bitmap_zero(reported, FT_MAX_ID);
+
+	num_touches = buf[FT_TD_STATUS] & FT_STATUS_NUM_TP_MASK;
+	if (data->pdata->num_max_touches < num_touches) {
+		dev_err(&data->client->dev, "%s: more touches (%d) than expected (%d), check you dts settings\n", __func__, num_touches, data->pdata->num_max_touches);
+		num_touches = data->pdata->num_max_touches;
+	}
+
+	for (i = 0; i < num_touches; i++) {
 		id = (buf[FT_TOUCH_ID_POS + FT_ONE_TCH_LEN * i]) >> 4;
 		if (id >= FT_MAX_ID)
 			break;
@@ -352,53 +359,29 @@ static irqreturn_t ft5x06_ts_interrupt(int irq, void *dev_id)
 			
 		status = buf[FT_TOUCH_EVENT_POS + FT_ONE_TCH_LEN * i] >> 6;
 
-		num_touches = buf[FT_TD_STATUS] & FT_STATUS_NUM_TP_MASK;
-
-		/* invalid combination */
-		if (!num_touches && !status && !id)
-			break;
-			
-		if(num_touches==0)
-			break;
-
-		update_input = true;
-
-#if REPORT_ABS_MT_NOT_ABS
-		input_mt_slot(ip_dev, id);
 		if (status == FT_TOUCH_DOWN || status == FT_TOUCH_CONTACT) {
+			input_mt_slot(ip_dev, id);
 			input_mt_report_slot_state(ip_dev, MT_TOOL_FINGER, 1);
 			input_report_abs(ip_dev, ABS_MT_POSITION_X, x);
 			input_report_abs(ip_dev, ABS_MT_POSITION_Y, y);
-		} else {
-			input_mt_report_slot_state(ip_dev, MT_TOOL_FINGER, 0);
+			input_report_abs(ip_dev, ABS_MT_PRESSURE, FT_PRESS);
+			__set_bit(id, reported);
 		}
-#else
-		if (status == FT_TOUCH_DOWN)
-		{
-			input_report_key(ip_dev, BTN_TOUCH, 1);
-		}
-		if (status == FT_TOUCH_DOWN || status == FT_TOUCH_CONTACT) {
-			input_report_abs(ip_dev, ABS_X, x);
-			input_report_abs(ip_dev, ABS_Y, y);
-			input_report_abs(ip_dev, ABS_PRESSURE, 100);	/* FIXME: calculate real pressure */
-		} 
-#endif
 	}
 
-#if REPORT_ABS_MT_NOT_ABS
-	if (update_input) {
-		input_mt_report_pointer_emulation(ip_dev, false);
-		input_sync(ip_dev);
+	for (id = 0; id < FT_MAX_ID; id++) {
+		if (test_bit(id, reported)) {
+			__set_bit(id, previously_reported);
+		} else if (test_bit(id, previously_reported)) {
+			__clear_bit(id, previously_reported);
+			input_mt_slot(ip_dev, id);
+			input_mt_report_slot_state(ip_dev, MT_TOOL_FINGER, 0);
+		}
 	}
-#else
-	if (update_input) {
-		input_sync(ip_dev);
-	} else {
-		input_report_key(ip_dev, BTN_TOUCH, 0);
-		input_report_abs(ip_dev, ABS_PRESSURE, 0);
-		input_sync(ip_dev);
-	}
-#endif
+
+	input_mt_report_pointer_emulation(ip_dev, false);
+	input_sync(ip_dev);
+
 	return IRQ_HANDLED;
 }
 
@@ -1488,30 +1471,15 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 	input_set_drvdata(input_dev, data);
 	i2c_set_clientdata(client, data);
 
-#if REPORT_ABS_MT_NOT_ABS
-	__set_bit(EV_KEY, input_dev->evbit);
 	__set_bit(EV_ABS, input_dev->evbit);
-	__set_bit(BTN_TOUCH, input_dev->keybit);
-	__set_bit(INPUT_PROP_DIRECT, input_dev->propbit);
 
-	input_mt_init_slots(input_dev, pdata->num_max_touches,0);
 	input_set_abs_params(input_dev, ABS_MT_POSITION_X, pdata->x_min,
 			     pdata->x_max, 0, 0);
 	input_set_abs_params(input_dev, ABS_MT_POSITION_Y, pdata->y_min,
 			     pdata->y_max, 0, 0);
+	input_set_abs_params(input_dev, ABS_MT_PRESSURE, 0, 0xff, 0, 0);
+	input_mt_init_slots(input_dev, pdata->num_max_touches, INPUT_MT_DIRECT);
 
-#else
- 	__set_bit(EV_KEY, input_dev->evbit);
-	__set_bit(EV_ABS, input_dev->evbit);
-	__set_bit(BTN_TOUCH, input_dev->keybit);
-
-	/* set range of the parameters */
-	input_set_abs_params(input_dev, ABS_X, pdata->x_min, pdata->x_max, 0, 0);
-	input_set_abs_params(input_dev, ABS_Y, pdata->y_min, pdata->y_max, 0, 0);
-	input_set_abs_params(input_dev, ABS_PRESSURE, 0, 100, 0, 0);
-
-#endif
-			 
 	err = input_register_device(input_dev);
 	if (err) {
 		dev_err(&client->dev, "Input device registration failed\n");

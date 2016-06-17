@@ -384,7 +384,7 @@
 			focaltech,group-id = <1>;
 			focaltech,hard-reset-delay-ms = <20>;
 			focaltech,soft-reset-delay-ms = <150>;
-			focaltech,num-max-touches = <2>;
+			focaltech,num-max-touches = <5>;
 			focaltech,fw-name = "ft_8610_qrd_fw.bin";
 			focaltech,fw-delay-aa-ms = <100>;
 			focaltech,fw-delay-55-ms = <30>;
