@@ -2056,7 +2056,8 @@ exit:
 int wl_android_init(void)
 {
 	int ret = 0;
-
+/* enabled load firmware from rootfs (dart-mx6ul som) */
+#define ENABLE_INSMOD_NO_FW_LOAD
 #ifdef ENABLE_INSMOD_NO_FW_LOAD
 	dhd_download_fw_on_driverload = FALSE;
 #endif /* ENABLE_INSMOD_NO_FW_LOAD */
