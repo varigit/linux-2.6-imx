@@ -659,7 +659,6 @@
 &gpc {
 	/* use ldo-bypass, u-boot will check it and configure */
 	fsl,ldo-bypass = <1>;
-	fsl,wdog-reset = <1>;
 };
 
 &hdmi_audio {
@@ -846,12 +845,4 @@
 		board-ref-clock = <4>;
 	};
 
-};
-
-&wdog1 {
-	status = "okay";
-};
-
-&wdog2 {
-	status = "disabled";
 };
