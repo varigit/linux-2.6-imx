@@ -791,3 +791,7 @@
 	enable-sdio-wakeup;
 	status = "okay";
 };
+
+&snvs_poweroff {
+	status = "okay";
+};
