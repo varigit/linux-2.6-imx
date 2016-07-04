@@ -811,11 +811,3 @@
 	enable-sdio-wakeup;
 	status = "okay";
 };
-
-&wdog1 {
-	status = "disabled";
-};
-
-&wdog2 {
-	status = "okay";
-};
