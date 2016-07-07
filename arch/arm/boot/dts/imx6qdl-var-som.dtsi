@@ -505,7 +505,7 @@
 			>;
 		};
 
-		pinctrl_pwm1_1: pwm1grp {
+		pinctrl_pwm2_1: pwm2grp {
 			fsl,pins = <
 				MX6QDL_PAD_DISP0_DAT9__PWM2_OUT		0x1b0b1
 			>;
@@ -699,7 +699,7 @@
 
 &pwm2 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_pwm1_1>;
+	pinctrl-0 = <&pinctrl_pwm2_1>;
 	status = "okay";
 };
 
