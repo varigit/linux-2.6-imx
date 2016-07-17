@@ -141,7 +141,7 @@ static int wm8731_slv_mode_clock_enable(int enable, struct imx_wm8731_data *data
 		default:
 			return -EINVAL;
 	}
-	
+
 	rate_req = pll_rate;
 	rate_avail = clk_round_rate(data->pll, rate_req);
 	clk_set_rate(data->pll, rate_avail);
@@ -167,7 +167,7 @@ static int imx_hifi_hw_params_slv_mode(struct snd_pcm_substream *substream,
 	struct snd_soc_dai *codec_dai = rtd->codec_dai;
 	struct snd_soc_card *card = rtd->card;
 	struct imx_wm8731_data *data = snd_soc_card_get_drvdata(card);
-	
+
 	u32 dai_format;
 	snd_pcm_format_t sample_format;
 	unsigned int channels;
@@ -178,7 +178,7 @@ static int imx_hifi_hw_params_slv_mode(struct snd_pcm_substream *substream,
 
 	sampling_rate = params_rate(params);
 	sample_format = params_format(params);
-	
+
 	channels = params_channels(params);
 	/*
 	printk("%s:%s  sampling rate = %u  channels = %u \n", __FUNCTION__,
@@ -287,10 +287,10 @@ static void imx_hifi_shutdown(struct snd_pcm_substream *substream)
 	struct snd_soc_dai *codec_dai = rtd->codec_dai;
 	struct snd_soc_card *card = rtd->card;
 	struct imx_wm8731_data *data = snd_soc_card_get_drvdata(card);
-	
+
 	if (!codec_dai->active)
 		wm8731_slv_mode_clock_enable(0,data);
-	
+
 	return;
 }
 
@@ -385,7 +385,7 @@ static int imx_wm8731_probe(struct platform_device *pdev)
 	int ret;
 
 	priv->pdev = pdev;
-	
+
 	ssi_np = of_parse_phandle(pdev->dev.of_node, "cpu-dai", 0);
 	codec_np = of_parse_phandle(pdev->dev.of_node, "audio-codec", 0);
 	if (!ssi_np || !codec_np) {
@@ -400,7 +400,7 @@ static int imx_wm8731_probe(struct platform_device *pdev)
 		ret = -EINVAL;
 		goto fail;
 	}
-        
+
 	codec_dev = of_find_i2c_device_by_node(codec_np);
 	if (!codec_dev || !codec_dev->dev.driver) {
 		dev_err(&pdev->dev, "failed to find codec platform device\n");
@@ -417,7 +417,7 @@ static int imx_wm8731_probe(struct platform_device *pdev)
 	card_priv.data = data;
 
 	data->codec_dev = codec_dev;
-	
+
 	data->dai.name = "HiFi";
 	data->dai.stream_name = "HiFi";
 	data->dai.codec_dai_name = "wm8731-hifi";
@@ -426,21 +426,21 @@ static int imx_wm8731_probe(struct platform_device *pdev)
 	data->dai.platform_of_node = ssi_np;
 	data->dai.ops = &imx_hifi_ops;
 	data->dai.init = &imx_wm8731_init;
-	
+
 	data->ssi_num = 2; /* 1-based */
 	data->src_port = 2;
 	data->ext_port = 4;
-	
+
 	imx_audmux_config_slv_mode(data->src_port, data->ext_port);
-	
+
 	/* Slave Mode Init */
 	wm8731_slv_mode_init(data);
-	
+
 	data->card.dev = &pdev->dev;
 	ret = snd_soc_of_parse_card_name(&data->card, "model");
 	if (ret)
 		goto fail;
-	
+
 	ret = snd_soc_of_parse_audio_routing(&data->card, "audio-routing");
 	if (ret)
 		goto fail;
@@ -459,7 +459,7 @@ static int imx_wm8731_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "snd_soc_register_card failed (%d)\n", ret);
 		goto fail;
 	}
-	
+
 	return 0;
 
 fail:
