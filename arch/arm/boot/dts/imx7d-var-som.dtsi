@@ -48,6 +48,30 @@
 		assigned-clock-rates = <0>, <11289600>;
 	};
 
+	gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpio_keys>;
+
+		menu {
+			label = "Menu";
+			gpios = <&gpio2 28 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_MENU>;
+		};
+
+		home {
+			label = "Home";
+			gpios = <&gpio2 29 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_HOME>;
+		};
+
+		back {
+			label = "Back";
+			gpios = <&gpio6 16 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_BACK>;
+		};
+	};
+
 	regulators {
 		compatible = "simple-bus";
 		#address-cells = <1>;
@@ -479,6 +503,14 @@
 				MX7D_PAD_UART2_TX_DATA__GPIO4_IO3	0x59  /* ethphy1 reset */
 				MX7D_PAD_GPIO1_IO10__GPIO1_IO10		0x59  /* hsic hub reset */
 				MX7D_PAD_GPIO1_IO09__GPIO1_IO9		0x59  /* hsic hub connect */
+			>;
+		};
+
+		pinctrl_gpio_keys: gpio_keysgrp {
+			fsl,pins = <
+				MX7D_PAD_EPDC_BDR0__GPIO2_IO28		0x32
+				MX7D_PAD_EPDC_BDR1__GPIO2_IO29		0x32
+				MX7D_PAD_SAI1_RX_SYNC__GPIO6_IO16	0x32
 			>;
 		};
 
