@@ -200,6 +200,7 @@
 		type = <2>;     /* bluetooth */
 		gpios = <&gpio6 18 0>;
 	};
+
 	btwilink {
 		compatible = "btwilink";
 	};
@@ -358,7 +359,6 @@
 			fsl,pins = <
 				/* CTW6120 IRQ */
 				MX6QDL_PAD_EIM_DA7__GPIO3_IO07 		0x80000000
-				/* Touch */
 				/* for Bluetooth/wifi enable */
 				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x1b0b1
 				/* SDMMC2 CD/WP */
@@ -412,11 +412,13 @@
 			>;
 		};
 
+#if 0
 		pinctrl_gpio_keys: gpio_keysgrp {
 			fsl,pins = <
-				/*MX6QDL_PAD_GPIO_5__GPIO1_IO05  0x80000000*/
+				MX6QDL_PAD_GPIO_5__GPIO1_IO05  0x80000000
 			>;
 		};
+#endif
 
 		pinctrl_hdmi_cec: hdmicecgrp {
 			fsl,pins = <
@@ -574,7 +576,6 @@
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3 		0x17069
                                 MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 	0x13059   /* Reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
                                 MX6QDL_PAD_SD3_RST__GPIO7_IO08  	0x13059   /* this is for wl_irq which driver will configure as an input with a pull down */
-                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 	0x13059   /* used for BT_EN */
 			>;
 		};
 
@@ -588,7 +589,6 @@
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x170B9
                                 MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 	0x130B9   /* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
                                 MX6QDL_PAD_SD3_RST__GPIO7_IO08  	0x130B9   /* this is for wl_irq which driver will configure as an input with a pull down */
-                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 	0x130B9   /* used for BT_EN */
 			>;
 		};
 
@@ -602,7 +602,6 @@
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x170F9
                                 MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 	0x130F9   /* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
                                 MX6QDL_PAD_SD3_RST__GPIO7_IO08  	0x130F9   /* this is for wl_irq which driver will configure as an input with a pull down */
-                                MX6QDL_PAD_SD3_DAT6__GPIO6_IO18 	0x130F9   /* used for BT_EN */
 			>;
 		};
 
