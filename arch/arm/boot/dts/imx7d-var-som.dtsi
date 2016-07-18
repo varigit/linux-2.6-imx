@@ -380,8 +380,10 @@
 	codec: wm8731@1a {
 		compatible = "wlf,wm8731";
 		reg = <0x1a>;
-		dbvdd-supply = <&vgen3_reg>;
-		avdd-supply = <&vgen6_reg>;
+		DCVDD-supply = <&vgen3_reg>;
+		DBVDD-supply = <&vgen3_reg>;
+		AVDD-supply = <&vgen6_reg>;
+		HPVDD-supply = <&vgen6_reg>;
 		clocks = <&clks IMX7D_AUDIO_MCLK_ROOT_CLK>;
 		clock-names = "mclk";
 	};
