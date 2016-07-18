@@ -503,6 +503,7 @@
 				MX7D_PAD_UART2_TX_DATA__GPIO4_IO3	0x59  /* ethphy1 reset */
 				MX7D_PAD_GPIO1_IO10__GPIO1_IO10		0x59  /* hsic hub reset */
 				MX7D_PAD_GPIO1_IO09__GPIO1_IO9		0x59  /* hsic hub connect */
+				MX7D_PAD_SAI1_RX_BCLK__GPIO6_IO17	0x59  /* LED */
 			>;
 		};
 
