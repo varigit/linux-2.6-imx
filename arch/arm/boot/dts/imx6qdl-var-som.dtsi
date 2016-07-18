@@ -743,30 +743,33 @@
 	status = "okay";
 };
 
-&gpmi { /* nand flash 0.5 GB partition table */
+&gpmi {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gpmi_nand_v1>;
 	status = "okay";
 
+	/* a 2 MiB partition */
 	partition@0 {
 		label = "spl";
 		reg = <0x00000000 0x00200000>;
 	};
 
+	/* a 2 MiB partition */
 	partition@1 {
 		label = "bootloader";
 		reg = <0x00200000 0x00200000>;
 	};
 
-
+	/* an 8 MiB partition */
 	partition@2 {
 		label = "kernel";
-		reg = <0x00400000 0x00600000>;
+		reg = <0x00400000 0x00800000>;
 	};
 
+	/* a 1012 MiB partition */
 	partition@3 {
 		label = "rootfs";
-		reg = <0x00a00000 0x3f600000>;
+		reg = <0x00c00000 0x3f400000>;
 	};
 };
 
