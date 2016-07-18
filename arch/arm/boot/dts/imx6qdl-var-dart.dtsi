@@ -335,6 +335,8 @@
 			fsl,pins = <
 				/* PMIC INT */
 				MX6QDL_PAD_GPIO_17__GPIO7_IO12		0x80000000
+				/* for Bluetooth/wifi enable */
+				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x1b0b1
 				/* Wifi Slow Clock */
 				MX6QDL_PAD_ENET_RXD0__OSC32K_32K_OUT	0x000b0
 				/* Audio Clock */
@@ -379,12 +381,6 @@
 		pinctrl_enet_irq: enetirqgrp {
 			fsl,pins = <
 				MX6QDL_PAD_GPIO_6__ENET_IRQ		0x000b1
-			>;
-		};
-
-		pinctrl_gpio_keys: gpio_keysgrp {
-			fsl,pins = <
-				/*MX6QDL_PAD_GPIO_5__GPIO1_IO05		0x80000000*/
 			>;
 		};
 
@@ -536,6 +532,8 @@
 				MX6QDL_PAD_SD1_DAT1__SD1_DATA1		0x17071
 				MX6QDL_PAD_SD1_DAT2__SD1_DATA2		0x17071
 				MX6QDL_PAD_SD1_DAT3__SD1_DATA3		0x17071
+				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x17071	/* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
+				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x17071	/* this is for wl_irq which driver will configure as an input with a pull down */
 			>;
 		};
 
@@ -547,9 +545,6 @@
 				MX6QDL_PAD_SD1_DAT1__SD1_DATA1		0x170B9
 				MX6QDL_PAD_SD1_DAT2__SD1_DATA2		0x170B9
 				MX6QDL_PAD_SD1_DAT3__SD1_DATA3		0x170B9
-				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x130B9	/* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x130B9	/* this is for wl_irq which driver will configure as an input with a pull down */
-				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x130B9	/* used for BT_EN */
 			>;
 		};
 
@@ -561,9 +556,6 @@
 				MX6QDL_PAD_SD1_DAT1__SD1_DATA1		0x170F9
 				MX6QDL_PAD_SD1_DAT2__SD1_DATA2		0x170F9
 				MX6QDL_PAD_SD1_DAT3__SD1_DATA3		0x170F9
-				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x130F9	/* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x130F9	/* this is for wl_irq which driver will configure as an input with a pull down */
-				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x130F9	/* used for BT_EN */
 			>;
 		};
 
@@ -586,9 +578,6 @@
 				MX6QDL_PAD_SD3_DAT1__SD3_DATA1		0x17059
 				MX6QDL_PAD_SD3_DAT2__SD3_DATA2		0x17059
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x17059
-				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x13059	/* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x13059	/* this is for wl_irq which driver will configure as an input with a pull down */
-				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x13059	/* used for BT_EN */
 			>;
 		};
 
@@ -600,9 +589,6 @@
 				MX6QDL_PAD_SD3_DAT1__SD3_DATA1		0x170B9
 				MX6QDL_PAD_SD3_DAT2__SD3_DATA2		0x170B9
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x170B9
-				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x130B9	/* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x130B9	/* this is for wl_irq which driver will configure as an input with a pull down */
-				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x130B9	/* used for BT_EN */
 			>;
 		};
 
@@ -614,9 +600,6 @@
 				MX6QDL_PAD_SD3_DAT1__SD3_DATA1		0x170F9
 				MX6QDL_PAD_SD3_DAT2__SD3_DATA2		0x170F9
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x170F9
-				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x130F9	/* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x130F9	/* this is for wl_irq which driver will configure as an input with a pull down */
-				MX6QDL_PAD_SD3_DAT6__GPIO6_IO18		0x130F9	/* used for BT_EN */
 			>;
 		};
 
@@ -666,7 +649,6 @@
 				MX6QDL_PAD_GPIO_8__FLEXCAN1_RX		0x80000000
 			>;
 		};
-
 	};
 };
 
@@ -787,8 +769,6 @@
 	pinctrl-0 = <&pinctrl_usdhc1_1>;
 	pinctrl-1 = <&pinctrl_usdhc1_2_100mhz>;
 	pinctrl-2 = <&pinctrl_usdhc1_2_200mhz>;
-	/*pinctrl-names = "default";*/
-	/*pinctrl-0 = <&pinctrl_usdhc1_1>;*/
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
 	vmmc-supply = <&wlan_en_reg>;
