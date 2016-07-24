@@ -177,7 +177,7 @@
 
 &clks {
 	assigned-clocks = <&clks IMX7D_PLL_AUDIO_POST_DIV>;
-	assigned-clock-rates = /*<884736000>*/<812851200>;
+	assigned-clock-rates = <812851200>;
 };
 
 &csi1 {
@@ -523,7 +523,7 @@
 
 		pinctrl_mipi_dsi_reset: mipi_dsi_reset_grp {
 			fsl,pins = <
-				MX7D_PAD_SAI1_TX_DATA__GPIO6_IO15 0x1b
+				MX7D_PAD_SAI1_TX_DATA__GPIO6_IO15	0x1b
 			>;
 		};
 
@@ -715,12 +715,6 @@
 			>;
 		};
 
-		pinctrl_usbotg2_pwr_1: usbotg2-1 {
-			fsl,pins = <
-				MX7D_PAD_UART3_CTS_B__GPIO4_IO7	0x14
-			>;
-		};
-
 		pinctrl_usdhc1: usdhc1grp {
 			fsl,pins = <
 				MX7D_PAD_SD1_CMD__SD1_CMD		0x59
@@ -860,7 +854,6 @@
 	status = "okay";
 };
 
-
 &sdma {
 	status = "okay";
 };
@@ -881,6 +874,7 @@
 				MX7D_PAD_GPIO1_IO05__GPIO1_IO5		0x14
 			>;
 		};
+
 		pinctrl_pwm2: pwm2grp {
 			fsl,pins = <
 				MX7D_PAD_GPIO1_IO02__PWM2_OUT		0x110b0
@@ -899,13 +893,11 @@
 			>;
 		};
 
-
 		pinctrl_sai1_mclk: sai1grp_mclk {
 			fsl,pins = <
 				MX7D_PAD_GPIO1_IO01__SAI1_MCLK		0x1f
 			>;
 		};
-
 
 		pinctrl_wlan: wlangrp {
 			fsl,pins = <
