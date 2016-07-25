@@ -27,9 +27,11 @@
 #include "debug.h"
 #include "firmware.h"
 #include "usb.h"
+#include "core.h"
+#include "common.h"
 
 
-#define IOCTL_RESP_TIMEOUT		2000
+#define IOCTL_RESP_TIMEOUT		msecs_to_jiffies(2000)
 
 #define BRCMF_USB_RESET_GETVER_SPINWAIT	100	/* in unit of ms */
 #define BRCMF_USB_RESET_GETVER_LOOP_CNT	10
@@ -43,10 +45,20 @@
 #define BRCMF_USB_CBCTL_READ		1
 #define BRCMF_USB_MAX_PKT_SIZE		1600
 
-#define BRCMF_USB_43143_FW_NAME		"brcm/brcmfmac43143.bin"
-#define BRCMF_USB_43236_FW_NAME		"brcm/brcmfmac43236b.bin"
-#define BRCMF_USB_43242_FW_NAME		"brcm/brcmfmac43242a.bin"
-#define BRCMF_USB_43569_FW_NAME		"brcm/brcmfmac43569.bin"
+BRCMF_FW_DEF(43143, "brcmfmac43143.bin");
+BRCMF_FW_DEF(43236B, "brcmfmac43236b.bin");
+BRCMF_FW_DEF(43242A, "brcmfmac43242a.bin");
+BRCMF_FW_DEF(43569, "brcmfmac43569.bin");
+
+static struct brcmf_firmware_mapping brcmf_usb_fwnames[] = {
+	BRCMF_FW_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
+	BRCMF_FW_ENTRY(BRCM_CC_43235_CHIP_ID, 0x00000008, 43236B),
+	BRCMF_FW_ENTRY(BRCM_CC_43236_CHIP_ID, 0x00000008, 43236B),
+	BRCMF_FW_ENTRY(BRCM_CC_43238_CHIP_ID, 0x00000008, 43236B),
+	BRCMF_FW_ENTRY(BRCM_CC_43242_CHIP_ID, 0xFFFFFFFF, 43242A),
+	BRCMF_FW_ENTRY(BRCM_CC_43566_CHIP_ID, 0xFFFFFFFF, 43569),
+	BRCMF_FW_ENTRY(BRCM_CC_43569_CHIP_ID, 0xFFFFFFFF, 43569)
+};
 
 #define TRX_MAGIC		0x30524448	/* "HDR0" */
 #define TRX_MAX_OFFSET		3		/* Max number of file offsets */
@@ -139,11 +151,13 @@ struct brcmf_usbdev_info {
 	struct brcmf_usbreq *tx_reqs;
 	struct brcmf_usbreq *rx_reqs;
 
+	char fw_name[BRCMF_FW_NAME_LEN];
 	const u8 *image;	/* buffer for combine fw and nvram */
 	int image_len;
 
 	struct usb_device *usbdev;
 	struct device *dev;
+	struct mutex dev_init_lock;
 
 	int ctl_in_pipe, ctl_out_pipe;
 	struct urb *ctl_urb; /* URB for control endpoint */
@@ -159,6 +173,7 @@ struct brcmf_usbdev_info {
 	struct urb *bulk_urb; /* used for FW download */
 
 	bool wowl_enabled;
+	struct brcmf_mp_device *settings;
 };
 
 static void brcmf_usb_rx_refill(struct brcmf_usbdev_info *devinfo,
@@ -178,14 +193,12 @@ static struct brcmf_usbdev_info *brcmf_usb_get_businfo(struct device *dev)
 static int brcmf_usb_ioctl_resp_wait(struct brcmf_usbdev_info *devinfo)
 {
 	return wait_event_timeout(devinfo->ioctl_resp_wait,
-				  devinfo->ctl_completed,
-				  msecs_to_jiffies(IOCTL_RESP_TIMEOUT));
+				  devinfo->ctl_completed, IOCTL_RESP_TIMEOUT);
 }
 
 static void brcmf_usb_ioctl_resp_wake(struct brcmf_usbdev_info *devinfo)
 {
-	if (waitqueue_active(&devinfo->ioctl_resp_wait))
-		wake_up(&devinfo->ioctl_resp_wait);
+	wake_up(&devinfo->ioctl_resp_wait);
 }
 
 static void
@@ -982,44 +995,14 @@ static int brcmf_usb_dlrun(struct brcmf_usbdev_info *devinfo)
 	return 0;
 }
 
-static bool brcmf_usb_chip_support(int chipid, int chiprev)
-{
-	switch(chipid) {
-	case BRCM_CC_43143_CHIP_ID:
-		return true;
-	case BRCM_CC_43235_CHIP_ID:
-	case BRCM_CC_43236_CHIP_ID:
-	case BRCM_CC_43238_CHIP_ID:
-		return (chiprev == 3);
-	case BRCM_CC_43242_CHIP_ID:
-		return true;
-	case BRCM_CC_43566_CHIP_ID:
-	case BRCM_CC_43569_CHIP_ID:
-		return true;
-	default:
-		break;
-	}
-	return false;
-}
-
 static int
 brcmf_usb_fw_download(struct brcmf_usbdev_info *devinfo)
 {
-	int devid, chiprev;
 	int err;
 
 	brcmf_dbg(USB, "Enter\n");
 	if (devinfo == NULL)
 		return -ENODEV;
-
-	devid = devinfo->bus_pub.devid;
-	chiprev = devinfo->bus_pub.chiprev;
-
-	if (!brcmf_usb_chip_support(devid, chiprev)) {
-		brcmf_err("unsupported chip %d rev %d\n",
-			  devid, chiprev);
-		return -EINVAL;
-	}
 
 	if (!devinfo->image) {
 		brcmf_err("No firmware!\n");
@@ -1047,6 +1030,9 @@ static void brcmf_usb_detach(struct brcmf_usbdev_info *devinfo)
 
 	kfree(devinfo->tx_reqs);
 	kfree(devinfo->rx_reqs);
+
+	if (devinfo->settings)
+		brcmf_release_module_param(devinfo->settings);
 }
 
 
@@ -1068,25 +1054,6 @@ static int check_file(const u8 *headers)
 		return actual_len + sizeof(struct trx_header_le);
 	}
 	return -1;
-}
-
-static const char *brcmf_usb_get_fwname(struct brcmf_usbdev_info *devinfo)
-{
-	switch (devinfo->bus_pub.devid) {
-	case BRCM_CC_43143_CHIP_ID:
-		return BRCMF_USB_43143_FW_NAME;
-	case BRCM_CC_43235_CHIP_ID:
-	case BRCM_CC_43236_CHIP_ID:
-	case BRCM_CC_43238_CHIP_ID:
-		return BRCMF_USB_43236_FW_NAME;
-	case BRCM_CC_43242_CHIP_ID:
-		return BRCMF_USB_43242_FW_NAME;
-	case BRCM_CC_43566_CHIP_ID:
-	case BRCM_CC_43569_CHIP_ID:
-		return BRCMF_USB_43569_FW_NAME;
-	default:
-		return NULL;
-	}
 }
 
 
@@ -1162,7 +1129,7 @@ static void brcmf_usb_wowl_config(struct device *dev, bool enabled)
 		device_set_wakeup_enable(devinfo->dev, false);
 }
 
-static struct brcmf_bus_ops brcmf_usb_bus_ops = {
+static const struct brcmf_bus_ops brcmf_usb_bus_ops = {
 	.txdata = brcmf_usb_tx,
 	.stop = brcmf_usb_down,
 	.txctl = brcmf_usb_tx_ctlpkt,
@@ -1175,7 +1142,7 @@ static int brcmf_usb_bus_setup(struct brcmf_usbdev_info *devinfo)
 	int ret;
 
 	/* Attach to the common driver interface */
-	ret = brcmf_attach(devinfo->dev);
+	ret = brcmf_attach(devinfo->dev, devinfo->settings);
 	if (ret) {
 		brcmf_err("brcmf_attach failed\n");
 		return ret;
@@ -1204,6 +1171,8 @@ static void brcmf_usb_probe_phase2(struct device *dev,
 	int ret;
 
 	brcmf_dbg(USB, "Start fw downloading\n");
+
+	devinfo = bus->bus_priv.usb->devinfo;
 	ret = check_file(fw->data);
 	if (ret < 0) {
 		brcmf_err("invalid firmware\n");
@@ -1211,7 +1180,6 @@ static void brcmf_usb_probe_phase2(struct device *dev,
 		goto error;
 	}
 
-	devinfo = bus->bus_priv.usb->devinfo;
 	devinfo->image = fw->data;
 	devinfo->image_len = fw->size;
 
@@ -1224,9 +1192,11 @@ static void brcmf_usb_probe_phase2(struct device *dev,
 	if (ret)
 		goto error;
 
+	mutex_unlock(&devinfo->dev_init_lock);
 	return;
 error:
 	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), ret);
+	mutex_unlock(&devinfo->dev_init_lock);
 	device_release_driver(dev);
 }
 
@@ -1259,19 +1229,40 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
 	bus->wowl_supported = true;
 #endif
 
+	devinfo->settings = brcmf_get_module_param(bus->dev, BRCMF_BUSTYPE_USB,
+						   bus_pub->devid,
+						   bus_pub->chiprev);
+	if (!devinfo->settings) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+
 	if (!brcmf_usb_dlneeded(devinfo)) {
 		ret = brcmf_usb_bus_setup(devinfo);
 		if (ret)
 			goto fail;
 		/* we are done */
+		mutex_unlock(&devinfo->dev_init_lock);
 		return 0;
 	}
 	bus->chip = bus_pub->devid;
 	bus->chiprev = bus_pub->chiprev;
 
+	ret = brcmf_fw_map_chip_to_name(bus_pub->devid, bus_pub->chiprev,
+					brcmf_usb_fwnames,
+					ARRAY_SIZE(brcmf_usb_fwnames),
+					devinfo->fw_name, NULL);
+	if (ret)
+		goto fail;
+
 	/* request firmware here */
-	brcmf_fw_get_firmwares(dev, 0, brcmf_usb_get_fwname(devinfo), NULL,
-			       brcmf_usb_probe_phase2);
+	ret = brcmf_fw_get_firmwares(dev, 0, devinfo->fw_name, NULL,
+				     brcmf_usb_probe_phase2);
+	if (ret) {
+		brcmf_err("firmware request failed: %d\n", ret);
+		goto fail;
+	}
+
 	return 0;
 
 fail:
@@ -1312,6 +1303,12 @@ brcmf_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
 
 	devinfo->usbdev = usb;
 	devinfo->dev = &usb->dev;
+	/* Take an init lock, to protect for disconnect while still loading.
+	 * Necessary because of the asynchronous firmware load construction
+	 */
+	mutex_init(&devinfo->dev_init_lock);
+	mutex_lock(&devinfo->dev_init_lock);
+
 	usb_set_intfdata(intf, devinfo);
 
 	/* Check that the device supports only one configuration */
@@ -1386,6 +1383,7 @@ brcmf_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
 	return 0;
 
 fail:
+	mutex_unlock(&devinfo->dev_init_lock);
 	kfree(devinfo);
 	usb_set_intfdata(intf, NULL);
 	return ret;
@@ -1398,8 +1396,19 @@ brcmf_usb_disconnect(struct usb_interface *intf)
 
 	brcmf_dbg(USB, "Enter\n");
 	devinfo = (struct brcmf_usbdev_info *)usb_get_intfdata(intf);
-	brcmf_usb_disconnect_cb(devinfo);
-	kfree(devinfo);
+
+	if (devinfo) {
+		mutex_lock(&devinfo->dev_init_lock);
+		/* Make sure that devinfo still exists. Firmware probe routines
+		 * may have released the device and cleared the intfdata.
+		 */
+		if (!usb_get_intfdata(intf))
+			goto done;
+
+		brcmf_usb_disconnect_cb(devinfo);
+		kfree(devinfo);
+	}
+done:
 	brcmf_dbg(USB, "Exit\n");
 }
 
@@ -1444,8 +1453,7 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
 
 	brcmf_dbg(USB, "Enter\n");
 
-	return brcmf_fw_get_firmwares(&usb->dev, 0,
-				      brcmf_usb_get_fwname(devinfo), NULL,
+	return brcmf_fw_get_firmwares(&usb->dev, 0, devinfo->fw_name, NULL,
 				      brcmf_usb_probe_phase2);
 }
 
@@ -1457,16 +1465,13 @@ static struct usb_device_id brcmf_usb_devid_table[] = {
 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
 	BRCMF_USB_DEVICE(BRCM_USB_43569_DEVICE_ID),
+	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LG, BRCM_USB_43242_LG_DEVICE_ID) },
 	/* special entry for device with firmware loaded and running */
 	BRCMF_USB_DEVICE(BRCM_USB_BCMFW_DEVICE_ID),
 	{ /* end: all zeroes */ }
 };
 
 MODULE_DEVICE_TABLE(usb, brcmf_usb_devid_table);
-MODULE_FIRMWARE(BRCMF_USB_43143_FW_NAME);
-MODULE_FIRMWARE(BRCMF_USB_43236_FW_NAME);
-MODULE_FIRMWARE(BRCMF_USB_43242_FW_NAME);
-MODULE_FIRMWARE(BRCMF_USB_43569_FW_NAME);
 
 static struct usb_driver brcmf_usbdrvr = {
 	.name = KBUILD_MODNAME,
@@ -1476,7 +1481,6 @@ static struct usb_driver brcmf_usbdrvr = {
 	.suspend = brcmf_usb_suspend,
 	.resume = brcmf_usb_resume,
 	.reset_resume = brcmf_usb_reset_resume,
-	.supports_autosuspend = 1,
 	.disable_hub_initiated_lpm = 1,
 };
 

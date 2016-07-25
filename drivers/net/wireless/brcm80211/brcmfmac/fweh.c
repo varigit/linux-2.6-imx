@@ -26,50 +26,6 @@
 #include "fwil.h"
 
 /**
- * struct brcm_ethhdr - broadcom specific ether header.
- *
- * @subtype: subtype for this packet.
- * @length: TODO: length of appended data.
- * @version: version indication.
- * @oui: OUI of this packet.
- * @usr_subtype: subtype for this OUI.
- */
-struct brcm_ethhdr {
-	__be16 subtype;
-	__be16 length;
-	u8 version;
-	u8 oui[3];
-	__be16 usr_subtype;
-} __packed;
-
-struct brcmf_event_msg_be {
-	__be16 version;
-	__be16 flags;
-	__be32 event_type;
-	__be32 status;
-	__be32 reason;
-	__be32 auth_type;
-	__be32 datalen;
-	u8 addr[ETH_ALEN];
-	char ifname[IFNAMSIZ];
-	u8 ifidx;
-	u8 bsscfgidx;
-} __packed;
-
-/**
- * struct brcmf_event - contents of broadcom event packet.
- *
- * @eth: standard ether header.
- * @hdr: broadcom specific ether header.
- * @msg: common part of the actual event message.
- */
-struct brcmf_event {
-	struct ethhdr eth;
-	struct brcm_ethhdr hdr;
-	struct brcmf_event_msg_be msg;
-} __packed;
-
-/**
  * struct brcmf_fweh_queue_item - event item on event queue.
  *
  * @q: list element for queuing.
@@ -85,6 +41,7 @@ struct brcmf_fweh_queue_item {
 	u8 ifidx;
 	u8 ifaddr[ETH_ALEN];
 	struct brcmf_event_msg_be emsg;
+	u32 datalen;
 	u8 data[0];
 };
 
@@ -179,38 +136,42 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
 {
 	struct brcmf_if_event *ifevent = data;
 	struct brcmf_if *ifp;
+	bool is_p2pdev;
 	int err = 0;
 
-	brcmf_dbg(EVENT, "action: %u idx: %u bsscfg: %u flags: %u role: %u\n",
-		  ifevent->action, ifevent->ifidx, ifevent->bssidx,
+	brcmf_dbg(EVENT, "action: %u ifidx: %u bsscfgidx: %u flags: %u role: %u\n",
+		  ifevent->action, ifevent->ifidx, ifevent->bsscfgidx,
 		  ifevent->flags, ifevent->role);
 
-	/* The P2P Device interface event must not be ignored
-	 * contrary to what firmware tells us. The only way to
-	 * distinguish the P2P Device is by looking at the ifidx
-	 * and bssidx received.
+	/* The P2P Device interface event must not be ignored contrary to what
+	 * firmware tells us. Older firmware uses p2p noif, with sta role.
+	 * This should be accepted when p2pdev_setup is ongoing. TDLS setup will
+	 * use the same ifevent and should be ignored.
 	 */
-	if (!(ifevent->ifidx == 0 && ifevent->bssidx == 1) &&
-	    (ifevent->flags & BRCMF_E_IF_FLAG_NOIF)) {
+	is_p2pdev = ((ifevent->flags & BRCMF_E_IF_FLAG_NOIF) &&
+		     (ifevent->role == BRCMF_E_IF_ROLE_P2P_CLIENT ||
+		      ((ifevent->role == BRCMF_E_IF_ROLE_STA) &&
+		       (drvr->fweh.p2pdev_setup_ongoing))));
+	if (!is_p2pdev && (ifevent->flags & BRCMF_E_IF_FLAG_NOIF)) {
 		brcmf_dbg(EVENT, "event can be ignored\n");
 		return;
 	}
 	if (ifevent->ifidx >= BRCMF_MAX_IFS) {
-		brcmf_err("invalid interface index: %u\n",
-			  ifevent->ifidx);
+		brcmf_err("invalid interface index: %u\n", ifevent->ifidx);
 		return;
 	}
 
-	ifp = drvr->iflist[ifevent->bssidx];
+	ifp = drvr->iflist[ifevent->bsscfgidx];
 
 	if (ifevent->action == BRCMF_E_IF_ADD) {
 		brcmf_dbg(EVENT, "adding %s (%pM)\n", emsg->ifname,
 			  emsg->addr);
-		ifp = brcmf_add_if(drvr, ifevent->bssidx, ifevent->ifidx,
-				   emsg->ifname, emsg->addr);
+		ifp = brcmf_add_if(drvr, ifevent->bsscfgidx, ifevent->ifidx,
+				   is_p2pdev, emsg->ifname, emsg->addr);
 		if (IS_ERR(ifp))
 			return;
-		brcmf_fws_add_interface(ifp);
+		if (!is_p2pdev)
+			brcmf_fws_add_interface(ifp);
 		if (!drvr->fweh.evt_handler[BRCMF_E_IF])
 			if (brcmf_net_attach(ifp, false) < 0)
 				return;
@@ -222,7 +183,7 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
 	err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
 
 	if (ifp && ifevent->action == BRCMF_E_IF_DEL)
-		brcmf_remove_interface(drvr, ifevent->bssidx);
+		brcmf_remove_interface(ifp);
 }
 
 /**
@@ -290,6 +251,11 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
 		brcmf_dbg_hex_dump(BRCMF_EVENT_ON(), event->data,
 				   min_t(u32, emsg.datalen, 64),
 				   "event payload, len=%d\n", emsg.datalen);
+		if (emsg.datalen > event->datalen) {
+			brcmf_err("event invalid length header=%d, msg=%d\n",
+				  event->datalen, emsg.datalen);
+			goto event_free;
+		}
 
 		/* special handling of interface event */
 		if (event->code == BRCMF_E_IF) {
@@ -297,8 +263,7 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
 			goto event_free;
 		}
 
-		if ((event->code == BRCMF_E_TDLS_PEER_EVENT) &&
-		    (emsg.bsscfgidx == 1))
+		if (event->code == BRCMF_E_TDLS_PEER_EVENT)
 			ifp = drvr->iflist[0];
 		else
 			ifp = drvr->iflist[emsg.bsscfgidx];
@@ -312,6 +277,17 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
 event_free:
 		kfree(event);
 	}
+}
+
+/**
+ * brcmf_fweh_p2pdev_setup() - P2P device setup ongoing (or not).
+ *
+ * @ifp: ifp on which setup is taking place or finished.
+ * @ongoing: p2p device setup in progress (or not).
+ */
+void brcmf_fweh_p2pdev_setup(struct brcmf_if *ifp, bool ongoing)
+{
+	ifp->drvr->fweh.p2pdev_setup_ongoing = ongoing;
 }
 
 /**
@@ -335,7 +311,7 @@ void brcmf_fweh_attach(struct brcmf_pub *drvr)
 void brcmf_fweh_detach(struct brcmf_pub *drvr)
 {
 	struct brcmf_fweh_info *fweh = &drvr->fweh;
-	struct brcmf_if *ifp = drvr->iflist[0];
+	struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
 
 	if (ifp) {
@@ -425,7 +401,8 @@ int brcmf_fweh_activate_events(struct brcmf_if *ifp)
  * dispatch the event to a registered handler (using worker).
  */
 void brcmf_fweh_process_event(struct brcmf_pub *drvr,
-			      struct brcmf_event *event_packet)
+			      struct brcmf_event *event_packet,
+			      u32 packet_len)
 {
 	enum brcmf_fweh_event_code code;
 	struct brcmf_fweh_info *fweh = &drvr->fweh;
@@ -445,6 +422,9 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
 	if (code != BRCMF_E_IF && !fweh->evt_handler[code])
 		return;
 
+	if (datalen > BRCMF_DCMD_MAXLEN)
+		return;
+
 	if (in_interrupt())
 		alloc_flag = GFP_ATOMIC;
 
@@ -458,6 +438,7 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
 	/* use memcpy to get aligned event message */
 	memcpy(&event->emsg, &event_packet->msg, sizeof(event->emsg));
 	memcpy(event->data, data, datalen);
+	event->datalen = datalen;
 	memcpy(event->ifaddr, event_packet->eth.h_dest, ETH_ALEN);
 
 	brcmf_fweh_queue_event(fweh, event);
