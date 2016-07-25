@@ -36,6 +36,7 @@
 #include "p2p.h"
 #include "cfg80211.h"
 #include "proto.h"
+#include "common.h"
 
 /**
  * DOC: Firmware Signalling
@@ -521,10 +522,6 @@ static const int brcmf_fws_prio2fifo[] = {
 	BRCMF_FWS_FIFO_AC_VO
 };
 
-static int fcmode;
-module_param(fcmode, int, S_IRUSR);
-MODULE_PARM_DESC(fcmode, "mode of firmware signalled flow control");
-
 #define BRCMF_FWS_TLV_DEF(name, id, len) \
 	case BRCMF_FWS_TYPE_ ## name: \
 		return len;
@@ -635,7 +632,7 @@ static int brcmf_fws_hanger_pushpkt(struct brcmf_fws_hanger *h,
 	return 0;
 }
 
-static int brcmf_fws_hanger_poppkt(struct brcmf_fws_hanger *h,
+static inline int brcmf_fws_hanger_poppkt(struct brcmf_fws_hanger *h,
 					  u32 slot_id, struct sk_buff **pktout,
 					  bool remove_item)
 {
@@ -719,7 +716,7 @@ static void brcmf_fws_macdesc_init(struct brcmf_fws_mac_descriptor *desc,
 	desc->state = BRCMF_FWS_STATE_OPEN;
 	desc->requested_credit = 0;
 	desc->requested_packet = 0;
-	/* depending on use may need ifp->bssidx instead */
+	/* depending on use may need ifp->bsscfgidx instead */
 	desc->interface_id = ifidx;
 	desc->ac_bitmap = 0xff; /* update this when handling APSD */
 	if (addr)
@@ -972,7 +969,7 @@ static void
 brcmf_fws_flow_control_check(struct brcmf_fws_info *fws, struct pktq *pq,
 			     u8 if_id)
 {
-	struct brcmf_if *ifp = fws->drvr->iflist[!if_id ? 0 : if_id + 1];
+	struct brcmf_if *ifp = brcmf_get_ifp(fws->drvr, if_id);
 
 	if (WARN_ON(!ifp))
 		return;
@@ -1398,7 +1395,7 @@ done:
 }
 
 static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
-					 struct sk_buff *skb, u8 ifidx,
+					 struct sk_buff *skb,
 					 u32 genbit, u16 seq)
 {
 	struct brcmf_fws_mac_descriptor *entry = brcmf_skbcb(skb)->mac;
@@ -1448,7 +1445,7 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
 	struct sk_buff *skb;
 	struct brcmf_skbuff_cb *skcb;
 	struct brcmf_fws_mac_descriptor *entry = NULL;
-	u8 ifidx;
+	struct brcmf_if *ifp;
 
 	brcmf_dbg(DATA, "flags %d\n", flags);
 
@@ -1497,15 +1494,16 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
 	}
 	brcmf_fws_macdesc_return_req_credit(skb);
 
-	if (brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb)) {
+	ret = brcmf_proto_hdrpull(fws->drvr, false, skb, &ifp);
+	if (ret) {
 		brcmu_pkt_buf_free_skb(skb);
 		return -EINVAL;
 	}
 	if (!remove_from_hanger)
-		ret = brcmf_fws_txstatus_suppressed(fws, fifo, skb, ifidx,
+		ret = brcmf_fws_txstatus_suppressed(fws, fifo, skb,
 						    genbit, seq);
 	if (remove_from_hanger || ret)
-		brcmf_txfinalize(fws->drvr, skb, ifidx, true);
+		brcmf_txfinalize(ifp, skb, true);
 
 	return 0;
 }
@@ -1608,18 +1606,18 @@ static int brcmf_fws_notify_bcmc_credit_support(struct brcmf_if *ifp,
 {
 	struct brcmf_fws_info *fws = ifp->drvr->fws;
 
-	brcmf_fws_lock(fws);
-	if (fws)
+	if (fws) {
+		brcmf_fws_lock(fws);
 		fws->bcmc_credit_check = true;
-	brcmf_fws_unlock(fws);
+		brcmf_fws_unlock(fws);
+	}
 	return 0;
 }
 
-int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
-		      struct sk_buff *skb)
+void brcmf_fws_hdrpull(struct brcmf_if *ifp, s16 siglen, struct sk_buff *skb)
 {
 	struct brcmf_skb_reorder_data *rd;
-	struct brcmf_fws_info *fws = drvr->fws;
+	struct brcmf_fws_info *fws = ifp->drvr->fws;
 	u8 *signal_data;
 	s16 data_len;
 	u8 type;
@@ -1629,20 +1627,20 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
 	s32 err;
 
 	brcmf_dbg(HDRS, "enter: ifidx %d, skblen %u, sig %d\n",
-		  ifidx, skb->len, signal_len);
+		  ifp->ifidx, skb->len, siglen);
 
-	WARN_ON(signal_len > skb->len);
+	WARN_ON(siglen > skb->len);
 
-	if (!signal_len)
-		return 0;
+	if (!siglen)
+		return;
 	/* if flow control disabled, skip to packet data and leave */
 	if ((!fws) || (!fws->fw_signals)) {
-		skb_pull(skb, signal_len);
-		return 0;
+		skb_pull(skb, siglen);
+		return;
 	}
 
 	fws->stats.header_pulls++;
-	data_len = signal_len;
+	data_len = siglen;
 	signal_data = skb->data;
 
 	status = BRCMF_FWS_RET_OK_NOSCHEDULE;
@@ -1730,14 +1728,12 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
 	/* signalling processing result does
 	 * not affect the actual ethernet packet.
 	 */
-	skb_pull(skb, signal_len);
+	skb_pull(skb, siglen);
 
 	/* this may be a signal-only packet
 	 */
 	if (skb->len == 0)
 		fws->stats.header_only_pkt++;
-
-	return 0;
 }
 
 static u8 brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
@@ -1848,7 +1844,7 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
 		entry->transit_count--;
 		if (entry->suppressed)
 			entry->suppr_transit_count--;
-		brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
+		(void)brcmf_proto_hdrpull(fws->drvr, false, skb, NULL);
 		goto rollback;
 	}
 
@@ -1904,7 +1900,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
 	if (fws->avoid_queueing) {
 		rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
 		if (rc < 0)
-			brcmf_txfinalize(drvr, skb, ifp->ifidx, false);
+			brcmf_txfinalize(ifp, skb, false);
 		return rc;
 	}
 
@@ -1928,7 +1924,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
 		brcmf_fws_schedule_deq(fws);
 	} else {
 		brcmf_err("drop skb: no hanger slot\n");
-		brcmf_txfinalize(drvr, skb, ifp->ifidx, false);
+		brcmf_txfinalize(ifp, skb, false);
 		rc = -ENOMEM;
 	}
 	brcmf_fws_unlock(fws);
@@ -1940,7 +1936,7 @@ void brcmf_fws_reset_interface(struct brcmf_if *ifp)
 {
 	struct brcmf_fws_mac_descriptor *entry = ifp->fws_desc;
 
-	brcmf_dbg(TRACE, "enter: idx=%d\n", ifp->bssidx);
+	brcmf_dbg(TRACE, "enter: bsscfgidx=%d\n", ifp->bsscfgidx);
 	if (!entry)
 		return;
 
@@ -2008,8 +2004,9 @@ static void brcmf_fws_dequeue_worker(struct work_struct *worker)
 				ret = brcmf_proto_txdata(drvr, ifidx, 0, skb);
 				brcmf_fws_lock(fws);
 				if (ret < 0)
-					brcmf_txfinalize(drvr, skb, ifidx,
-							 false);
+					brcmf_txfinalize(brcmf_get_ifp(drvr,
+								       ifidx),
+							 skb, false);
 				if (fws->bus_flow_blocked)
 					break;
 			}
@@ -2117,6 +2114,7 @@ static int brcmf_debugfs_fws_stats_read(struct seq_file *seq, void *data)
 int brcmf_fws_init(struct brcmf_pub *drvr)
 {
 	struct brcmf_fws_info *fws;
+	struct brcmf_if *ifp;
 	u32 tlv = BRCMF_FWS_FLAGS_RSSI_SIGNALS;
 	int rc;
 	u32 mode;
@@ -2133,10 +2131,10 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
 
 	/* set linkage back */
 	fws->drvr = drvr;
-	fws->fcmode = fcmode;
+	fws->fcmode = drvr->settings->fcmode;
 
 	if ((drvr->bus_if->always_use_fws_queue == false) &&
-	    (fcmode == BRCMF_FWS_FCMODE_NONE)) {
+	    (fws->fcmode == BRCMF_FWS_FCMODE_NONE)) {
 		fws->avoid_queueing = true;
 		brcmf_dbg(INFO, "FWS queueing will be avoided\n");
 		return 0;
@@ -2176,21 +2174,22 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
 	 * continue. Set mode back to none indicating not enabled.
 	 */
 	fws->fw_signals = true;
-	if (brcmf_fil_iovar_int_set(drvr->iflist[0], "tlv", tlv)) {
+	ifp = brcmf_get_ifp(drvr, 0);
+	if (brcmf_fil_iovar_int_set(ifp, "tlv", tlv)) {
 		brcmf_err("failed to set bdcv2 tlv signaling\n");
 		fws->fcmode = BRCMF_FWS_FCMODE_NONE;
 		fws->fw_signals = false;
 	}
 
-	if (brcmf_fil_iovar_int_set(drvr->iflist[0], "ampdu_hostreorder", 1))
+	if (brcmf_fil_iovar_int_set(ifp, "ampdu_hostreorder", 1))
 		brcmf_dbg(INFO, "enabling AMPDU host-reorder failed\n");
 
 	/* Enable seq number reuse, if supported */
-	if (brcmf_fil_iovar_int_get(drvr->iflist[0], "wlfc_mode", &mode) == 0) {
+	if (brcmf_fil_iovar_int_get(ifp, "wlfc_mode", &mode) == 0) {
 		if (BRCMF_FWS_MODE_GET_REUSESEQ(mode)) {
 			mode = 0;
 			BRCMF_FWS_MODE_SET_REUSESEQ(mode, 1);
-			if (brcmf_fil_iovar_int_set(drvr->iflist[0],
+			if (brcmf_fil_iovar_int_set(ifp,
 						    "wlfc_mode", mode) == 0) {
 				BRCMF_FWS_MODE_SET_REUSESEQ(fws->mode, 1);
 			}
