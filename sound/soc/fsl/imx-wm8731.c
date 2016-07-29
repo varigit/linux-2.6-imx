@@ -95,7 +95,7 @@ static int wm8731_slv_mode_init(struct imx_wm8731_data *data)
 	struct clk *ssi_clk;
 	struct i2c_client *codec_dev = data->codec_dev;
 
-	new_parent = devm_clk_get(&codec_dev->dev, "mclk");
+	new_parent = devm_clk_get(&codec_dev->dev, "pll4");
 	if (IS_ERR(new_parent)) {
 		pr_err("Could not get \"mclk\" clock \n");
 		return PTR_ERR(new_parent);
@@ -145,15 +145,18 @@ static int wm8731_slv_mode_clock_enable(int enable, struct imx_wm8731_data *data
 	rate_req = pll_rate;
 	rate_avail = clk_round_rate(data->pll, rate_req);
 	clk_set_rate(data->pll, rate_avail);
-
+#if 0
+	pr_info("%s: \"pll4\" rate = %ld (= %ld)\n",
+			__func__, rate_avail, rate_req);
+#endif
 	rate_req = data->sysclk;
 	rate_avail = clk_round_rate(data->clock_root,
 								rate_req);
 	clk_set_rate(data->clock_root, rate_avail);
-	/*
-	pr_info("%s: \"imx-ssi.1\" rate = %ld (= %ld)\n",
+#if 0
+	pr_info("%s: \"mclk\" rate = %ld (= %ld)\n",
 			__func__, rate_avail, rate_req);
-	*/
+#endif
 	data->current_rate = data->sysclk;
 
 	return 0;

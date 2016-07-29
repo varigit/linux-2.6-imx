@@ -144,8 +144,6 @@
 };
 
 &clks {
-	assigned-clocks = <&clks IMX6UL_CLK_PLL4_AUDIO_DIV>;
-	assigned-clock-rates = <632217600>,<688128000>;
 
 	/* ref_clk for micrel ethernet phy */
 	rmii_ref_clk: rmii_ref_clk_grp {
