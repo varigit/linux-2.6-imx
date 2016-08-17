@@ -454,6 +454,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
 		/* pcie phy ref clock select; 1? internal pll : external osc */
 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
 			BIT(5), imx6_pcie->phy_refclk ? BIT(5) : 0);
+		/* get pcie phy out of reset to get correct clock rate */
+		regmap_update_bits(imx6_pcie->reg_src, 0x2c, BIT(1), 0);
+        regmap_update_bits(imx6_pcie->reg_src, 0x2c, BIT(2), 0);
+        regmap_update_bits(imx6_pcie->reg_src, 0x2c, BIT(6), 0);
 	} else if (is_imx6sx_pcie(imx6_pcie)) {
 		/* Force PCIe PHY reset */
 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
