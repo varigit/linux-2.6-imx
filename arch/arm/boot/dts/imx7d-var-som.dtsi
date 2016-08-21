@@ -21,11 +21,6 @@
 		status = "okay";
 	};
 
-	bcmdhd_wlan_0: bcmdhd_wlan@0 {
-		compatible = "android,bcmdhd_wlan";
-		wlreg_on-supply = <&wlreg_on>;
-	};
-
 	pxp_v4l2_out {
 		compatible = "fsl,imx7d-pxp-v4l2", "fsl,imx6sx-pxp-v4l2", "fsl,imx6sl-pxp-v4l2";
 		status = "okay";
@@ -972,9 +967,9 @@
 	enable-sdio-wakeup;
 	keep-power-in-suspend;
 	non-removable;
-	cd-post;
 	pm-ignore-notify;
 	wifi-host;
+	vmmc-supply = <&wlreg_on>;
 	status = "okay";
 };
 
