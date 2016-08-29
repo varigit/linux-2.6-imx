@@ -244,7 +244,6 @@
 	assigned-clock-rates = <0>, <100000000>;
 	phy-mode = "rgmii";
 	phy-handle = <&ethphy0>;
-	phy-reset-gpios = <&gpio5 11 GPIO_ACTIVE_LOW>;
 	fsl,magic-packet;
 	status = "okay";
 
