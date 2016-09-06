@@ -280,7 +280,7 @@
 	xnur-gpio = <&gpio1 3 0>;
 	measure_delay_time = <0xffff>;
 	pre_charge_time = <0xfff>;
-	status = "okay";
+	status = "disabled";
 };
 
 /* Console Uart */
@@ -585,6 +585,7 @@
 				MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 0x17059
 				MX6UL_PAD_CSI_VSYNC__GPIO4_IO19	  0x1b0b1  /* SD card detect */
 				MX6UL_PAD_SNVS_TAMPER6__GPIO5_IO06 0x03029 /* WLAN enable */
+				MX6UL_PAD_GPIO1_IO03__REF_CLK_32K 0x03029  /* WLAN Slow Clock */
 			>;
 		};
 
@@ -598,6 +599,7 @@
 				MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 0x170b9
 				MX6UL_PAD_CSI_VSYNC__GPIO4_IO19	  0x1b0b1  /* SD card detect */
 				MX6UL_PAD_SNVS_TAMPER6__GPIO5_IO06 0x03029 /* WLAN enable */
+				MX6UL_PAD_GPIO1_IO03__REF_CLK_32K 0x03029  /* WLAN Slow Clock */
 			>;
 		};
 
@@ -611,6 +613,7 @@
 				MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 0x170f9
 				MX6UL_PAD_CSI_VSYNC__GPIO4_IO19	  0x1b0b1  /* SD card detect */
 				MX6UL_PAD_SNVS_TAMPER6__GPIO5_IO06 0x03029 /* WLAN enable */
+				MX6UL_PAD_GPIO1_IO03__REF_CLK_32K 0x03029  /* WLAN Slow Clock */
 			>;
 		};
 #ifdef EMMC
