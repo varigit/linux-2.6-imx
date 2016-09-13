@@ -46,7 +46,6 @@
 	nand-supply = <&vgen3_reg>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gpmi_nand_1>;
-	nand-on-flash-bbt;
 	status = "okay";
 
 	/* a 2 MiB partition */
