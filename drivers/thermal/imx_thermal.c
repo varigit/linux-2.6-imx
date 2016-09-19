@@ -55,7 +55,7 @@ enum imx_thermal_trip {
  * It defines the temperature in millicelsius for passive trip point
  * that will trigger cooling action when crossed.
  */
-#define IMX_TEMP_PASSIVE		85000
+#define IMX_TEMP_PASSIVE		70000
 #define IMX_TEMP_PASSIVE_COOL_DELTA	10000
 
 /*
