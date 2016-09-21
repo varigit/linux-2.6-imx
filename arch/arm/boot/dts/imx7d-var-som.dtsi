@@ -62,7 +62,7 @@
 
 		back {
 			label = "Back";
-			gpios = <&gpio6 16 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_BACK>;
 		};
 	};
@@ -148,7 +148,7 @@
 		reg_hsic_hub_connect: reg_hsic_hub_connect {
 			compatible = "regulator-fixed";
 			regulator-name = "reg_hsic_hub_connect";
-			gpio = <&gpio1 9 GPIO_ACTIVE_HIGH>;
+			gpio = <&gpio1 12 GPIO_ACTIVE_HIGH>;
 			enable-active-high;
 			regulator-always-on;
 			status = "okay";
@@ -203,9 +203,9 @@
 		reg = <0>;
 		compatible = "ti,ads7846";
 		interrupt-parent = <&gpio1>;
-		interrupts = <12 0>;
+		interrupts = <9 0>;
 		spi-max-frequency = <1500000>;
-		pendown-gpio = <&gpio1 12 0>;
+		pendown-gpio = <&gpio1 9 0>;
 		ti,x-min = /bits/ 16 <125>;
 		ti,x-max = /bits/ 16 <4008>;
 		ti,y-min = /bits/ 16 <282>;
@@ -496,8 +496,9 @@
 				MX7D_PAD_SD2_RESET_B__GPIO5_IO11	0x59  /* ethphy0 reset */
 				MX7D_PAD_UART2_TX_DATA__GPIO4_IO3	0x59  /* ethphy1 reset */
 				MX7D_PAD_GPIO1_IO10__GPIO1_IO10		0x59  /* hsic hub reset */
-				MX7D_PAD_GPIO1_IO09__GPIO1_IO9		0x59  /* hsic hub connect */
-				MX7D_PAD_SAI1_RX_BCLK__GPIO6_IO17	0x59  /* LED */
+				MX7D_PAD_GPIO1_IO12__GPIO1_IO12		0x59  /* hsic hub connect */
+				MX7D_PAD_GPIO1_IO13__GPIO1_IO13		0x59  /* LED */
+				MX7D_PAD_SD1_WP__CCM_CLKO2		0xb0  /* camera clock */
 			>;
 		};
 
@@ -505,7 +506,7 @@
 			fsl,pins = <
 				MX7D_PAD_EPDC_BDR0__GPIO2_IO28		0x32
 				MX7D_PAD_EPDC_BDR1__GPIO2_IO29		0x32
-				MX7D_PAD_SAI1_RX_SYNC__GPIO6_IO16	0x32
+				MX7D_PAD_GPIO1_IO11__GPIO1_IO11		0x32
 			>;
 		};
 
@@ -672,7 +673,7 @@
 
 		pinctrl_tsc2046_pendown: tsc2046_pendown {
 			fsl,pins = <
-				MX7D_PAD_GPIO1_IO12__GPIO1_IO12		0x59
+				MX7D_PAD_GPIO1_IO09__GPIO1_IO9		0x59
 			>;
 		};
 
@@ -942,9 +943,7 @@
 
 &usbotg1 {
 	vbus-supply = <&reg_usb_otg1_vbus>;
-	srp-disable;
-	hnp-disable;
-	adp-disable;
+	dr_mode = "host";
 	status = "okay";
 };
 
