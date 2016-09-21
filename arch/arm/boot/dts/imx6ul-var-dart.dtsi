@@ -188,11 +188,13 @@
 	status = "okay";
 };
 
+#ifndef WIFI
 &flexcan2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_flexcan2>;
 	status = "okay";
 };
+#endif
 
 &gpc {
 //ud1	fsl,cpu_pupscr_sw2iso = <0x1>;
@@ -283,7 +285,9 @@
 &uart2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart2>;
+#ifdef WIFI
 	fsl,uart-has-rtscts;
+#endif
 	status = "okay";
 };
 
@@ -495,12 +499,14 @@
 			>;
 		};
 
+#ifndef WIFI
 		pinctrl_flexcan2: flexcan2grp{
 			fsl,pins = <
 				MX6UL_PAD_UART2_RTS_B__FLEXCAN2_RX	0x1b020
 				MX6UL_PAD_UART2_CTS_B__FLEXCAN2_TX	0x1b020
 			>;
 		};
+#endif
 
 		pinctrl_lcdif_dat: lcdifdatgrp {
 			fsl,pins = <
@@ -549,8 +555,10 @@
 			fsl,pins = <
 				MX6UL_PAD_UART2_TX_DATA__UART2_DCE_TX	0x1b0b1
 				MX6UL_PAD_UART2_RX_DATA__UART2_DCE_RX	0x1b0b1
+#ifdef WIFI
 				MX6UL_PAD_UART2_CTS_B__UART2_DCE_CTS	0x1b0b1
 				MX6UL_PAD_UART2_RTS_B__UART2_DCE_RTS	0x1b0b1
+#endif
 			>;
 		};
 
