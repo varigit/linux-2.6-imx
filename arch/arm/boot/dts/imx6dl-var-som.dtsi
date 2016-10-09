@@ -16,7 +16,7 @@
 
 / {
 	model = "Variscite i.MX6 DL/Solo VAR-SOM-MX6";
-	compatible = "fsl,imx6q-var-som", "fsl,imx6q";
+	compatible = "fsl,imx6dl-var-som", "fsl,imx6dl";
 };
 
 &i2c2 {
