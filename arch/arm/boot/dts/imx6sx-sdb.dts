@@ -1,0 +1,111 @@
+/*
+ * Copyright (C) 2015 Freescale Semiconductor, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include "imx6sx-sdb.dtsi"
+
+/ {
+	model = "Freescale i.MX6 SoloX SDB RevB Board";
+
+	regulators {
+		/* Transceiver EN/STBY is active low on RevB board */
+		reg_can_stby: regulator@10 {
+			gpio = <&gpio4 27 GPIO_ACTIVE_LOW>;
+		};
+	};
+	bt_rfkill {
+		compatible = "fsl,mxc_bt_rfkill";
+		bt-power-gpios = <&gpio6 11 0>;
+		status = "okay";
+	};
+	ramoops_device {
+		compatible = "fsl,mxc_ramoops";
+		record_size = <524288>; /*512K*/
+		console_size= <262144>; /*256K*/
+		ftrace_size= <262144>;  /*256K*/
+		dump_oops = <1>;
+		status = "okay";
+	};
+};
+
+&cpu0 {
+	operating-points = <
+		/* kHz    uV */
+		996000  1250000
+		792000  1175000
+		396000  1175000
+		198000	1175000
+		>;
+	fsl,soc-operating-points = <
+		/* ARM kHz      SOC uV */
+		996000	1250000
+		792000	1175000
+		396000	1175000
+		198000	1175000
+	>;
+	arm-supply = <&sw1a_reg>;
+	soc-supply = <&sw1a_reg>;
+	fsl,arm-soc-shared = <1>;
+};
+
+&qspi2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_qspi2>;
+	status = "okay";
+
+#ifndef SPANSIONFLASH
+	ddrsmp=<0>;
+
+	flash0: n25q256a@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "micron,n25q256a";
+		spi-max-frequency = <29000000>;
+		reg = <0>;
+	};
+
+	flash1: n25q256a@1 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "micron,n25q256a";
+		spi-max-frequency = <29000000>;
+		reg = <1>;
+	};
+#endif
+};
+
+&usbphy1 {
+	tx-d-cal = <0x5>;
+};
+
+&usbphy2 {
+	tx-d-cal = <0x5>;
+};
+
+&usdhc3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_wifi_sdio>;
+	bus-width = <4>;
+	cd-gpios = <&gpio2 10 GPIO_ACTIVE_LOW>;
+	wp-gpios = <&gpio2 15 GPIO_ACTIVE_HIGH>;
+	keep-power-in-suspend;
+	enable-sdio-wakeup;
+	vmmc-supply = <&vcc_sd3>;
+	no-1-8-v;       /* force 3.3V VIO */
+	wifi-host;      /* pull in card detect mechanism for BCMDHD driver */
+	pm-ignore-notify;
+	non-removable;
+	cd-post;
+	status = "okay";
+};
+
+&uart3 { /* ttymxc2 for Murata BCM4339 V1 Bluetooth. */
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_bt_uart>;
+	fsl,uart-has-rtscts;
+	status = "okay";
+};
