@@ -342,11 +342,11 @@
 	pinctrl-0 = <&pinctrl_i2c3_3>;
 	status = "okay";
 
-        /* DS1307 RTC module */
-        rtc@0x68 {
-                 compatible = "dallas,ds1307";
-                 reg = <0x68>;
-        };
+	/* DS1307 RTC module */
+	rtc@0x68 {
+		compatible = "dallas,ds1307";
+		reg = <0x68>;
+	};
 };
 
 &iomuxc {
@@ -568,14 +568,14 @@
 
 		pinctrl_usdhc3_2: usdhc3grp {
 			fsl,pins = <
-				MX6QDL_PAD_SD3_CMD__SD3_CMD    		0x17069
-				MX6QDL_PAD_SD3_CLK__SD3_CLK    		0x10069
-				MX6QDL_PAD_SD3_DAT0__SD3_DATA0 		0x17069
-				MX6QDL_PAD_SD3_DAT1__SD3_DATA1 		0x17069
-				MX6QDL_PAD_SD3_DAT2__SD3_DATA2 		0x17069
-				MX6QDL_PAD_SD3_DAT3__SD3_DATA3 		0x17069
-                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 	0x13059   /* Reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  	0x13059   /* this is for wl_irq which driver will configure as an input with a pull down */
+				MX6QDL_PAD_SD3_CMD__SD3_CMD		0x17069
+				MX6QDL_PAD_SD3_CLK__SD3_CLK		0x10069
+				MX6QDL_PAD_SD3_DAT0__SD3_DATA0		0x17069
+				MX6QDL_PAD_SD3_DAT1__SD3_DATA1		0x17069
+				MX6QDL_PAD_SD3_DAT2__SD3_DATA2		0x17069
+				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x17069
+				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x13059   /* Reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
+				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x13059   /* this is for wl_irq which driver will configure as an input with a pull down */
 			>;
 		};
 
@@ -587,8 +587,8 @@
 				MX6QDL_PAD_SD3_DAT1__SD3_DATA1		0x170B9
 				MX6QDL_PAD_SD3_DAT2__SD3_DATA2		0x170B9
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x170B9
-                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 	0x130B9   /* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  	0x130B9   /* this is for wl_irq which driver will configure as an input with a pull down */
+				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x130B9   /* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
+				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x130B9   /* this is for wl_irq which driver will configure as an input with a pull down */
 			>;
 		};
 
@@ -600,8 +600,8 @@
 				MX6QDL_PAD_SD3_DAT1__SD3_DATA1		0x170F9
 				MX6QDL_PAD_SD3_DAT2__SD3_DATA2		0x170F9
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x170F9
-                                MX6QDL_PAD_SD3_DAT7__GPIO6_IO17 	0x130F9   /* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-                                MX6QDL_PAD_SD3_RST__GPIO7_IO08  	0x130F9   /* this is for wl_irq which driver will configure as an input with a pull down */
+				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x130F9   /* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
+				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x130F9   /* this is for wl_irq which driver will configure as an input with a pull down */
 			>;
 		};
 
