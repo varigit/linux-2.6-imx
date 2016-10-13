@@ -444,6 +444,7 @@ dtb-$(CONFIG_SOC_IMX6ULL) += \
 	imx6ull-var-dart-sd_nand.dtb \
 	imx6ull-var-dart-sd_emmc.dtb
 dtb-$(CONFIG_SOC_IMX6SLL) += \
+	imx6sll-lpddr2-arm2.dtb \
 	imx6sll-lpddr3-arm2.dtb \
 	imx6sll-lpddr3-arm2-csi.dtb \
 	imx6sll-lpddr3-arm2-ecspi.dtb \
