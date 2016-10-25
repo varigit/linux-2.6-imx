@@ -31,6 +31,9 @@
 #include <linux/list.h>
 #include <linux/bitops.h>
 #include <net/mac80211.h>
+#ifdef CONFIG_HAS_WAKELOCK
+#include <linux/wakelock.h>
+#endif
 
 #include "conf.h"
 #include "ini.h"
@@ -228,6 +231,7 @@ enum wl12xx_flags {
 	WL1271_FLAG_TX_PENDING,
 	WL1271_FLAG_IN_ELP,
 	WL1271_FLAG_ELP_REQUESTED,
+	WL1271_FLAG_WAKE_LOCK,
 	WL1271_FLAG_IRQ_RUNNING,
 	WL1271_FLAG_FW_TX_BUSY,
 	WL1271_FLAG_DUMMY_PACKET_PENDING,
@@ -503,6 +507,11 @@ struct ieee80211_vif *wl12xx_wlvif_to_vif(struct wl12xx_vif *wlvif)
 	return container_of((void *)wlvif, struct ieee80211_vif, drv_priv);
 }
 
+static inline bool wlcore_is_p2p_mgmt(struct wl12xx_vif *wlvif)
+{
+	return wl12xx_wlvif_to_vif(wlvif)->type == NL80211_IFTYPE_P2P_DEVICE;
+}
+
 #define wl12xx_for_each_wlvif(wl, wlvif) \
 		list_for_each_entry(wlvif, &wl->wlvif_list, list)
 
@@ -532,6 +541,7 @@ struct wl12xx_rx_filter *wl1271_rx_filter_alloc(void);
 int wl1271_rx_filter_get_fields_size(struct wl12xx_rx_filter *filter);
 void wl1271_rx_filter_flatten_fields(struct wl12xx_rx_filter *filter,
 				     u8 *buf);
+int wlcore_rx_ba_max_subframes(struct wl1271 *wl, u8 hlid);
 
 #define JOIN_TIMEOUT 5000 /* 5000 milliseconds to join */
 
