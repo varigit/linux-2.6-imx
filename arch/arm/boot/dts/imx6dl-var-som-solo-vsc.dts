@@ -1,0 +1,117 @@
+/*
+ * Copyright (C) 2014-2016 Variscite, Ltd. All Rights Reserved
+ * Donio Ron: ron.d@variscite.com
+ *
+ * Copyright (C) 2013 Freescale Semiconductor, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+/dts-v1/;
+
+#include "imx6dl.dtsi"
+#include "imx6qdl-var-som.dtsi"
+#include "imx6qdl-var-solocb-dt6cb-displays.dtsi"
+
+/ {
+	model = "Variscite i.MX6 DL/Solo SOM-SOLO SOM-DUAL SoloCustomBoard";
+	compatible = "fsl,imx6dl-var-som", "fsl,imx6dl";
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		home {
+			label = "Home";
+			gpios = <&gpio5 14 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_HOMEPAGE>;
+			gpio-key,wakeup;
+		};
+
+		menu {
+			label = "Menu";
+			gpios = <&gpio5 12 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_MENU>;
+			gpio-key,wakeup;
+		};
+	};
+};
+
+&cpu0 {
+	operating-points = <
+		/* kHz    uV */
+		996000	1275000
+		792000	1200000
+		396000	1175000
+	>;
+	fsl,soc-operating-points = <
+		/* ARM kHz  SOC-PU uV */
+		996000	1175000
+		792000	1175000
+		396000	1175000
+	>;
+};
+
+&iomuxc {
+	imx6qdl-var-som-mx6 {
+		pinctrl_usbotg_1: usbotggrp-1 {
+			fsl,pins = <
+				MX6QDL_PAD_GPIO_1__USB_OTG_ID		0x17059
+			>;
+		};
+
+		pinctrl_ft5406_pins: ft5406_pins {
+			fsl,pins = <
+				MX6QDL_PAD_DISP0_DAT23__GPIO5_IO17	0x1B0B0
+			>;
+		};
+	};
+};
+
+&reg_usb_otg_vbus {
+	gpio = <&gpio3 22 GPIO_ACTIVE_HIGH>;
+	enable-active-high;
+};
+
+&reg_usb_h1_vbus {
+	gpio = <&gpio4 15 GPIO_ACTIVE_HIGH>;
+	enable-active-high;
+};
+
+&usbotg {
+	pinctrl-0 = <&pinctrl_usbotg_1>;
+	dr_mode = "otg"; /* Use "host" if you would like to use the USB0 type A connector */
+};
+
+&cpu0 {
+	arm-supply = <&reg_arm>;
+	soc-supply = <&reg_soc>;
+};
+
+&gpc {
+	/* Use ldo-enable, U-Boot will check it and configure */
+	fsl,ldo-bypass = <0>;
+};
+
+&touch {
+	interrupt-parent = <&gpio5>;
+	interrupts = <17 0>;
+	focaltech,irq-gpio = <&gpio5 17 0x00>;
+};
+
+&usdhc2 {	/* uSDHC2, MMC/SD card */
+	wp-gpios = <>;
+};
+
+&mxcfb1 {
+	status = "okay";
+};
+
+&mxcfb2 {
+	status = "okay";
+};
+
+&pxp {
+	status = "okay";
+};

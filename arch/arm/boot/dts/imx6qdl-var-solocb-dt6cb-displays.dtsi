@@ -1,0 +1,95 @@
+/*
+ * Copyright (C) 2016 Variscite, Ltd. All Rights Reserved
+ *
+ * Copyright 2012 Freescale Semiconductor, Inc.
+ * Copyright 2011 Linaro Ltd.
+ *
+ * The code contained herein is licensed under the GNU General Public
+ * License. You may obtain a copy of the GNU General Public License
+ * Version 2 or later at the following locations:
+ *
+ * http://www.opensource.org/licenses/gpl-license.html
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * Capacitive Display for VAR-SoloCustomBoard and VAR-DT6CustomBoard
+ */
+
+&mxcfb1 {
+	interface_pix_fmt = "RGB666";
+};
+
+&i2c3 {
+	touch: ft5x06_ts@38 {
+		compatible = "focaltech,5x06";
+		reg = <0x38>;
+		focaltech,family-id = <0x54>;
+		vdd-supply = <&touch_3v3_regulator>;
+		vcc_i2c-supply = <&touch_3v3_regulator>;
+		focaltech,display-coords = <0 0 800 480>;
+		focaltech,name = "ft6x06";
+		focaltech,no-force-update;
+		focaltech,group-id = <1>;
+		focaltech,hard-reset-delay-ms = <20>;
+		focaltech,soft-reset-delay-ms = <150>;
+		focaltech,num-max-touches = <5>;
+		focaltech,fw-name = "ft_8610_qrd_fw.bin";
+		focaltech,fw-delay-aa-ms = <100>;
+		focaltech,fw-delay-55-ms = <30>;
+		focaltech,fw-upgrade-id1 = <0x79>;
+		focaltech,fw-upgrade-id2 = <0x08>;
+		focaltech,fw-delay-readid-ms = <10>;
+		focaltech,fw-delay-era-flsh-ms = <2000>;
+		focaltech,fw-auto-cal;
+		focaltech,mirror_h;
+		focaltech,mirror_v;
+	};
+};
+
+&ldb {
+	status = "okay";
+
+	lvds-channel@0 {
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <18>;
+		crtc = "ipu1-di0";
+		status = "okay";
+
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: hsd100pxn1 {
+				clock-frequency = <32000000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <39>;
+				hfront-porch = <39>;
+				vback-porch = <29>;
+				vfront-porch = <13>;
+				hsync-len = <47>;
+				vsync-len = <2>;
+			};
+		};
+	};
+
+	lvds-channel@1 {
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <18>;
+		crtc = "ipu1-di1";
+		primary;
+		status = "okay";
+
+		display-timings {
+			native-mode = <&timing1>;
+			timing1: hsd100pxn1 {
+				clock-frequency = <32000000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <39>;
+				hfront-porch = <39>;
+				vback-porch = <29>;
+				vfront-porch = <13>;
+				hsync-len = <47>;
+				vsync-len = <2>;
+			};
+		};
+	};
+};
