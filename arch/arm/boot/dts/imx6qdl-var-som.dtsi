@@ -90,24 +90,6 @@
 		enable-active-high;
 	};
 
-#if 0
-	gpio-keys {
-		compatible = "gpio-keys";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_gpio_keys>;
-
-		back {
-			label = "Back";
-			gpios = <&gpio5 20 GPIO_ACTIVE_LOW>;
-			linux,code = <KEY_BACK>; /* KEY_BACK */
-			gpio-key,wakeup;
-
-		};
-
-
-	};
-#endif
-
 	sound {
 		compatible = "fsl,imx6q-var-som-tlv320aic3x", "fsl,imx-audio-tlv320aic3x";
 		model = "tlv320aic3x-audio";
@@ -411,14 +393,6 @@
 				MX6QDL_PAD_GPIO_6__ENET_IRQ		0x000b1
 			>;
 		};
-
-#if 0
-		pinctrl_gpio_keys: gpio_keysgrp {
-			fsl,pins = <
-				MX6QDL_PAD_GPIO_5__GPIO1_IO05  0x80000000
-			>;
-		};
-#endif
 
 		pinctrl_hdmi_cec: hdmicecgrp {
 			fsl,pins = <

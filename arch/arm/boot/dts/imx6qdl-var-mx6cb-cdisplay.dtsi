@@ -13,7 +13,6 @@
  *
  * Capacitive Display for VAR-MX6CustomBoard
  */
-
 &mxcfb1 {
 	interface_pix_fmt = "RGB24";
 };

@@ -8,3 +8,4 @@
 
 #include "imx6dl-var-som-solo.dtsi"
 #include "imx6qdl-var-mx6cb-cdisplay.dtsi"
+#include "imx6qdl-var-mx6cb-buttons.dtsi""

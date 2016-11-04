@@ -8,3 +8,5 @@
 
 #include "imx6q-var-som.dtsi"
 #include "imx6qdl-var-mx6cb-rdisplay.dtsi"
+#include "imx6qdl-var-mx6cb-buttons.dtsi"
+

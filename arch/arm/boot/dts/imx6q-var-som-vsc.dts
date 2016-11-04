@@ -18,6 +18,7 @@
 #include "imx6q.dtsi"
 #include "imx6qdl-var-som.dtsi"
 #include "imx6qdl-var-solocb-dt6cb-displays.dtsi"
+#include "imx6qdl-var-solocb-buttons.dtsi"
 
 / {
 	model = "Variscite i.MX6 QUAD VAR-SOM-MX6 SoloCustomBoard";

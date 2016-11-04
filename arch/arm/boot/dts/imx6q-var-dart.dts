@@ -18,6 +18,7 @@
 #include "imx6q.dtsi"
 #include "imx6qdl-var-dart.dtsi"
 #include "imx6qdl-var-solocb-dt6cb-displays.dtsi"
+#include "imx6qdl-var-dt6cb-buttons.dtsi"
 
 / {
 	model = "Variscite i.MX6 QUAD VAR-DART Smart Device Board";
