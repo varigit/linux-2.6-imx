@@ -44,6 +44,11 @@
 	>;
 };
 
+&usbotg {
+	pinctrl-0 = <&pinctrl_usbotg_var>;
+	dr_mode = "otg"; /* Use "host" if you would like to use the USB0 type A connector */
+};
+
 &i2c2 {
 	pmic: pfuze100@08 {
 		compatible = "fsl,pfuze100";
