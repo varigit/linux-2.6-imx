@@ -757,7 +757,10 @@
 	pinctrl-0 = <&pinctrl_usbotg_var>;
 	disable-over-current;
 	/* dr_mode: One of "host", "peripheral" or "otg". Defaults to "otg" */
-	dr_mode = "host" ;
+	dr_mode = "host";
+	srp-disable;
+	hnp-disable;
+	adp-disable;
 	status = "okay";
 };
 

@@ -686,6 +686,9 @@
 	disable-over-current;
 	/* dr_mode: One of "host", "peripheral" or "otg". Defaults to "otg" */
 	dr_mode = "host";	/* Use "host" if you would like to use the USB0 type A connector */
+	srp-disable;
+	hnp-disable;
+	adp-disable;
 	status = "okay";
 };
 
