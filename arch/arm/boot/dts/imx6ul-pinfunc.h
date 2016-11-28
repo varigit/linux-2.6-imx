@@ -562,7 +562,7 @@
 #define	MX6UL_PAD_LCD_DATA11__EIM_DATA03                         	0x0144 0x03D0 0x0000 4 0
 #define	MX6UL_PAD_LCD_DATA11__GPIO3_IO16                         	0x0144 0x03D0 0x0000 5 0
 #define	MX6UL_PAD_LCD_DATA11__SRC_BT_CFG11                       	0x0144 0x03D0 0x0000 6 0
-#define	MX6UL_PAD_LCD_DATA11__FLEXCAN2_RX                        	0x0144 0x03D0 0x0000 8 0
+#define	MX6UL_PAD_LCD_DATA11__FLEXCAN2_RX                        	0x0144 0x03D0 0x0588 8 2
 #define	MX6UL_PAD_LCD_DATA12__LCDIF_DATA12                       	0x0148 0x03D4 0x0000 0 0
 #define	MX6UL_PAD_LCD_DATA12__SAI3_TX_SYNC                       	0x0148 0x03D4 0x060C 1 1
 #define	MX6UL_PAD_LCD_DATA12__CSI_DATA20                         	0x0148 0x03D4 0x0000 3 0
