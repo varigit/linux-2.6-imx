@@ -103,7 +103,7 @@ static int imx6ul_adc_init(struct imx6ul_tsc *tsc)
 	u32 adc_gc;
 	u32 adc_gs;
 	u32 adc_cfg;
-	int timeout;
+	u32 timeout;
 
 	reinit_completion(&tsc->completion);
 
@@ -255,7 +255,7 @@ static irqreturn_t tsc_irq_fn(int irq, void *dev_id)
 	struct imx6ul_tsc *tsc = dev_id;
 	u32 status;
 	u32 value;
-	int x, y;
+	u32 x, y;
 	u32 start;
 
 	status = readl(tsc->tsc_regs + REG_TSC_INT_STATUS);
