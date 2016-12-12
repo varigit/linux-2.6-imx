@@ -213,8 +213,9 @@
 
 &ecspi3 {
 	fsl,spi-num-chipselects = <1>;
-	pinctrl-names = "default";
+	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&pinctrl_ecspi3_1>;
+	pinctrl-1 = <&pinctrl_ecspi3_1_sleep>;
 	cs-gpios = <&gpio4 24 0>;
 	status = "okay";
 };
@@ -224,7 +225,8 @@
 	pinctrl-0 = <&pinctrl_enet_4>;
 	phy-mode = "rgmii";
 	phy-reset-gpios = <&gpio1 25 0>;
-	fsl,magic-packet;
+	phy-reset-duration=<100>;
+	phy-reset-on-resume;
 	status = "okay";
 };
 
@@ -354,8 +356,12 @@
 				MX6QDL_PAD_ENET_RXD0__OSC32K_32K_OUT	0x000b0
 				/* Audio Clock */
 				MX6QDL_PAD_GPIO_0__CCM_CLKO1		0x130b0
+				/* Audio reset */
+				MX6QDL_PAD_GPIO_19__GPIO4_IO05		0x178b0
 				/* Camera Clock */
 				MX6QDL_PAD_GPIO_3__CCM_CLKO2		0x130b0
+				/* Resistive touch irq */
+				MX6QDL_PAD_DISP0_DAT4__GPIO4_IO25	0x178b0
 			>;
 		};
 
@@ -605,6 +611,16 @@
 				MX6QDL_PAD_DISP0_DAT2__ECSPI3_MISO	0x100b1
 				MX6QDL_PAD_DISP0_DAT1__ECSPI3_MOSI	0x100b1
 				MX6QDL_PAD_DISP0_DAT0__ECSPI3_SCLK	0x100b1
+				MX6QDL_PAD_DISP0_DAT3__GPIO4_IO24	0x178b0 /* CS */
+			>;
+		};
+
+		pinctrl_ecspi3_1_sleep: ecspi3sleepgrp {
+			fsl,pins = <
+				MX6QDL_PAD_DISP0_DAT2__GPIO4_IO23	0x178b0
+				MX6QDL_PAD_DISP0_DAT1__GPIO4_IO22	0x178b0
+				MX6QDL_PAD_DISP0_DAT0__GPIO4_IO21	0x178b0
+				MX6QDL_PAD_DISP0_DAT3__GPIO4_IO24	0x178b0 /* CS */
 			>;
 		};
 
