@@ -19,6 +19,9 @@
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_platform.h>
+#include <linux/workqueue.h>
+#include <linux/gpio.h>
+#include <linux/of_gpio.h>
 #include <linux/i2c.h>
 #include <linux/clk.h>
 #include <sound/soc.h>
@@ -35,7 +38,50 @@ struct imx_tlv320aic3x_data {
 	char platform_name[DAI_NAME_SIZE];
 	struct clk *codec_clk;
 	unsigned int clk_frequency;
+	unsigned int output_enable_delay;
+	struct gpio_desc *output_enable_gpio;
+	struct delayed_work output_enable_work;
 };
+
+static void imx_tlv320aic3x_output_enable(struct work_struct *work)
+{
+	struct imx_tlv320aic3x_data *data = container_of(work,
+			struct imx_tlv320aic3x_data, output_enable_work.work);
+
+	if (data->output_enable_gpio)
+		gpiod_set_value(data->output_enable_gpio, 1);
+}
+
+static int imx_tlv320aic3x_prepare(struct snd_pcm_substream *substream)
+{
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct imx_tlv320aic3x_data *data = container_of(rtd->card,
+					struct imx_tlv320aic3x_data, card);
+
+	if (data->output_enable_gpio)
+		queue_delayed_work(system_power_efficient_wq,
+			&data->output_enable_work, data->output_enable_delay);
+
+	return 0;
+}
+
+static int imx_tlv320aic3x_hwfree(struct snd_pcm_substream *substream)
+{
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct imx_tlv320aic3x_data *data = container_of(rtd->card,
+					struct imx_tlv320aic3x_data, card);
+
+	if (data->output_enable_gpio)
+		gpiod_set_value(data->output_enable_gpio, 0);
+
+	return 0;
+}
+
+static struct snd_soc_ops imx_tlv320aic3x_ops = {
+	.prepare = imx_tlv320aic3x_prepare,
+	.hw_free = imx_tlv320aic3x_hwfree,
+};
+
 static int imx_tlv320aic3x_dai_init(struct snd_soc_pcm_runtime *rtd)
 {
 	struct imx_tlv320aic3x_data *data = container_of(rtd->card,
@@ -112,6 +158,7 @@ static int imx_tlv320aic3x_probe(struct platform_device *pdev)
 	struct platform_device *cpu_pdev;
 	struct i2c_client *codec_dev;
 	struct imx_tlv320aic3x_data *data;
+	struct gpio_desc *gpio;
 	int ret;
 
 	cpu_np = of_parse_phandle(pdev->dev.of_node, "cpu-dai", 0);
@@ -162,6 +209,23 @@ static int imx_tlv320aic3x_probe(struct platform_device *pdev)
 		clk_prepare_enable(data->codec_clk);
 	}
 
+	gpio = devm_gpiod_get(&pdev->dev, "output-enable");
+	if (!IS_ERR(gpio)) {
+		ret = gpiod_direction_output(gpio, 0);
+		if (ret) {
+			dev_err(&codec_dev->dev,
+				"failed to set output-enable direction\n");
+			goto clk_fail;
+		}
+		data->output_enable_gpio = gpio;
+		of_property_read_u32(pdev->dev.of_node, "output-enable-delay",
+			&ret);
+		/* convert output-enable-delay from milliseconds to jiffies */
+		data->output_enable_delay = msecs_to_jiffies(ret);
+		INIT_DELAYED_WORK(&data->output_enable_work,
+					imx_tlv320aic3x_output_enable);
+	}
+
 	data->dai.name = "HiFi";
 	data->dai.stream_name = "HiFi";
 	data->dai.codec_dai_name = "tlv320aic3x-hifi";
@@ -169,6 +233,7 @@ static int imx_tlv320aic3x_probe(struct platform_device *pdev)
 	data->dai.cpu_of_node = cpu_np;
 	data->dai.platform_of_node = cpu_np;
 	data->dai.init = &imx_tlv320aic3x_dai_init;
+	data->dai.ops = &imx_tlv320aic3x_ops;
 	data->dai.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
 			    SND_SOC_DAIFMT_CBM_CFM;
 
