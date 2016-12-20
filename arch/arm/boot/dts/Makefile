@@ -414,7 +414,11 @@ dtb-$(CONFIG_SOC_IMX6ULL) += \
 	imx6ull-14x14-evk-gpmi-weim.dtb \
 	imx6ull-14x14-evk-usb-certi.dtb \
 	imx6ull-9x9-evk.dtb \
-	imx6ull-9x9-evk-btwifi.dtb
+	imx6ull-9x9-evk-btwifi.dtb \
+	imx6ull-var-dart-nand_wifi.dtb \
+	imx6ull-var-dart-emmc_wifi.dtb \
+	imx6ull-var-dart-sd_nand.dtb \
+	imx6ull-var-dart-sd_emmc.dtb
 dtb-$(CONFIG_SOC_IMX7D) += \
 	imx7d-12x12-lpddr3-arm2.dtb \
 	imx7d-12x12-lpddr3-arm2-m4.dtb \
