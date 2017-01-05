@@ -277,7 +277,11 @@
 	xnur-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
 	measure_delay_time = <0xffff>;
 	pre_charge_time = <0xfff>;
+#ifdef WIFI
+	status = "disabled";
+#else
 	status = "okay";
+#endif
 };
 
 /* Console Uart */
@@ -469,6 +473,7 @@
 #ifdef WIFI
 				MX6UL_PAD_SNVS_TAMPER4__GPIO5_IO04	0x1b0b0	/* BT Enable */
 				MX6UL_PAD_SNVS_TAMPER6__GPIO5_IO06	0x03029	/* WLAN enable */
+				MX6UL_PAD_GPIO1_IO03__REF_CLK_32K	0x03029	/* WLAN Slow Clock */
 #endif
 			>;
 		};
