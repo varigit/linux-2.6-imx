@@ -440,6 +440,7 @@ dtb-$(CONFIG_SOC_IMX6ULL) += \
 	imx6ull-14x14-evk-usb-certi.dtb \
 	imx6ull-9x9-evk.dtb \
 	imx6ull-9x9-evk-btwifi.dtb \
+	imx6ull-9x9-evk-ldo.dtb \
 	imx6ull-var-dart-nand_wifi.dtb \
 	imx6ull-var-dart-emmc_wifi.dtb \
 	imx6ull-var-dart-5g-nand_wifi.dtb \
