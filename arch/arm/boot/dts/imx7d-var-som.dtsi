@@ -1001,7 +1001,7 @@
 };
 
 &usdhc3 {
-	status = "disable";
+	status = "disabled";
 };
 
 &wdog1 {
@@ -1009,3 +1009,8 @@
 	pinctrl-0 = <&pinctrl_wdog>;
 	fsl,wdog_b;
 };
+
+&snvs_rtc {
+       status = "disabled";
+};
+
