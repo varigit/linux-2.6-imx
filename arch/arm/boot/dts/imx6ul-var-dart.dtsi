@@ -101,23 +101,6 @@
 			"RLINEIN",		"Line Jack";
 	};
 
-#ifdef WIFI
-
-	/* define hook for BCMDHD driver.   */
-	/* Include WL_HOST_WAKE and WL_REG_ON GPIO's. */
-	bcmdhd_wlan_0: bcmdhd_wlan@0 {
-		compatible = "android,bcmdhd_wlan";
-		/* WL_HOST_WAKE: ENET2_RX_ER (gpio5_01) */
-		bcmdhd_wlan_irq = <&gpio5 1 0>;
-		wlreg_on-supply = <&reg_sd1_vmmc>;
-	};
-
-	btwilink {
-		compatible = "btwilink";
-	};
-
-#endif
-
 	leds {
 		compatible = "gpio-leds";
 		hdd {
