@@ -128,6 +128,7 @@
 	phy-mode = "rmii";
 	phy-reset-gpios=<&gpio5 0 1>;
 	phy-reset-duration=<100>;
+	phy-reset-on-resume;
 	phy-handle = <&ethphy0>;
 	status = "okay";
 };
@@ -139,6 +140,7 @@
 	phy-handle = <&ethphy1>;
 	phy-reset-gpios=<&gpio1 10 1>;
 	phy-reset-duration=<100>;
+	phy-reset-on-resume;
 	status = "okay";
 	mdio {
 		#address-cells = <1>;
