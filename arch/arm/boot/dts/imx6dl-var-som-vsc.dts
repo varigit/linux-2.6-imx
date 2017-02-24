@@ -17,5 +17,4 @@
 &touch {
 	interrupt-parent = <&gpio5>;
 	interrupts = <17 0>;
-	focaltech,irq-gpio = <&gpio5 17 0x00>;
 };

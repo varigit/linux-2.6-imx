@@ -65,7 +65,6 @@
 &touch {
 	interrupt-parent = <&gpio5>;
 	interrupts = <17 0>;
-	focaltech,irq-gpio = <&gpio5 17 0x00>;
 };
 
 &usdhc2 {	/* uSDHC2, MMC/SD card */
