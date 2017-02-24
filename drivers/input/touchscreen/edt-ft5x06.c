@@ -95,6 +95,9 @@ struct edt_ft5x06_ts_data {
 	int irq_pin;
 	int wake_pin;
 
+	u32 mirror_h;
+	u32 mirror_v;
+
 #if defined(CONFIG_DEBUG_FS)
 	struct dentry *debug_dir;
 	u8 *raw_buffer;
@@ -236,6 +239,11 @@ static irqreturn_t edt_ft5x06_ts_isr(int irq, void *dev_id)
 		y = ((buf[2] << 8) | buf[3]) & 0x0fff;
 		id = (buf[2] >> 4) & 0x0f;
 		down = type != TOUCH_EVENT_UP;
+
+		if (tsdata->mirror_h)
+			x = tsdata->mirror_h - x;
+		if (tsdata->mirror_v)
+			y = tsdata->mirror_v - y;
 
 		input_mt_slot(tsdata->input, id);
 		input_mt_report_slot_state(tsdata->input, MT_TOOL_FINGER, down);
@@ -944,6 +952,8 @@ static int edt_ft5x06_i2c_ts_probe_dt(struct device *dev,
 	tsdata->irq_pin = -EINVAL;
 	tsdata->reset_pin = of_get_named_gpio(np, "reset-gpios", 0);
 	tsdata->wake_pin = of_get_named_gpio(np, "wake-gpios", 0);
+	of_property_read_u32(np,"mirror_h", &tsdata->mirror_h);
+	of_property_read_u32(np,"mirror_v", &tsdata->mirror_v);
 
 	return 0;
 }
