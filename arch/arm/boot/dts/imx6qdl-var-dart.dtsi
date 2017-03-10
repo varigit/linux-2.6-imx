@@ -709,17 +709,11 @@
 	wlcore: wlcore@0 {
 		compatible = "ti,wl1835";
 		reg = <2>;
-#if 0
-		gpio = <177>;   /* The wl8 driver expects gpio to be an integer, so gpio6_17 is (6-1)*32+17=207
-				   irq property must not be set as driver derives irq number from gpio if no irq set
-				   use edge irqs for suspend/resume */
-		platform-quirks = <1>;
-#endif
 		interrupt-parent = <&gpio6>;
 		interrupts = <17 IRQ_TYPE_EDGE_RISING>;
 
 		/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
-		board-ref-clock = <4>;
+		ref-clock-frequency = <38400000>;
 	};
 };
 
