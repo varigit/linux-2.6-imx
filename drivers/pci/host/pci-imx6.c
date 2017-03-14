@@ -502,7 +502,7 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
 	if (is_imx7d_pcie(imx6_pcie)) {
 		/* Enable PCIe PHY 1P0D */
 		regulator_set_voltage(imx6_pcie->pcie_phy_regulator,
-				1000000, 1000000);
+				1050000, 1050000);
 		ret = regulator_enable(imx6_pcie->pcie_phy_regulator);
 		if (ret)
 			dev_err(pp->dev, "failed to enable pcie regulator.\n");
