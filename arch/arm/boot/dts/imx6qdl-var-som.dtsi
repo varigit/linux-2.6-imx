@@ -877,6 +877,7 @@
 &gpmi { /* nand flash 0.5 GB partition table */
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gpmi_nand_v1>;
+	fsl,legacy-bch-geometry;
 	status = "okay";
 
 	partition@0 {
