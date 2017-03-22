@@ -345,6 +345,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gpmi_nand_1>;
 	nand-on-flash-bbt;
+	fsl,legacy-bch-geometry;
 	status = "okay";
 	
 	partition@0 {
