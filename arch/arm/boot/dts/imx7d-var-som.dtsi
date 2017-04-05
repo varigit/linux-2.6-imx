@@ -476,8 +476,10 @@
 		reg = <0x38>;
 		interrupt-parent = <&gpio2>;
 		interrupts = <30 0>;
-		mirror_h = <799>;
-		mirror_v = <479>;
+		touchscreen-size-x = <800>;
+		touchscreen-size-y = <480>;
+		touchscreen-inverted-x;
+		touchscreen-inverted-y;
 	};
 };
 

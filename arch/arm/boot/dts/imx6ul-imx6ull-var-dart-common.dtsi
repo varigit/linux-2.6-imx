@@ -398,8 +398,10 @@
 		reg = <0x38>;
 		interrupt-parent = <&gpio3>;
 		interrupts = <4 0>;
-		mirror_h = <799>;
-		mirror_v = <479>;
+		touchscreen-size-x = <800>;
+		touchscreen-size-y = <480>;
+		touchscreen-inverted-x;
+		touchscreen-inverted-y;
 	};
 
 	/* DS1307 RTC module */

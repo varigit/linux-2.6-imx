@@ -22,8 +22,10 @@
 	touch: ft5x06_ts@38 {
 		compatible = "edt,edt-ft5x06";
 		reg = <0x38>;
-		mirror_h = <799>;
-		mirror_v = <479>;
+		touchscreen-size-x = <800>;
+		touchscreen-size-y = <480>;
+		touchscreen-inverted-x;
+		touchscreen-inverted-y;
 	};
 };
 
