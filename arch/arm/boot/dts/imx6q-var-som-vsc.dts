@@ -44,6 +44,10 @@
 	>;
 };
 
+&fec {
+	phy-reset-on-resume;
+};
+
 &iomuxc {
 	imx6qdl-var-som-mx6 {
 		pinctrl_usbotg_1: usbotggrp-1 {

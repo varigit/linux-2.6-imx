@@ -43,6 +43,10 @@
 	>;
 };
 
+&fec {
+	phy-reset-on-resume;
+};
+
 &i2c2 {
 	pmic: pfuze100@08 {
 		compatible = "fsl,pfuze100";

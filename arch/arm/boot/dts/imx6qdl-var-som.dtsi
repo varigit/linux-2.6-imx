@@ -204,7 +204,6 @@
 	phy-mode = "rgmii";
 	phy-reset-gpios = <&gpio1 25 0>;
 	phy-reset-duration=<100>;
-	phy-reset-on-resume;
 	status = "okay";
 };
 
