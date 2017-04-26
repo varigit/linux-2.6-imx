@@ -32,7 +32,11 @@
 #define	BRCMF_BSS_INFO_VERSION	109 /* curr ver of brcmf_bss_info_le struct */
 #define BRCMF_BSS_RSSI_ON_CHANNEL	0x0002
 
-#define BRCMF_STA_ASSOC			0x10		/* Associated */
+#define BRCMF_STA_WME              0x00000002      /* WMM association */
+#define BRCMF_STA_AUTHE            0x00000008      /* Authenticated */
+#define BRCMF_STA_ASSOC            0x00000010      /* Associated */
+#define BRCMF_STA_AUTHO            0x00000020      /* Authorized */
+#define BRCMF_STA_SCBSTATS         0x00004000      /* Per STA debug stats */
 
 /* size of brcmf_scan_params not including variable length array */
 #define BRCMF_SCAN_PARAMS_FIXED_SIZE	64
@@ -106,6 +110,10 @@
 #define BRCMF_WOWL_UNASSOC		(1 << 24)
 /* Wakeup if received matched secured pattern: */
 #define BRCMF_WOWL_SECURE		(1 << 25)
+/* Wakeup on finding preferred network */
+#define BRCMF_WOWL_PFN_FOUND		(1 << 27)
+/* Wakeup on receiving pairwise key EAP packets: */
+#define WIPHY_WOWL_EAP_PK		(1 << 28)
 /* Link Down indication in WoWL mode: */
 #define BRCMF_WOWL_LINKDOWN		(1 << 31)
 
@@ -113,6 +121,30 @@
 #define BRCMF_WOWL_MAXPATTERNSIZE	128
 
 #define BRCMF_COUNTRY_BUF_SZ		4
+#define BRCMF_ANT_MAX			4
+
+#define BRCMF_MAX_ASSOCLIST		128
+
+#define BRCMF_TXBF_SU_BFE_CAP		BIT(0)
+#define BRCMF_TXBF_MU_BFE_CAP		BIT(1)
+#define BRCMF_TXBF_SU_BFR_CAP		BIT(0)
+#define BRCMF_TXBF_MU_BFR_CAP		BIT(1)
+
+#define	BRCMF_MAXPMKID			16	/* max # PMKID cache entries */
+
+#define BRCMF_PFN_MACADDR_CFG_VER	1
+#define BRCMF_PFN_MAC_OUI_ONLY		BIT(0)
+#define BRCMF_PFN_SET_MAC_UNASSOC	BIT(1)
+
+#define BRCMF_MCSSET_LEN		16
+
+#define BRCMF_RSN_KCK_LENGTH		16
+#define BRCMF_RSN_KEK_LENGTH		16
+#define BRCMF_RSN_REPLAY_LEN		8
+
+#define BRCMF_MFP_NONE			0
+#define BRCMF_MFP_CAPABLE		1
+#define BRCMF_MFP_REQUIRED		2
 
 /* join preference types for join_pref iovar */
 enum brcmf_join_pref_types {
@@ -163,7 +195,7 @@ struct brcmf_fil_af_params_le {
 };
 
 struct brcmf_fil_bss_enable_le {
-	__le32 bsscfg_idx;
+	__le32 bsscfgidx;
 	__le32 enable;
 };
 
@@ -259,7 +291,7 @@ struct brcmf_bss_info_le {
 	__le32 reserved32[1];	/* Reserved for expansion of BSS properties */
 	u8 flags;		/* flags */
 	u8 reserved[3];	/* Reserved for expansion of BSS properties */
-	u8 basic_mcs[MCSSET_LEN];	/* 802.11N BSS required MCS set */
+	u8 basic_mcs[BRCMF_MCSSET_LEN];	/* 802.11N BSS required MCS set */
 
 	__le16 ie_offset;	/* offset at which IEs start, from beginning */
 	__le32 ie_length;	/* byte length of Information Elements */
@@ -275,14 +307,9 @@ struct brcm_rateset_le {
 	u8 rates[BRCMF_MAXRATES_IN_SET];
 };
 
-struct brcmf_ssid {
-	u32 SSID_len;
-	unsigned char SSID[32];
-};
-
 struct brcmf_ssid_le {
 	__le32 SSID_len;
-	unsigned char SSID[32];
+	unsigned char SSID[IEEE80211_MAX_SSID_LEN];
 };
 
 struct brcmf_scan_params_le {
@@ -456,25 +483,61 @@ struct brcmf_channel_info_le {
 };
 
 struct brcmf_sta_info_le {
-	__le16	ver;		/* version of this struct */
-	__le16	len;		/* length in bytes of this structure */
-	__le16	cap;		/* sta's advertised capabilities */
-	__le32	flags;		/* flags defined below */
-	__le32	idle;		/* time since data pkt rx'd from sta */
-	u8	ea[ETH_ALEN];		/* Station address */
-	__le32	count;			/* # rates in this set */
-	u8	rates[BRCMF_MAXRATES_IN_SET];	/* rates in 500kbps units */
+	__le16 ver;		/* version of this struct */
+	__le16 len;		/* length in bytes of this structure */
+	__le16 cap;		/* sta's advertised capabilities */
+	__le32 flags;		/* flags defined below */
+	__le32 idle;		/* time since data pkt rx'd from sta */
+	u8 ea[ETH_ALEN];		/* Station address */
+	__le32 count;			/* # rates in this set */
+	u8 rates[BRCMF_MAXRATES_IN_SET];	/* rates in 500kbps units */
 						/* w/hi bit set if basic */
-	__le32	in;		/* seconds elapsed since associated */
-	__le32	listen_interval_inms; /* Min Listen interval in ms for STA */
-	__le32	tx_pkts;	/* # of packets transmitted */
-	__le32	tx_failures;	/* # of packets failed */
-	__le32	rx_ucast_pkts;	/* # of unicast packets received */
-	__le32	rx_mcast_pkts;	/* # of multicast packets received */
-	__le32	tx_rate;	/* Rate of last successful tx frame */
-	__le32	rx_rate;	/* Rate of last successful rx frame */
-	__le32	rx_decrypt_succeeds;	/* # of packet decrypted successfully */
-	__le32	rx_decrypt_failures;	/* # of packet decrypted failed */
+	__le32 in;		/* seconds elapsed since associated */
+	__le32 listen_interval_inms; /* Min Listen interval in ms for STA */
+	__le32 tx_pkts;	/* # of packets transmitted */
+	__le32 tx_failures;	/* # of packets failed */
+	__le32 rx_ucast_pkts;	/* # of unicast packets received */
+	__le32 rx_mcast_pkts;	/* # of multicast packets received */
+	__le32 tx_rate;	/* Rate of last successful tx frame */
+	__le32 rx_rate;	/* Rate of last successful rx frame */
+	__le32 rx_decrypt_succeeds;	/* # of packet decrypted successfully */
+	__le32 rx_decrypt_failures;	/* # of packet decrypted failed */
+	__le32 tx_tot_pkts;    /* # of tx pkts (ucast + mcast) */
+	__le32 rx_tot_pkts;    /* # of data packets recvd (uni + mcast) */
+	__le32 tx_mcast_pkts;  /* # of mcast pkts txed */
+	__le64 tx_tot_bytes;   /* data bytes txed (ucast + mcast) */
+	__le64 rx_tot_bytes;   /* data bytes recvd (ucast + mcast) */
+	__le64 tx_ucast_bytes; /* data bytes txed (ucast) */
+	__le64 tx_mcast_bytes; /* # data bytes txed (mcast) */
+	__le64 rx_ucast_bytes; /* data bytes recvd (ucast) */
+	__le64 rx_mcast_bytes; /* data bytes recvd (mcast) */
+	s8 rssi[BRCMF_ANT_MAX];   /* per antenna rssi */
+	s8 nf[BRCMF_ANT_MAX];     /* per antenna noise floor */
+	__le16 aid;                    /* association ID */
+	__le16 ht_capabilities;        /* advertised ht caps */
+	__le16 vht_flags;              /* converted vht flags */
+	__le32 tx_pkts_retry_cnt;      /* # of frames where a retry was
+					 * exhausted.
+					 */
+	__le32 tx_pkts_retry_exhausted; /* # of user frames where a retry
+					 * was exhausted
+					 */
+	s8 rx_lastpkt_rssi[BRCMF_ANT_MAX]; /* Per antenna RSSI of last
+					    * received data frame.
+					    */
+	/* TX WLAN retry/failure statistics:
+	 * Separated for host requested frames and locally generated frames.
+	 * Include unicast frame only where the retries/failures can be counted.
+	 */
+	__le32 tx_pkts_total;          /* # user frames sent successfully */
+	__le32 tx_pkts_retries;        /* # user frames retries */
+	__le32 tx_pkts_fw_total;       /* # FW generated sent successfully */
+	__le32 tx_pkts_fw_retries;     /* # retries for FW generated frames */
+	__le32 tx_pkts_fw_retry_exhausted;     /* # FW generated where a retry
+						* was exhausted
+						*/
+	__le32 rx_pkts_retried;        /* # rx with retry bit set */
+	__le32 tx_rate_fallback;       /* lowest fallback TX rate */
 };
 
 struct brcmf_chanspec_list {
@@ -578,6 +641,175 @@ struct brcmf_rev_info_le {
 	__le32 anarev;
 	__le32 chippkg;
 	__le32 nvramrev;
+};
+
+/**
+ * struct brcmf_assoclist_le - request assoc list.
+ *
+ * @count: indicates number of stations.
+ * @mac: MAC addresses of stations.
+ */
+struct brcmf_assoclist_le {
+	__le32 count;
+	u8 mac[BRCMF_MAX_ASSOCLIST][ETH_ALEN];
+};
+
+/**
+ * struct brcmf_wowl_wakeind_le - Wakeup indicators
+ *	Note: note both fields contain same information.
+ *
+ * @pci_wakeind: Whether PCI PMECSR PMEStatus bit was set.
+ * @ucode_wakeind: What wakeup-event indication was set by ucode
+ */
+struct brcmf_wowl_wakeind_le {
+	__le32 pci_wakeind;
+	__le32 ucode_wakeind;
+};
+
+/**
+ * struct brcmf_pmksa - PMK Security Association
+ *
+ * @bssid: The AP's BSSID.
+ * @pmkid: he PMK material itself.
+ */
+struct brcmf_pmksa {
+	u8 bssid[ETH_ALEN];
+	u8 pmkid[WLAN_PMKID_LEN];
+};
+
+/**
+ * struct brcmf_pmk_list_le - List of pmksa's.
+ *
+ * @npmk: Number of pmksa's.
+ * @pmk: PMK SA information.
+ */
+struct brcmf_pmk_list_le {
+	__le32 npmk;
+	struct brcmf_pmksa pmk[BRCMF_MAXPMKID];
+};
+
+/**
+ * struct brcmf_pno_param_le - PNO scan configuration parameters
+ *
+ * @version: PNO parameters version.
+ * @scan_freq: scan frequency.
+ * @lost_network_timeout: #sec. to declare discovered network as lost.
+ * @flags: Bit field to control features of PFN such as sort criteria auto
+ *	enable switch and background scan.
+ * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
+ *	criteria.
+ * @bestn: number of best networks in each scan.
+ * @mscan: number of scans recorded.
+ * @repeat: minimum number of scan intervals before scan frequency changes
+ *	in adaptive scan.
+ * @exp: exponent of 2 for maximum scan interval.
+ * @slow_freq: slow scan period.
+ */
+struct brcmf_pno_param_le {
+	__le32 version;
+	__le32 scan_freq;
+	__le32 lost_network_timeout;
+	__le16 flags;
+	__le16 rssi_margin;
+	u8 bestn;
+	u8 mscan;
+	u8 repeat;
+	u8 exp;
+	__le32 slow_freq;
+};
+
+/**
+ * struct brcmf_pno_net_param_le - scan parameters per preferred network.
+ *
+ * @ssid: ssid name and its length.
+ * @flags: bit2: hidden.
+ * @infra: BSS vs IBSS.
+ * @auth: Open vs Closed.
+ * @wpa_auth: WPA type.
+ * @wsec: wsec value.
+ */
+struct brcmf_pno_net_param_le {
+	struct brcmf_ssid_le ssid;
+	__le32 flags;
+	__le32 infra;
+	__le32 auth;
+	__le32 wpa_auth;
+	__le32 wsec;
+};
+
+/**
+ * struct brcmf_pno_net_info_le - information per found network.
+ *
+ * @bssid: BSS network identifier.
+ * @channel: channel number only.
+ * @SSID_len: length of ssid.
+ * @SSID: ssid characters.
+ * @RSSI: receive signal strength (in dBm).
+ * @timestamp: age in seconds.
+ */
+struct brcmf_pno_net_info_le {
+	u8 bssid[ETH_ALEN];
+	u8 channel;
+	u8 SSID_len;
+	u8 SSID[32];
+	__le16	RSSI;
+	__le16	timestamp;
+};
+
+/**
+ * struct brcmf_pno_scanresults_le - result returned in PNO NET FOUND event.
+ *
+ * @version: PNO version identifier.
+ * @status: indicates completion status of PNO scan.
+ * @count: amount of brcmf_pno_net_info_le entries appended.
+ */
+struct brcmf_pno_scanresults_le {
+	__le32 version;
+	__le32 status;
+	__le32 count;
+};
+
+/**
+ * struct brcmf_pno_macaddr_le - to configure PNO macaddr randomization.
+ *
+ * @version: PNO version identifier.
+ * @flags: Flags defining how mac addrss should be used.
+ * @mac: MAC address.
+ */
+struct brcmf_pno_macaddr_le {
+	u8 version;
+	u8 flags;
+	u8 mac[ETH_ALEN];
+};
+
+/**
+ * struct brcmf_pktcnt_le - packet counters.
+ *
+ * @rx_good_pkt: packets (MSDUs & MMPDUs) received from this station
+ * @rx_bad_pkt: failed rx packets
+ * @tx_good_pkt: packets (MSDUs & MMPDUs) transmitted to this station
+ * @tx_bad_pkt: failed tx packets
+ * @rx_ocast_good_pkt: unicast packets destined for others
+ */
+struct brcmf_pktcnt_le {
+	__le32 rx_good_pkt;
+	__le32 rx_bad_pkt;
+	__le32 tx_good_pkt;
+	__le32 tx_bad_pkt;
+	__le32 rx_ocast_good_pkt;
+};
+
+/**
+ * struct brcmf_gtk_keyinfo_le - GTP rekey data
+ *
+ * @kck: key confirmation key.
+ * @kek: key encryption key.
+ * @replay_counter: replay counter.
+ */
+struct brcmf_gtk_keyinfo_le {
+	u8 kck[BRCMF_RSN_KCK_LENGTH];
+	u8 kek[BRCMF_RSN_KEK_LENGTH];
+	u8 replay_counter[BRCMF_RSN_REPLAY_LEN];
 };
 
 #endif /* FWIL_TYPES_H_ */

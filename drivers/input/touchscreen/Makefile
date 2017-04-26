@@ -6,7 +6,7 @@
 
 wm97xx-ts-y := wm97xx-core.o
 
-obj-$(CONFIG_OF_TOUCHSCREEN)		+= of_touchscreen.o
+obj-$(CONFIG_TOUCHSCREEN_PROPERTIES)	+= of_touchscreen.o
 obj-$(CONFIG_TOUCHSCREEN_88PM860X)	+= 88pm860x-ts.o
 obj-$(CONFIG_TOUCHSCREEN_AD7877)	+= ad7877.o
 obj-$(CONFIG_TOUCHSCREEN_AD7879)	+= ad7879.o
@@ -34,8 +34,9 @@ obj-$(CONFIG_TOUCHSCREEN_GUNZE)		+= gunze.o
 obj-$(CONFIG_TOUCHSCREEN_EETI)		+= eeti_ts.o
 obj-$(CONFIG_TOUCHSCREEN_ELAN)		+= elants_i2c.o
 obj-$(CONFIG_TOUCHSCREEN_ELO)		+= elo.o
-obj-$(CONFIG_TOUCHSCREEN_ELAN_TS)      += elan_ts.o
+obj-$(CONFIG_TOUCHSCREEN_ELAN_TS)	+= elan_ts.o
 obj-$(CONFIG_TOUCHSCREEN_EGALAX)	+= egalax_ts.o
+obj-$(CONFIG_TOUCHSCREEN_FT5X06)	+= ft5x06_ts.o
 obj-$(CONFIG_TOUCHSCREEN_FUJITSU)	+= fujitsu_ts.o
 obj-$(CONFIG_TOUCHSCREEN_GOODIX)	+= goodix.o
 obj-$(CONFIG_TOUCHSCREEN_ILI210X)	+= ili210x.o

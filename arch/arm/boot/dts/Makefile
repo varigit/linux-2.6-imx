@@ -283,6 +283,12 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6dl-tx6u-811x.dtb \
 	imx6dl-udoo.dtb \
 	imx6dl-sabresd-enetirq.dtb \
+	imx6dl-var-som-cap.dtb \
+	imx6dl-var-som-res.dtb \
+	imx6dl-var-som-solo-cap.dtb \
+	imx6dl-var-som-solo-res.dtb \
+	imx6dl-var-som-solo-vsc.dtb \
+	imx6dl-var-som-vsc.dtb \
 	imx6dl-wandboard.dtb \
 	imx6dl-wandboard-revb1.dtb \
 	imx6q-arm2.dtb \
@@ -330,6 +336,10 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6q-tx6q-1020-comtft.dtb \
 	imx6q-tx6q-1110.dtb \
 	imx6q-udoo.dtb \
+	imx6q-var-dart.dtb \
+	imx6q-var-som-cap.dtb \
+	imx6q-var-som-res.dtb \
+	imx6q-var-som-vsc.dtb \
 	imx6q-wandboard.dtb \
 	imx6q-wandboard-revb1.dtb
 dtb-$(CONFIG_SOC_IMX6SL) += \
@@ -373,7 +383,11 @@ dtb-$(CONFIG_SOC_IMX6UL) += \
 	imx6ul-9x9-evk.dtb \
 	imx6ul-9x9-evk-btwifi.dtb \
 	imx6ul-9x9-evk-csi.dtb \
-	imx6ul-9x9-evk-ldo.dtb
+	imx6ul-9x9-evk-ldo.dtb \
+	imx6ul-var-dart-nand_wifi.dtb \
+	imx6ul-var-dart-emmc_wifi.dtb \
+	imx6ul-var-dart-sd_nand.dtb \
+	imx6ul-var-dart-sd_emmc.dtb
 dtb-$(CONFIG_SOC_IMX6ULL) += \
 	imx6ull-14x14-ddr3-arm2.dtb \
 	imx6ull-14x14-ddr3-arm2-adc.dtb \
@@ -394,7 +408,11 @@ dtb-$(CONFIG_SOC_IMX6ULL) += \
 	imx6ull-14x14-evk.dtb \
 	imx6ull-14x14-evk-btwifi.dtb \
 	imx6ull-14x14-evk-gpmi-weim.dtb \
-	imx6ull-14x14-evk-usb-certi.dtb
+	imx6ull-14x14-evk-usb-certi.dtb \
+	imx6ull-var-dart-nand_wifi.dtb \
+	imx6ull-var-dart-emmc_wifi.dtb \
+	imx6ull-var-dart-sd_nand.dtb \
+	imx6ull-var-dart-sd_emmc.dtb
 dtb-$(CONFIG_SOC_IMX7D) += \
 	imx7d-12x12-lpddr3-arm2.dtb \
 	imx7d-12x12-lpddr3-arm2-m4.dtb \
@@ -421,7 +439,9 @@ dtb-$(CONFIG_SOC_IMX7D) += \
 	imx7d-sdb-reva-m4.dtb \
 	imx7d-sdb-reva-qspi.dtb \
 	imx7d-sdb-reva-touch.dtb \
-	imx7d-sdb-reva-wm8960.dtb
+	imx7d-sdb-reva-wm8960.dtb \
+	imx7d-var-som-emmc.dtb \
+	imx7d-var-som-nand.dtb
 dtb-$(CONFIG_SOC_LS1021A) += \
 	ls1021a-qds.dtb \
 	ls1021a-twr.dtb

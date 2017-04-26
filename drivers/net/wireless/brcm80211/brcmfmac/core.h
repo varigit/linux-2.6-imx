@@ -21,6 +21,7 @@
 #ifndef BRCMFMAC_CORE_H
 #define BRCMFMAC_CORE_H
 
+#include <net/cfg80211.h>
 #include "fweh.h"
 
 #define TOE_TX_CSUM_OL		0x00000001
@@ -47,6 +48,8 @@
  */
 #define BRCMF_DRIVER_FIRMWARE_VERSION_LEN	32
 
+#define NDOL_MAX_ENTRIES	8
+
 /**
  * struct brcmf_ampdu_rx_reorder - AMPDU receive reorder info
  *
@@ -68,8 +71,8 @@ struct brcmf_ampdu_rx_reorder {
 
 /* Forward decls for struct brcmf_pub (see below) */
 struct brcmf_proto;	/* device communication protocol info */
-struct brcmf_cfg80211_dev; /* cfg80211 device info */
-struct brcmf_fws_info; /* firmware signalling info */
+struct brcmf_fws_info;	/* firmware signalling info */
+struct brcmf_mp_device;	/* module paramateres, device specific */
 
 /*
  * struct brcmf_rev_info
@@ -118,7 +121,10 @@ struct brcmf_pub {
 	/* Multicast data packets sent to dongle */
 	unsigned long tx_multicast;
 
+	struct mac_address addresses[BRCMF_MAX_IFS];
+
 	struct brcmf_if *iflist[BRCMF_MAX_IFS];
+	s32 if2bss[BRCMF_MAX_IFS];
 
 	struct mutex proto_block;
 	unsigned char proto_buf[BRCMF_DCMD_MAXLEN];
@@ -137,6 +143,10 @@ struct brcmf_pub {
 #ifdef DEBUG
 	struct dentry *dbgfs_dir;
 #endif
+
+	struct notifier_block inetaddr_notifier;
+	struct notifier_block inet6addr_notifier;
+	struct brcmf_mp_device *settings;
 };
 
 /* forward declarations */
@@ -150,10 +160,13 @@ struct brcmf_fws_mac_descriptor;
  *	netif stopped due to firmware signalling flow control.
  * @BRCMF_NETIF_STOP_REASON_FLOW:
  *	netif stopped due to flowring full.
+ * @BRCMF_NETIF_STOP_REASON_DISCONNECTED:
+ *	netif stopped due to not being connected (STA mode).
  */
 enum brcmf_netif_stop_reason {
-	BRCMF_NETIF_STOP_REASON_FWS_FC = 1,
-	BRCMF_NETIF_STOP_REASON_FLOW = 2
+	BRCMF_NETIF_STOP_REASON_FWS_FC = BIT(0),
+	BRCMF_NETIF_STOP_REASON_FLOW = BIT(1),
+	BRCMF_NETIF_STOP_REASON_DISCONNECTED = BIT(2)
 };
 
 /**
@@ -165,9 +178,10 @@ enum brcmf_netif_stop_reason {
  * @stats: interface specific network statistics.
  * @setmacaddr_work: worker object for setting mac address.
  * @multicast_work: worker object for multicast provisioning.
+ * @ndoffload_work: worker object for neighbor discovery offload configuration.
  * @fws_desc: interface specific firmware-signalling descriptor.
  * @ifidx: interface index in device firmware.
- * @bssidx: index of bss associated with this interface.
+ * @bsscfgidx: index of bss associated with this interface.
  * @mac_addr: assigned mac address.
  * @netif_stop: bitmap indicates reason why netif queues are stopped.
  * @netif_stop_lock: spinlock for update netif_stop from multiple sources.
@@ -181,14 +195,17 @@ struct brcmf_if {
 	struct net_device_stats stats;
 	struct work_struct setmacaddr_work;
 	struct work_struct multicast_work;
+	struct work_struct ndoffload_work;
 	struct brcmf_fws_mac_descriptor *fws_desc;
 	int ifidx;
-	s32 bssidx;
+	s32 bsscfgidx;
 	u8 mac_addr[ETH_ALEN];
 	u8 netif_stop;
 	spinlock_t netif_stop_lock;
 	atomic_t pend_8021x_cnt;
 	wait_queue_head_t pend_8021x_wait;
+	struct in6_addr ipv6_addr_tbl[NDOL_MAX_ENTRIES];
+	u8 ipv6addr_idx;
 };
 
 struct brcmf_skb_reorder_data {
@@ -198,20 +215,19 @@ struct brcmf_skb_reorder_data {
 int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp);
 
 /* Return pointer to interface name */
-char *brcmf_ifname(struct brcmf_pub *drvr, int idx);
-
+char *brcmf_ifname(struct brcmf_if *ifp);
+struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx);
 int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
-struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
-			      char *name, u8 *mac_addr);
-void brcmf_remove_interface(struct brcmf_pub *drvr, u32 bssidx);
+struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
+			      bool is_p2pdev, char *name, u8 *mac_addr);
+void brcmf_remove_interface(struct brcmf_if *ifp);
 int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr);
 void brcmf_txflowblock_if(struct brcmf_if *ifp,
 			  enum brcmf_netif_stop_reason reason, bool state);
-void brcmf_txfinalize(struct brcmf_pub *drvr, struct sk_buff *txp, u8 ifidx,
-		      bool success);
+void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
 void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
-
-/* Sets dongle media info (drv_version, mac address). */
-int brcmf_c_preinit_dcmds(struct brcmf_if *ifp);
+void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
+int __init brcmf_core_init(void);
+void __exit brcmf_core_exit(void);
 
 #endif /* BRCMFMAC_CORE_H */

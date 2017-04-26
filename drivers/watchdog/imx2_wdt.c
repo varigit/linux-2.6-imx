@@ -43,6 +43,8 @@
 
 #define IMX2_WDT_WCR		0x00		/* Control Register */
 #define IMX2_WDT_WCR_WT		(0xFF << 8)	/* -> Watchdog Timeout Field */
+#define IMX2_WDT_WCR_WDA	(1 << 5)	/* -> External reset Assert */
+#define IMX2_WDT_WCR_SRS	(1 << 4)	/* -> Software Reset Signal */
 #define IMX2_WDT_WCR_WRE	(1 << 3)	/* -> WDOG Reset Enable */
 #define IMX2_WDT_WCR_WDE	(1 << 2)	/* -> Watchdog Enable */
 #define IMX2_WDT_WCR_WDZST	(1 << 0)	/* -> Watchdog timer Suspend */
@@ -100,9 +102,9 @@ static int imx2_restart_handler(struct notifier_block *this, unsigned long mode,
 	struct imx2_wdt_device *wdev = container_of(this,
 						    struct imx2_wdt_device,
 						    restart_handler);
-	/* Assert WDOG_B signal */
-	if (wdev->wdog_b)
-		wcr_enable = 0x14;
+
+	if (!wdev->wdog_b)
+		wcr_enable |= IMX2_WDT_WCR_WDA; /* do not assert ext reset */	
 
 	regmap_write(wdev->regmap, 0, wcr_enable);
 	/*
@@ -132,8 +134,14 @@ static inline void imx2_wdt_setup(struct watchdog_device *wdog)
 	val |= IMX2_WDT_WCR_WDZST;
 	/* Strip the old watchdog Time-Out value */
 	val &= ~IMX2_WDT_WCR_WT;
-	/* Generate reset if WDOG times out */
-	val &= ~IMX2_WDT_WCR_WRE;
+
+	/* Generate internal chip-level reset if WDOG times out */
+	if (!wdev->wdog_b)
+		val &= ~IMX2_WDT_WCR_WRE;
+	/* If external reset line exists assert WDOG_B if WDOG times out */
+	else
+		val |= IMX2_WDT_WCR_WRE;
+
 	/* Keep Watchdog Disabled */
 	val &= ~IMX2_WDT_WCR_WDE;
 	/* Set the watchdog's Time-Out value */

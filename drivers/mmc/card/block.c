@@ -905,7 +905,7 @@ static inline int mmc_blk_part_switch(struct mmc_card *card,
 
 		ret = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 				 EXT_CSD_PART_CONFIG, part_config,
-				 card->ext_csd.part_time);
+				 card->ext_csd.part_time*20);
 		if (ret)
 			return ret;
 

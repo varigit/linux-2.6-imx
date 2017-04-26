@@ -10,6 +10,7 @@
 #include <linux/irqchip.h>
 #include <linux/mfd/syscon.h>
 #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
+#include <linux/micrel_phy.h>
 #include <linux/netdevice.h>
 #include <linux/of_address.h>
 #include <linux/of_gpio.h>
@@ -50,10 +51,10 @@ static int ksz8081_phy_fixup(struct phy_device *dev)
 	return 0;
 }
 
-#define PHY_ID_KSZ8081	0x00221560
 static void __init imx6ul_enet_phy_init(void)
 {
-	phy_register_fixup_for_uid(PHY_ID_KSZ8081, 0xffffffff,	ksz8081_phy_fixup);
+	phy_register_fixup_for_uid(PHY_ID_KSZ8081, MICREL_PHY_ID_MASK,
+				   ksz8081_phy_fixup);
 }
 
 #define OCOTP_CFG3			0x440

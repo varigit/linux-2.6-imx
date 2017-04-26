@@ -230,6 +230,8 @@ MODULE_PARM_DESC(macaddr, "FEC Ethernet MAC address");
 
 static int mii_cnt;
 
+static bool fec_ready_for_phy_reset;
+
 static inline
 struct bufdesc *fec_enet_get_nextdesc(struct bufdesc *bdp,
 				      struct fec_enet_private *fep,
@@ -3327,35 +3329,56 @@ static int fec_enet_init(struct net_device *ndev)
 }
 
 #ifdef CONFIG_OF
-static void fec_reset_phy(struct platform_device *pdev)
+static int fec_prepare_for_phy_reset(struct platform_device *pdev, struct fec_enet_private *fep)
 {
-	int err, phy_reset;
-	int msec = 1;
+	int err;
 	struct device_node *np = pdev->dev.of_node;
 
 	if (!np)
-		return;
+		return -1;
 
-	err = of_property_read_u32(np, "phy-reset-duration", &msec);
+	fep->phy_reset_duration = 1;
+
+	err = of_property_read_u32(np, "phy-reset-duration", &(fep->phy_reset_duration));
 	/* A sane reset duration should not be longer than 1s */
-	if (!err && msec > 1000)
-		msec = 1;
+	if (!err && fep->phy_reset_duration > 1000)
+		fep->phy_reset_duration = 1;
 
-	phy_reset = of_get_named_gpio(np, "phy-reset-gpios", 0);
-	if (!gpio_is_valid(phy_reset))
-		return;
+	fep->phy_reset_gpios = of_get_named_gpio(np, "phy-reset-gpios", 0);
+	if (!gpio_is_valid(fep->phy_reset_gpios))
+		return -1;
 
-	err = devm_gpio_request_one(&pdev->dev, phy_reset,
+	err = devm_gpio_request_one(&pdev->dev, fep->phy_reset_gpios,
 				    GPIOF_OUT_INIT_LOW, "phy-reset");
 	if (err) {
 		dev_err(&pdev->dev, "failed to get phy-reset-gpios: %d\n", err);
-		return;
+		return -1;
 	}
-	msleep(msec);
-	gpio_set_value(phy_reset, 1);
+
+	fep->phy_reset_on_resume = (of_find_property(np, "phy-reset-on-resume", NULL)) ? true : false;
+
+	return 0;
 }
 #else /* CONFIG_OF */
-static void fec_reset_phy(struct platform_device *pdev)
+static int fec_prepare_for_phy_reset(struct platform_device *pdev, struct fec_enet_private *fep)
+{
+	/*
+	 * In case of platform probe, the reset has been done
+	 * by machine code.
+	 */
+}
+#endif /* CONFIG_OF */
+
+
+#ifdef CONFIG_OF
+static void fec_reset_phy(struct fec_enet_private *fep)
+{
+	gpio_set_value(fep->phy_reset_gpios, 0);
+	msleep(fep->phy_reset_duration);
+	gpio_set_value(fep->phy_reset_gpios, 1);
+}
+#else /* CONFIG_OF */
+static void fec_reset_phy(struct fec_enet_private *fep)
 {
 	/*
 	 * In case of platform probe, the reset has been done
@@ -3571,7 +3594,10 @@ fec_probe(struct platform_device *pdev)
 		fep->reg_phy = NULL;
 	}
 
-	fec_reset_phy(pdev);
+	fec_ready_for_phy_reset = !fec_prepare_for_phy_reset(pdev, fep);
+
+	if (fec_ready_for_phy_reset)
+		fec_reset_phy(fep);
 
 	if (fep->bufdesc_ex)
 		fec_ptp_init(pdev);
@@ -3750,6 +3776,9 @@ static int __maybe_unused fec_resume(struct device *dev)
 		fec_restore_mii_bus(ndev);
 	}
 	rtnl_unlock();
+
+	if (fep->phy_reset_on_resume && fec_ready_for_phy_reset)
+		fec_reset_phy(fep);
 
 	return 0;
 
