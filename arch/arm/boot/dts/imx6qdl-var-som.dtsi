@@ -117,7 +117,7 @@
 	mxcfb1: fb@0 {
 		compatible = "fsl,mxc_sdc_fb";
 		disp_dev = "ldb";
-		default_bpp = <16>;
+		default_bpp = <32>;
 		int_clk = <0>;
 		late_init = <0>;
 		status = "disabled";
@@ -175,6 +175,18 @@
 		compatible = "fsl,mxc_v4l2_output";
 		status = "okay";
 	};
+
+	btwilink {
+		compatible = "btwilink";
+	};
+
+	kim {
+		compatible = "kim";
+		nshutdown_gpio = <178>;	/* GPIO6_18 */
+		dev_name = "/dev/ttymxc1";
+		flow_cntrl = <1>;
+		baud_rate = <3000000>;
+	};
 };
 
 &audmux {
@@ -188,6 +200,10 @@
 	soc-supply = <&sw1c_reg>;
 };
 
+&clks {
+	fsl,ldb-di0-parent = <&clks IMX6QDL_CLK_PLL2_PFD0_352M>;
+	fsl,ldb-di1-parent = <&clks IMX6QDL_CLK_PLL2_PFD0_352M>;
+};
 
 &ecspi3 {
 	fsl,spi-num-chipselects = <1>;
@@ -204,6 +220,7 @@
 	phy-mode = "rgmii";
 	phy-reset-gpios = <&gpio1 25 0>;
 	phy-reset-duration=<100>;
+	fsl,magic-packet;
 	status = "okay";
 };
 
@@ -713,7 +730,7 @@
 	pinctrl-0 = <&pinctrl_usbotg_var>;
 	disable-over-current;
 	/* dr_mode: One of "host", "peripheral" or "otg". Defaults to "otg" */
-	dr_mode = "host";
+	dr_mode = "peripheral";	/* Allow adb to work */
 	srp-disable;
 	hnp-disable;
 	adp-disable;

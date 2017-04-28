@@ -100,7 +100,9 @@
 			"Headphone Jack",	"HPLOUT",
 			"Headphone Jack",	"HPROUT",
 			"Line In Jack",		"LINE1L",
-			"Line In Jack",		"LINE1R";
+			"Line In Jack",		"LINE1R",
+			"Playback",		"CPU-Playback",
+			"CPU-Capture",		"Capture";
 		mux-int-port = <2>;
 		mux-ext-port = <3>;
 	};
@@ -115,7 +117,7 @@
 	mxcfb1: fb@0 {
 		compatible = "fsl,mxc_sdc_fb";
 		disp_dev = "ldb";
-		default_bpp = <16>;
+		default_bpp = <32>;
 		int_clk = <0>;
 		late_init = <0>;
 		status = "disabled";
@@ -181,11 +183,21 @@
 		status = "okay";
 	};
 
-
-
 	v4l2_out {
 		compatible = "fsl,mxc_v4l2_output";
 		status = "okay";
+	};
+
+	btwilink {
+		compatible = "btwilink";
+	};
+
+	kim {
+		compatible = "kim";
+		nshutdown_gpio = <178>;	/* GPIO6_18 */
+		dev_name = "/dev/ttymxc1";
+		flow_cntrl = <1>;
+		baud_rate = <3000000>;
 	};
 };
 
@@ -198,6 +210,11 @@
 &cpu0 {
 	arm-supply = <&sw1a_reg>;
 	soc-supply = <&sw1c_reg>;
+};
+
+&clks {
+	fsl,ldb-di0-parent = <&clks IMX6QDL_CLK_PLL2_PFD0_352M>;
+	fsl,ldb-di1-parent = <&clks IMX6QDL_CLK_PLL2_PFD0_352M>;
 };
 
 &fec {
@@ -289,6 +306,8 @@
 				MX6QDL_PAD_ENET_RXD0__OSC32K_32K_OUT	0x000b0
 				/* Audio Clock */
 				MX6QDL_PAD_GPIO_0__CCM_CLKO1		0x130b0
+				/* Audio Reset */
+				MX6QDL_PAD_GPIO_19__GPIO4_IO05		0x130b0
 				/* Camera Clock */
 				MX6QDL_PAD_GPIO_3__CCM_CLKO2		0x130b0
 				MX6QDL_PAD_KEY_ROW0__GPIO4_IO07		0x0b0b1
