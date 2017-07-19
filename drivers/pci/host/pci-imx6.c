@@ -361,6 +361,17 @@ static void pci_imx_phy_pll_locked(struct imx6_pcie *imx6_pcie)
 	}
 }
 
+static void pcie_reset(int reset_gpio)
+{
+	/* Some boards don't have PCIe reset GPIO. */
+	if (gpio_is_valid(reset_gpio)) {
+		gpio_set_value_cansleep(reset_gpio, 0);
+		mdelay(20);
+		gpio_set_value_cansleep(reset_gpio, 1);
+		mdelay(20);
+	}
+}
+
 static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
 {
 	int ret;
@@ -426,13 +437,8 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
 	/* allow the clocks to stabilize */
 	udelay(200);
 
-	/* Some boards don't have PCIe reset GPIO. */
-	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-		mdelay(20);
-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-		mdelay(20);
-	}
+	if (!is_imx7d_pcie(imx6_pcie))
+		pcie_reset(imx6_pcie->reset_gpio);
 
 	/*
 	 * Release the PCIe PHY reset here
@@ -458,6 +464,8 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
 		}
 
 		regmap_update_bits(imx6_pcie->reg_src, 0x2c, BIT(2), 0);
+
+		pcie_reset(imx6_pcie->reset_gpio);
 
 		/* wait for phy pll lock firstly. */
 		pci_imx_phy_pll_locked(imx6_pcie);
