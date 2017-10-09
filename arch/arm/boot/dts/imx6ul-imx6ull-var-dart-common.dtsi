@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2015 Freescale Semiconductor, Inc.
  *
- * Copyright (C) 2015-2016 Variscite Ltd. - http://www.variscite.com
+ * Copyright (C) 2015-2017 Variscite Ltd. - http://www.variscite.com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -46,20 +46,36 @@
 		};
 
 #ifdef WIFI
-/* force VMMC1 to always on so BT can operate independently of Wi-Fi */
-		reg_1v8_wlan: regulator@1 {
+#ifdef WIFI_5G
+		reg_1v8_wlan: regulator_1v8_wlan {
 			compatible = "regulator-fixed";
 			regulator-name = "VWLAN_1V8";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
 			gpio = <&gpio5 2 GPIO_ACTIVE_HIGH>;	/* WL_1V8_ON: SNVS_TAMPER2 (gpio5_2) */
 			enable-active-high;
-			regulator-always-on;
+			regulator-boot-on;
 			startup-delay-us = <50000>;
-			status = "disabled";			/* enabled by u-boot on DART-6UL-5G with Wi-Fi */
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
 		};
 
-		reg_sd1_vmmc: regulator@2 {
+		reg_sd1_vmmc: regulator_sd1_vmmc {
+			compatible = "regulator-fixed";
+			regulator-name = "VSD_3V3";
+			vin-supply = <&reg_1v8_wlan>;
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			gpio = <&gpio5 6 GPIO_ACTIVE_HIGH>;	/* WL_REG_ON: SNVS_TAMPER6 (gpio5_6) */
+			enable-active-high;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+#else
+/* force VMMC1 to always on so BT can operate independently of Wi-Fi */
+		reg_sd1_vmmc: regulator_sd1_vmmc {
 			compatible = "regulator-fixed";
 			regulator-name = "VSD_3V3";
 			regulator-min-microvolt = <3300000>;
@@ -68,6 +84,7 @@
 			enable-active-high;
 			regulator-always-on;
 		};
+#endif
 #endif
 		reg_gpio_dvfs: regulator-gpio {
 			compatible = "regulator-gpio";
@@ -306,7 +323,19 @@
 };
 
 #ifdef WIFI
+#ifdef WIFI_5G
 /*  Wi-Fi/BT SD Card Slot Definition */
+&usdhc1 {
+	pinctrl-names = "default", "state_100mhz", "state_200mhz";
+	pinctrl-0 = <&pinctrl_usdhc1>;
+	pinctrl-1 = <&pinctrl_usdhc1_100mhz>;
+	pinctrl-2 = <&pinctrl_usdhc1_200mhz>;
+	enable-sdio-wakeup;
+	vmmc-supply = <&reg_sd1_vmmc>;
+	wifi-host;			/* add hook for SD card detect mechanism */
+	status = "okay";
+};
+#else
 &usdhc1 {
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc1>;
@@ -320,6 +349,7 @@
 	non-removable;
 	status = "okay";
 };
+#endif /* WIFI_5G */
 #else
 &usdhc1 {
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
