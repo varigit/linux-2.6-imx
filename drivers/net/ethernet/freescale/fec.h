@@ -589,6 +589,9 @@ struct fec_enet_private {
 
 	/* phy reset duration in ms */
 	int phy_reset_duration;
+
+	/* phy post reset delay in ms */
+	int phy_reset_post_delay;
 };
 
 void fec_ptp_init(struct platform_device *pdev);
