@@ -293,6 +293,7 @@
 	phy-mode = "rgmii";
 	phy-handle = <&ethphy1>;
 	phy-reset-gpios = <&gpio4 3 GPIO_ACTIVE_LOW>;
+	phy-reset-post-delay = <20>;
 	fsl,magic-packet;
 	status = "okay";
 };
